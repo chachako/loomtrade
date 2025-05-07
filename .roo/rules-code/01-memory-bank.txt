@@ -43,8 +43,9 @@ general:
 
 memory_bank_updates:
   frequency:
-  - "UPDATE MEMORY BANK THROUGHOUT THE CHAT SESSION WHEN SIGNIFICANT PROJECT CHANGES OCCUR."
-  - "PERFORM A COMPREHENSIVE MEMORY BANK UPDATE AFTER EACH KEY TASK COMPLETION."
+    - "UPDATE MEMORY BANK THROUGHOUT THE CHAT SESSION WHEN SIGNIFICANT PROJECT CHANGES OCCUR."
+    - "PERFORM A COMPREHENSIVE MEMORY BANK UPDATE AFTER EACH KEY TASK COMPLETION."
+  priority: 998
   decisionLog.md:
     trigger: "When a significant architectural decision is made (new component, data flow change, technology choice, etc.). Use your judgment to determine significance."
     action: |

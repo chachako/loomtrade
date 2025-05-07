@@ -353,6 +353,7 @@ graph TD
 *   **构建与启动:**
     *   使用 `npm run build` (或 `yarn build`) 执行 `next build` 命令来构建生产优化版本的 Next.js 应用。
     *   使用 `npm run start` (或 `yarn start`) 执行 `next start` 命令来启动 Next.js 生产服务器。
+    *   **包管理器 (Package Manager):** 项目前端 (`frontend/`) 统一使用 `pnpm` 作为包管理器。所有依赖安装、脚本运行等操作均应通过 `pnpm` 执行 (例如 `pnpm install`, `pnpm run dev`)。
 *   **部署选项:**
 *   **服务器部署 (主要方式):**
     *   Next.js 前端和 Python (FastAPI) 后端将作为独立服务通过 Docker 容器进行部署。

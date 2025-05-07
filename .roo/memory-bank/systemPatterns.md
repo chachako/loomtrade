@@ -11,6 +11,7 @@ It is optional, but recommended to be updated as the project evolves.
 * Frontend: Next.js (React 19), Magic UI, TypeScript.
 * Backend: Python (FastAPI), SQLAlchemy (ORM).
 * Internationalization (i18n): Planned for both frontend (`next-i18next` or similar) and backend (e.g., `python-i18n`).
+* Frontend Package Manager: `pnpm` is the designated package manager for the `frontend/` Node.js project. All dependency installations and script executions should utilize `pnpm`.
 
 ## Architectural Patterns
 
