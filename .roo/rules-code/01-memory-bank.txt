@@ -9,11 +9,11 @@ memory_bank_strategy:
     <recursive>false</recursive>
     </list_files>
     <thinking>
-    - If 'memory-bank/' DOES exist, skip immediately to `if_memory_exists`.
+    - If 'memory-bank/' DOES exist, skip immediately to `if_memory_bank_exists`.
     </thinking>
   if_no_memory_bank: |
-    1. **Inform the User:**  
-          "No Memory Bank was found. I recommend creating one to  maintain project context. Would you like to switch to Architect mode to do this?"
+    1. **Inform the User:**
+          "No Memory Bank was found. I recommend creating one to maintain project context. Would you like to switch to Architect mode to do this?"
     2. **Conditional Actions:**
        * If the user declines:
         <thinking>
@@ -21,7 +21,7 @@ memory_bank_strategy:
         </thinking>
         a. Inform the user that the Memory Bank will not be created.
         b. Set the status to '[MEMORY BANK: INACTIVE]'.
-        c. Proceed with the task using the current context if needed or if no task is provided, use the `ask_followup_question` tool .
+        c. Proceed with the task using the current context if needed, or if no task is provided, use the `ask_followup_question` tool.
        * If the user agrees:
           Switch to Architect mode to create the Memory Bank.
   if_memory_bank_exists: |
@@ -30,27 +30,28 @@ memory_bank_strategy:
     I will read all memory bank files, one at a time.
     Plan: Read all mandatory files sequentially.
     1. Read `productContext.md`
-    2. Read `activeContext.md` 
-    3. Read `systemPatterns.md` 
-    4. Read `decisionLog.md` 
-    5. Read `progress.md` 
-    6. Set status to [MEMORY BANK: ACTIVE] and inform user.
-    7. Proceed with the task using the context from the Memory Bank or if no task is provided, use the `ask_followup_question` tool.
+    2. Read `activeContext.md`
+    3. Read `systemPatterns.md`
+    4. Read `decisionLog.md`
+    5. Read `progress.md`
+    6. Set status to '[MEMORY BANK: ACTIVE]' and inform the user.
+    7. Proceed with the task using the context from the Memory Bank, or if no task is provided, use the `ask_followup_question` tool.
     </thinking>
-      
+
 general:
   status_prefix: "Begin EVERY response with either '[MEMORY BANK: ACTIVE]' or '[MEMORY BANK: INACTIVE]', according to the current state of the Memory Bank."
 
 memory_bank_updates:
   frequency:
-  - "UPDATE MEMORY BANK THROUGHOUT THE CHAT SESSION, WHEN SIGNIFICANT CHANGES OCCUR IN THE PROJECT."
+  - "UPDATE MEMORY BANK THROUGHOUT THE CHAT SESSION WHEN SIGNIFICANT PROJECT CHANGES OCCUR."
+  - "PERFORM A COMPREHENSIVE MEMORY BANK UPDATE AFTER EACH KEY TASK COMPLETION."
   decisionLog.md:
     trigger: "When a significant architectural decision is made (new component, data flow change, technology choice, etc.). Use your judgment to determine significance."
     action: |
       <thinking>
-      I need to update decisionLog.md with a decision, the rationale, and any implications. 
+      I need to update decisionLog.md with a decision, the rationale, and any implications.
       </thinking>
-      Use append_to_file to *append* new information. Never overwrite existing entries. Always include a timestamp.  
+      Use append_to_file to *append* new information. Never overwrite existing entries. Always include a timestamp.
     format: |
       "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
   productContext.md:
@@ -62,7 +63,7 @@ memory_bank_updates:
       Use append_to_file to *append* new information or use apply_diff to modify existing entries if necessary. Timestamp and summary of change will be appended as footnotes to the end of the file.
     format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change]"
   systemPatterns.md:
-    trigger: "When new architectural patterns, reusable code components (e.g., utility functions, encapsulated modules), or significant design patterns are introduced, identified, or modified. Use your judgement."
+    trigger: "When new architectural patterns, reusable code components (e.g., utility functions, encapsulated modules), or significant design patterns are introduced, identified, or modified. Use your judgment."
     action: |
       <thinking>
       A new reusable component, pattern, or utility has been identified or created. I need to update systemPatterns.md with its description, purpose, and how it can be reused.
@@ -70,30 +71,37 @@ memory_bank_updates:
       Use append_to_file to *append* new patterns/components or use apply_diff to modify existing entries if warranted. Always include a timestamp.
     format: "[YYYY-MM-DD HH:MM:SS] - [Type: Architectural/Code Component/Utility] - [Name/Brief ID]: [Description of Pattern/Component and its reusability]"
   activeContext.md:
-    trigger: "When the current focus of work changes, or when significant progress is made. Use your judgement."
+    trigger: "When the current focus of work changes, or when significant progress is made. Use your judgment."
     action: |
       <thinking>
-      I need to update activeContext.md with a brief summary and time stamp.
+      I need to update activeContext.md with a brief summary and timestamp.
       </thinking>
-      Use append_to_file to *append* to the relevant section (Current Focus, Recent Changes, Open Questions/Issues) or use apply_diff to modify existing entries if warranted.  Always include a timestamp.
+      Use append_to_file to *append* to the relevant section (Current Focus, Recent Changes, Open Questions/Issues) or use apply_diff to modify existing entries if warranted. Always include a timestamp.
     format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
   progress.md:
-      trigger: "When a task begins, is completed, or if there are any changes Use your judgement."
-      action: |
-        <thinking>
-        I need to update progress.md with a brief summary and time stamp.
-        </thinking>
-        Use append_to_file to *append* the new entry, never overwrite existing entries. Always include a timestamp.
-      format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
-
-incomplete_code_tracking:
-    trigger: "When incomplete code (e.g., containing '// TODO:', '// FIXME:', 'pass', 'NotImplementedError', or explicitly stated as incomplete) is generated by the Code expert."
+    trigger: "When a task begins, is completed, or if there are any changes. Use your judgment."
     action: |
       <thinking>
-      The Code expert generated incomplete code. I need to record this in activeContext.md to ensure it's tracked and addressed later.
+      I need to update progress.md with a brief summary and timestamp.
       </thinking>
-      Use append_to_file to *append* to the 'Open Questions/Issues' section of `activeContext.md`. Always include a timestamp and a reference to the file and specific location if possible.
-    format: "[YYYY-MM-DD HH:MM:SS] - INCOMPLETE_CODE: [File: path/to/file, Location: e.g., line X or function Y] - [Brief description of what is incomplete]"
+      Use append_to_file to *append* the new entry, never overwrite existing entries. Always include a timestamp.
+    format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
+  post_task_comprehensive_update:
+    trigger: "When the AI determines a main task or a key sub-task is completed (e.g., after successful use of the `attempt_completion` tool with positive user feedback, or when the user explicitly states the task is finished)."
+    action: |
+      <thinking>
+      A task has just been completed. This is a critical juncture to ensure all relevant learnings, decisions, and contextual changes from this task are comprehensively recorded in the Memory Bank.
+      I need to conduct an extensive review and update of all relevant Memory Bank files, similar to a manual 'Update Memory Bank' (UMB) command, but focused on the context of the just-completed task.
+      </thinking>
+
+incomplete_code_tracking:
+  trigger: "When incomplete code (e.g., containing '// TODO:', '// FIXME:', 'pass', 'NotImplementedError', or explicitly stated as incomplete) is generated by the Code expert."
+  action: |
+    <thinking>
+    The Code expert generated incomplete code. I need to record this in activeContext.md to ensure it's tracked and addressed later.
+    </thinking>
+    Use append_to_file to *append* to the 'Open Questions/Issues' section of `activeContext.md`. Always include a timestamp and a reference to the file and specific location if possible.
+  format: "[YYYY-MM-DD HH:MM:SS] - INCOMPLETE_CODE: [File: path/to/file, Location: e.g., line X or function Y] - [Brief description of what is incomplete]"
 
 umb:
   trigger: "^(Update Memory Bank|UMB)$"

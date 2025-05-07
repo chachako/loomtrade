@@ -9,7 +9,7 @@ memory_bank_strategy:
     <recursive>false</recursive>
     </list_files>
     <thinking>
-    - If 'memory-bank/' DOES exist, skip immediately to `if_memory_exists`.
+    - If 'memory-bank/' DOES exist, skip immediately to `if_memory_bank_exists`.
     </thinking>
   if_no_memory_bank: |
     1. **Inform the User:**
@@ -168,8 +168,8 @@ memory_bank_updates:
     action: |
       <thinking>
       I need to update decisionLog.md with a decision, the rationale, and any implications.
-      Use append_to_file to *append* new information. Never overwrite existing entries. Always include a timestamp.
       </thinking>
+      Use append_to_file to *append* new information. Never overwrite existing entries. Always include a timestamp.
     format: |
       "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
   productContext.md:
@@ -177,33 +177,40 @@ memory_bank_updates:
     action: |
       <thinking>
       A fundamental change has occurred which warrants an update to productContext.md.
-      Use append_to_file to *append* new information or use apply_diff to modify existing entries if necessary. Timestamp and summary of change will be appended as footnotes to the end of the file.
       </thinking>
-    format: "(Optional)[YYYY-MM-DD HH:MM:SS] - [Summary of Change]"
+      Use append_to_file to *append* new information or use apply_diff to modify existing entries if necessary. Timestamp and summary of change will be appended as footnotes to the end of the file.
+    format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change]"
   systemPatterns.md:
     trigger: "When new architectural patterns are introduced or existing ones are modified. Use your judgement."
     action: |
       <thinking>
       I need to update systemPatterns.md with a brief summary and time stamp.
-      Use append_to_file to *append* new patterns or use apply_diff to modify existing entries if warranted. Always include a timestamp.
       </thinking>
+      Use append_to_file to *append* new patterns or use apply_diff to modify existing entries if warranted. Always include a timestamp.
     format: "[YYYY-MM-DD HH:MM:SS] - [Description of Pattern/Change]"
   activeContext.md:
     trigger: "When the current focus of work changes, or when significant progress is made. Use your judgement."
     action: |
       <thinking>
       I need to update activeContext.md with a brief summary and time stamp.
-      Use append_to_file to *append* to the relevant section (Current Focus, Recent Changes, Open Questions/Issues) or use apply_diff to modify existing entries if warranted.  Always include a timestamp.
       </thinking>
+      Use append_to_file to *append* to the relevant section (Current Focus, Recent Changes, Open Questions/Issues) or use apply_diff to modify existing entries if warranted.  Always include a timestamp.
     format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
   progress.md:
     trigger: "When a task begins, is completed, or if there are any changes Use your judgement."
     action: |
       <thinking>
       I need to update progress.md with a brief summary and time stamp.
-      Use append_to_file to *append* the new entry, never overwrite existing entries. Always include a timestamp.
       </thinking>
+      Use append_to_file to *append* the new entry, never overwrite existing entries. Always include a timestamp.
     format: "[YYYY-MM-DD HH:MM:SS] - [Summary of Change/Focus/Issue]"
+  post_task_comprehensive_update:
+    trigger: "When the AI determines a main task or a key sub-task is completed (e.g., after successful use of the `attempt_completion` tool with positive user feedback, or when the user explicitly states the task is finished)."
+    action: |
+      <thinking>
+      A task has just been completed. This is a critical juncture to ensure all relevant learnings, decisions, and contextual changes from this task are comprehensively recorded in the Memory Bank.
+      I need to conduct an extensive review and update of all relevant Memory Bank files, similar to a manual 'Update Memory Bank' (UMB) command, but focused on the context of the just-completed task.
+      </thinking>
 
 umb:
   trigger: "^(Update Memory Bank|UMB)$"

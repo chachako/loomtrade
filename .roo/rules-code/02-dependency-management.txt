@@ -1,6 +1,7 @@
 mcp_integration_rules:
   documentation_lookup:
     trigger: "When the user asks for information about a library, its best practices, or to review code against its documentation (e.g., 'check FastAPI code for best practices', 'how to use X feature in Y library')."
+    priority: 499
     action: |
       <thinking>
       The user is asking for library-specific information or a code review based on library documentation. I need to use the context7 MCP server to get this information.
@@ -35,6 +36,7 @@ mcp_integration_rules:
 
   dependency_version_check:
     trigger: "When adding new dependencies, updating existing ones, or when the user explicitly asks to check/update dependency versions (e.g., 'add library X', 'update all packages', 'are my Python dependencies up to date?')."
+    priority: 500
     action: |
       <thinking>
       The user's request involves managing project dependencies or ensuring they are up-to-date. I need to use the package-version MCP server.
@@ -66,3 +68,31 @@ mcp_integration_rules:
           }
         </arguments>
       </use_mcp_tool>
+
+dependency_management_automation:
+  auto_install_dependencies:
+    trigger: "When a package.json file is created or its 'dependencies' or 'devDependencies' sections are modified, or when other common dependency files like requirements.txt (Python), pyproject.toml (Python), go.mod (Go) are created or changed."
+    priority: 100
+    action: |
+      <thinking>
+      A dependency file (e.g., package.json, requirements.txt) has been created or modified.
+      I need to automatically run the appropriate installation command using the project's preferred package manager.
+
+      Plan:
+      1. Identify the directory of the changed dependency file (e.g., `frontend/` if `frontend/package.json` changed).
+      2. Determine the package manager and command:
+         - If `package.json` changed in a Node.js project (like `frontend/`), use `pnpm install` (based on recorded user preference).
+         - If `requirements.txt` or `pyproject.toml` changed in a Python project (like `backend/`), use `pip install -r requirements.txt` (or potentially `poetry install` if pyproject.toml indicates Poetry usage - need to confirm project setup or ask user if ambiguous).
+         - If `go.mod` changed, use `go mod tidy`.
+         - (Extend with other common dependency files and managers as needed).
+      3. Construct the `execute_command` tool usage with the correct command and `cwd`.
+      4. Inform the user in the subsequent `attempt_completion` (if applicable) or in the next response that the installation command was automatically executed.
+      </thinking>
+      Example for frontend/package.json change (assuming it's the trigger):
+      <execute_command>
+      <command>pnpm install</command>
+      <cwd>frontend</cwd>
+      </execute_command>
+      <thinking>
+      After this, I will proceed with the original task or provide a completion message, noting that dependencies were installed.
+      </thinking>
