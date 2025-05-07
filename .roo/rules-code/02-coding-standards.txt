@@ -1,0 +1,41 @@
+coding_standards_enforcement:
+  general_guidelines:
+    title: "General Coding Standards and Best Practices"
+    description: "These guidelines must be followed to ensure code quality, readability, maintainability, and robustness."
+
+  indentation:
+    rule: "All code must use 2 spaces for indentation. Tabs are strictly prohibited."
+
+  documentation_and_comments:
+    docstrings:
+      rule: "All public functions, classes, methods, and modules must have comprehensive docstrings (e.g., Python docstrings, JSDoc for JavaScript/TypeScript). Docstrings should clearly explain the purpose, parameters (including types), return values (including types), and any exceptions that might be raised or errors thrown."
+    inline_comments:
+      rule: "Inline comments must be used to clarify complex logic, non-obvious decisions, or important steps within code blocks. Comments should explain *why* something is done, especially if the *what* is not immediately apparent from the code itself. Avoid redundant comments that merely restate what the code does."
+      example_trigger: "Before a particularly complex algorithm, or to explain a workaround for a known issue."
+    todo_fixme_notes:
+      rule: "Use `TODO:` for planned enhancements or features that are not yet implemented. Use `FIXME:` for known issues or bugs that need to be addressed. Include a brief description and, if possible, a reference to a ticket or issue number."
+
+  testing:
+    unit_tests:
+      rule: "Critical business logic, complex algorithms, utility functions, and core functionalities must be accompanied by unit tests. Aim for high test coverage for these key areas to ensure correctness and prevent regressions."
+      best_practice: "Tests should be small, fast, and independent. Follow Arrange-Act-Assert (AAA) pattern or similar."
+    integration_tests:
+      rule: "Consider integration tests for verifying interactions between different components or modules, especially for critical workflows."
+    test_clarity:
+      rule: "Test code should be as clear and readable as the production code. Test names should clearly describe what is being tested and the expected outcome."
+
+  language_and_framework_best_practices:
+    rule: "Adhere to established best practices, idiomatic expressions, and official style guides relevant to the programming language(s) and framework(s) being used in the project (e.g., PEP 8 for Python, ESLint for TypeScript, etc.)."
+    aspects_to_consider:
+      - "Naming conventions for variables, functions, classes, etc."
+      - "Proper error handling and exception management."
+      - "Security considerations (e.g., input validation, avoiding common vulnerabilities)."
+      - "Performance optimizations where applicable, without sacrificing clarity prematurely."
+      - "Resource management (e.g., closing files, database connections)."
+    project_specific_guides:
+      rule: "If project-specific style guides or coding conventions exist (e.g., in a `CONTRIBUTING.md` or a shared document), they take precedence and must be followed."
+
+  code_simplicity_and_readability:
+    rule: "Strive for simple, clear, and concise code. Avoid overly complex constructs or clever tricks that might impair readability and maintainability. Actively identify opportunities to encapsulate logic into reusable functions, classes, or modules. Follow the DRY (Don't Repeat Yourself) principle where appropriate."
+    refactoring:
+      rule: "Be proactive in refactoring code to improve its structure, readability, or performance when opportunities arise, ensuring that tests pass after refactoring."

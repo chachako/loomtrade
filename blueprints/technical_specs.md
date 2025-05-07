@@ -3,7 +3,7 @@
 ## 1. 引言
 
 ### 1.1 项目愿景
-打造一个基于先进大语言模型 (LLM) Agent 技术的、用户友好的自动化加密货币合约交易平台，赋予用户定义和执行个性化交易策略的能力，实现新一代的“AI交易员”。
+打造一个基于先进大语言模型 (LLM) Agent 技术的、用户友好的自动化**多资产**交易平台 (支持加密货币、股票、外汇等)，赋予用户定义和执行个性化交易策略的能力，实现新一代的“AI交易员”。
 
 ### 1.2 核心理念
 其核心运作模式基于一种成熟的智能代理循环（Agentic Loop）思想，构建一个 AI Agent，该 Agent 能够：
@@ -13,7 +13,7 @@
 *   提供透明的决策过程展示和友好的人机交互界面。
 
 ### 1.3 目标用户
-*   有一定交易经验，希望将自己的交易思路自动化的加密货币交易者。
+*   有一定交易经验（加密货币、股票、外汇等），希望将自己的交易思路自动化的交易者。
 *   对 AI 技术在交易领域的应用感兴趣，并愿意尝试新工具的早期采用者。
 *   希望从重复性的市场监控和手动执行中解放出来的活跃交易者。
 
@@ -32,7 +32,7 @@
 一套具体的、可操作的规则和条件集合，用于识别交易信号、执行入场、管理仓位和执行出场。例如：“RSI超买做空，1.5倍ATR止损，2倍ATR止盈”。
 
 ### 2.4 工具 (Tools)
-Agent 与外部世界交互的接口。每个工具封装一项特定功能，如获取行情、计算指标、执行订单等。LLM 决定调用哪个工具及相关参数，Agent 负责实际执行并返回结果。
+Agent 与**各种交易市场及数据源**交互的接口。每个工具封装一项特定功能，如获取**不同资产类别**的行情、计算技术指标、执行**各类**订单等。LLM 决定调用哪个工具及相关参数，Agent 负责实际执行并返回结果。
 
 ### 2.5 系统提示 (System Prompt)
 在每次与 LLM 交互时发送给 LLM 的固定指令集。它定义了 Agent 的角色、能力、可用工具列表、行为准则、当前交易风格和策略的核心要素等。
@@ -60,7 +60,7 @@ Agentic Loop 是一个持续的、由多个阶段组成的循环过程，驱动 
 *   **3.1.3 阶段2: Prompt 构建 (Prompt Engineering):**
     这是与 LLM 有效沟通的关键。一个完整的 Prompt 通常由以下几部分构成：
     *   **A. 系统提示 (System Prompt) - 基石:**
-        *   **Agent 角色定义:** 清晰定义 LLM 所扮演的角色，例如：“你是一个经验丰富且谨慎的加密货币合约量化交易员AI助手。你的目标是根据用户设定的交易风格和策略，并利用提供的工具，来分析市场、识别交易机会并执行交易决策，同时最大化利润并控制风险。”
+        *   **Agent 角色定义:** 清晰定义 LLM 所扮演的角色，例如：“你是一个经验丰富且谨慎的**多资产市场（包括但不限于加密货币、股票、外汇等）**量化交易员AI助手。你的目标是根据用户设定的交易风格和策略，并利用提供的工具，来分析**各类市场**、识别交易机会并执行交易决策，同时最大化利润并控制风险。”
         *   **核心能力与职责:** 阐述 Agent 应具备的能力（分析市场、执行策略、管理风险、与用户沟通等）和主要职责。
         *   **可用工具列表及其详细使用规范:** 这是至关重要的一环。必须**极其详细和明确**地列出所有 Agent 可用的工具。对每个工具：
             *   **名称 (Tool Name):** 如 `get_historical_klines`。
@@ -237,39 +237,75 @@ Agentic Loop 是一个持续的、由多个阶段组成的循环过程，驱动 
 ### 4.1 高层架构图
 ```mermaid
 graph TD
-    User[用户] -- HTTPS --> WebApp[前端 Web 应用 (React/Vue/Svelte)]
-    WebApp -- API Calls (REST/GraphQL) --> Backend[后端服务 (Node.js/Python/Go)]
+    User[用户] -- HTTPS --> NextApp[Next.js Web 应用 (React UI + API Routes as BFF)]
+    NextApp -- API Calls (from Client or API Routes) --> MainBackend[主后端服务 (Python - FastAPI)]
     
-    Backend -- User/Config Mgmt --> DB[(数据库 PostgreSQL/MongoDB)]
-    Backend -- LLM API Calls --> LLMProvider[LLM 服务提供商 (OpenAI/Anthropic/Google)]
-    Backend -- Exchange API Calls --> Exchange[加密货币交易所 (Binance/OKX/Bybit)]
-    Backend -- Real-time Data --> WebSocketServer[WebSocket 服务 (行情/Agent状态)]
+    MainBackend -- User/Config Mgmt --> DB[(数据库 PostgreSQL)]
+    MainBackend -- LLM API Calls --> LLMProvider[LLM 服务提供商 (OpenAI/Anthropic/Google)]
+    MainBackend -- Exchange API Calls --> Exchange[加密货币交易所 (Binance/OKX/Bybit)]
+    MainBackend -- Real-time Data Handling --> WebSocketServer[WebSocket 服务 (由 FastAPI 提供)]
     
-    AgentCore[Agent 核心逻辑] -- Runs In --> Backend
+    AgentCore[Agent 核心逻辑] -- Runs In --> MainBackend
     AgentCore -- Uses --> ToolExecutor[工具执行器]
     ToolExecutor -- Interacts With --> Exchange
     ToolExecutor -- Calculates Indicators --> IndicatorLib[技术指标库]
     
-    WebApp -- WebSocket Connection --> WebSocketServer
-    TradingView[TradingView 轻量图表库] -- Embedded In --> WebApp
+    NextApp -- WebSocket Connection --> WebSocketServer
+    TradingView[TradingView 轻量图表库] -- Embedded In --> NextApp
 
-    subgraph Backend Services
+    subgraph "Next.js Application (Frontend & BFF)"
+        direction LR
+        ReactUI[React UI Components (SSR/CSR)]
+        APIRoutes[API Routes (BFF)]
+        ReactUI --> APIRoutes
+        APIRoutes -.-> MainBackend
+    end
+
+    subgraph "Main Backend Services (Python - FastAPI)"
         AgentCore
         ToolExecutor
         UserAccountService[用户账户服务]
         ConfigService[配置管理服务]
         OrderMgmtService[订单管理服务]
         NotificationService[通知服务]
+        WebSocketServer
     end
 ```
 
 ### 4.2 前端 Web 应用
-*   **技术选型建议:** React, Vue, Svelte 或 Angular。
-*   **主要职责:** 用户界面展示、用户输入处理、与后端 API 通信、实时数据显示 (通过 WebSocket)、嵌入 TradingView 图表。
+*   **技术选型:** Next.js (基于 **React 19**)。计划使用 **Magic UI** 等现代化 UI 组件库来构建界面。
+*   **主要职责:** 用户界面展示与交互、用户输入处理、通过其 API Routes (作为 BFF) 或直接与主后端 API 通信、实时数据显示 (通过 WebSocket 连接到主后端服务)、嵌入 TradingView 图表。
+*   **核心优势:** 利用 Next.js 进行服务端渲染 (SSR) 或静态站点生成 (SSG) 以优化首屏加载，API Routes 作为后端即服务 (BFF) 的潜力，文件系统路由的便捷性，React 19 的新特性，成熟的 React 组件模型。
+
+### 4.2.1 Next.js 前端架构
+
+*   **目录结构:** 项目将遵循 Next.js 的标准目录结构，包括：
+    *   `pages`: 用于页面级路由、SSR/SSG 数据获取函数。
+    *   `app`: (如果采用 App Router 模式) 用于基于组件的路由和布局。
+    *   `components`: 存放可复用的 React UI 组件。
+    *   `lib` 或 `utils`: 存放辅助函数、工具类和客户端服务。
+    *   `public`: 存放静态资源如图片、favicon 等。
+    *   `pages/api`: Next.js API Routes，作为 BFF 层。
+*   **路由:** 采用 Next.js 基于文件系统的路由机制。
+*   **组件化设计:** 严格遵循 React 的组件化设计原则，利用 **Magic UI** 等库构建高内聚、低耦合、可复用、可维护的 UI 单元，以支持仪表盘的复杂布局和交互。
+*   **状态管理:**
+    *   **选型:** 针对 Vibetrade 应用的复杂性，优先考虑使用 **Zustand** 或 **Redux Toolkit** 作为全局状态管理方案。
+        *   **Zustand:** 轻量级、上手快，API 简洁，能有效管理全局状态而无需过多模板代码。
+        *   **Redux Toolkit:** 功能更全面，适合非常复杂的状态逻辑和中间件需求，但相对 Zustand 更重一些。
+    *   **理由:** 这些方案能提供中心化的状态存储，便于跨组件共享数据（如用户认证信息、全局配置、Agent 状态摘要等），并能与 Next.js 的数据获取和生命周期良好集成。
+    *   局部组件状态将使用 React 内置的 `useState` 和 `useReducer`。
+*   **数据获取策略:**
+    *   **`getServerSideProps` (SSR):** 用于需要在请求时从后端（可能通过 BFF API Route）获取关键数据并进行服务端预渲染的页面，如仪表盘的主体框架或需要最新用户配置的页面，以提升首屏加载速度。
+    *   **`getStaticProps` (SSG):** 主要用于项目的静态内容页面，如产品介绍、FAQ、文档等（如果未来有这些页面）。
+    *   **客户端数据获取 (CSR):**
+        *   对于高度动态的数据（如实时行情、持仓更新、Agent 聊天和日志流），将主要采用客户端数据获取。
+        *   推荐使用 **SWR** 或 **React Query (TanStack Query)** 这类库来处理客户端的数据请求、缓存、重新验证和状态同步，它们能极大地简化数据管理逻辑，并提供乐观更新、轮询等高级功能。
+        *   这些库将通过 Next.js API Routes (BFF) 或直接调用主后端 FastAPI 服务获取数据。
+*   **国际化 (i18n):** 计划使用 `next-i18next` (基于 `i18next`) 或社区推荐的适用于 React 19 的最佳 i18n 方案，实现多语言支持，确保界面文本和内容的本地化。
 
 ### 4.3 后端服务
-*   **技术选型建议:** Node.js (TypeScript), Python (FastAPI/Django), Go。
-*   **4.3.1 Agent 核心逻辑服务 (Agent Core):**
+*   **技术选型:** Python (使用 FastAPI 框架)。选择 FastAPI 是因为它是一个现代、高性能的 Python Web 框架，非常适合构建 API 服务，并且拥有出色的异步支持（对于处理大量 I/O 密集型操作如外部 API 调用、数据库交互至关重要）和自动数据校验及文档生成功能。其生态系统与 Python 在 AI/LLM 和数据处理方面的优势能良好结合。
+*   **4.3.1 Agent 核心逻辑服务 (Agent Core) - 运行于 FastAPI 后端:**
     *   管理 Agent 实例的生命周期。
     *   实现 Agentic Loop。
     *   构建和管理发送给 LLM 的 Prompt (包括 System Prompt 和对话历史)。
@@ -279,31 +315,68 @@ graph TD
 *   **4.3.2 用户账户与配置管理服务:**
     *   用户注册、登录、认证。
     *   安全存储用户配置，包括交易所 API Key (高强度加密)、LLM API Key、选择的交易风格、自定义的交易策略等。
-*   **4.3.3 交易所 API 交互模块:**
-    *   封装对各主流交易所 API 的调用 (获取行情、下单、查询持仓/订单、提现等)。
-    *   处理 API 错误、速率限制等。
-    *   标准化不同交易所 API 的接口。
+*   **4.3.3 市场接口与交易执行模块:**
+*   封装对各类交易市场接口（包括加密货币交易所、股票经纪商、外汇平台等）API的调用 (获取行情、下单、查询持仓/订单、资金操作等)。
+*   处理不同市场接口的 API 错误、速率限制等。
+*   尽可能标准化不同市场接口的调用方式。
 *   **4.3.4 LLM API 交互模块:**
     *   封装对不同 LLM 提供商 API 的调用。
     *   处理 API 错误和重试逻辑。
 *   **4.3.5 数据存储服务:**
     *   与数据库交互，持久化用户信息、配置、交易历史、Agent 日志等。
 *   **4.3.6 行情数据处理与指标计算服务:**
-    *   可以订阅交易所的实时行情数据 (WebSocket)。
+    *   可以订阅**不同市场（如交易所、数据提供商）**的实时行情数据 (WebSocket 或其他协议)。
     *   提供常用的技术指标计算功能 (可内置或调用库)。
-*   **4.3.7 WebSocket 服务:**
-    *   向前端推送实时更新，如 Agent 状态、持仓变化、新交易信号、Agent 思考日志等。
-*   **4.3.8 通知服务:**
+*   **4.3.7 WebSocket 服务 (集成于 FastAPI 后端):**
+    *   将使用 FastAPI 内置的 WebSocket 支持或结合 `python-socketio` 等库，在主 Python 后端实现 WebSocket 服务。
+    *   负责处理与客户端 (Next.js 前端) 的双向实时通信连接。
+    *   向前端推送实时更新，如 Agent 状态、持仓变化、新交易信号、Agent 思考日志流等。
+*   **4.3.8 通知服务 (运行于 FastAPI 后端):**
     *   通过邮件、App内通知等方式向用户发送重要事件提醒。
 
+*   **4.3.9 API 国际化支持 (i18n):**
+    *   后端 API 返回的错误消息、验证提示、状态文本等需要支持多语言。需要选择合适的 Python i18n 库（如 `python-i18n`, `fastapi-babel` 或类似 FastAPI 中间件方案）来管理和提供翻译文本。
 ### 4.4 数据库
-*   **技术选型建议:** PostgreSQL (关系型，适合结构化数据和事务)、MongoDB (NoSQL，适合存储 Agent 日志、灵活的配置等)。
-*   **主要存储内容:** 见 6. 数据模型。
+*   **技术选型:** PostgreSQL。其关系型特性、对事务的强大支持、以及处理结构化数据的能力非常适合存储 Vibetrade 的核心业务数据（用户、配置、交易历史、Agent 记忆等）。JSONB 字段类型也为存储半结构化数据（如策略参数、日志详情）提供了灵活性。
+*   **主要存储内容:** 见第 7 章数据模型 (已更新为 7. 数据模型)。
 
 ### 4.5 第三方服务集成
-*   **加密货币交易所:** Binance, OKX, Bybit 等主流合约交易所。
+*   **交易市场接口:**
+    *   **加密货币交易所:** Binance, OKX, Bybit 等主流（含合约）交易所。
+    *   **股票市场:** (示例) Interactive Brokers (IBKR), Alpaca, TD Ameritrade (需研究其 API 适用性)。
+    *   **外汇市场:** (示例) OANDA, Forex.com (需研究其 API 适用性)。
 *   **LLM 服务提供商:** OpenAI (GPT系列), Anthropic (Claude系列), Google (Gemini系列) 等。
-*   **TradingView:** 使用其 Lightweight Charts™ 或 Trading Platform 图表库嵌入。
+*   **TradingView:** 使用其 Lightweight Charts™ 或 Trading Platform 图表库嵌入 (需评估其对股票、外汇等多资产图表的支持程度)。
+
+### 4.6 Next.js 应用的部署策略
+
+*   **构建与启动:**
+    *   使用 `npm run build` (或 `yarn build`) 执行 `next build` 命令来构建生产优化版本的 Next.js 应用。
+    *   使用 `npm run start` (或 `yarn start`) 执行 `next start` 命令来启动 Next.js 生产服务器。
+*   **部署选项:**
+*   **服务器部署 (主要方式):**
+    *   Next.js 前端和 Python (FastAPI) 后端将作为独立服务通过 Docker 容器进行部署。
+    *   可部署到主流云平台 (如 AWS ECS/EKS, Google Cloud Run/GKE, Azure Kubernetes Service) 或自建的 Kubernetes 集群/物理服务器。
+    *   用户将通过配置的域名访问 Web 应用。
+    *   Vercel 是 Next.js 应用的优秀托管平台，可作为前端部署的一个优先选项。
+*   **本地化运行 (未来探索):**
+    *   考虑未来提供将 Web 应用打包成本地可执行二进制文件的可能性（例如使用 Electron, Tauri 或类似技术）。
+    *   这将允许用户在个人电脑上直接运行 Vibetrade 应用，通过 `localhost` 或类似的本地地址访问，无需依赖外部服务器（除必要的 LLM 和交易所 API 通信外）。
+*   **容器化部署 (Docker):**
+    *   为前端和后端分别创建 Dockerfile，以便于构建、分发和运行。
+*   **其他 PaaS/Serverless 平台:** 仍可按需评估。
+*   **自托管 Node.js 服务器 (用于前端):** 仍是备选方案之一。
+*   **环境变量管理:**
+    *   通过 `.env` 文件 (如 `.env.local`, `.env.production`) 管理不同环境的配置。
+    *   Next.js 支持在构建时和运行时注入环境变量，确保敏感信息（如 API 密钥、数据库连接字符串）的安全。
+    *   部署平台通常也提供环境变量管理功能。
+*   **SSR/ISR 注意事项:**
+    *   如果应用大量使用 SSR (Server-Side Rendering) 或 ISR (Incremental Static Regeneration)，部署时需要确保 Node.js 服务器环境能够处理这些请求。
+    *   Vercel 和类似的平台对这些特性有原生支持。自托管时需要确保服务器配置得当。
+*   **与主后端服务的协同部署:**
+    *   Next.js 前端/BFF 和 Python (FastAPI) 主后端是两个独立的服务，可以独立部署和扩展。
+    *   在本地开发时，可以使用 Docker Compose 统一管理和启动所有服务（Next.js, FastAPI, PostgreSQL）。
+    *   在生产环境中，它们将通过网络进行通信（例如，Next.js API Routes 或客户端直接调用部署在特定域名下的 FastAPI 服务）。
 
 ## 5. 功能模块详解
 
@@ -312,13 +385,13 @@ graph TD
     *   简洁明了地介绍产品核心价值和功能。
     *   步骤式引导用户完成初始配置。
 *   **5.1.2 交易所选择与 API Key 配置:**
-    *   下拉列表选择支持的交易所。
-    *   输入 API Key 和 Secret Key。
+    *   下拉列表选择支持的**交易市场/经纪商**。
+    *   根据所选市场，输入相应的 API Key, Secret Key, 或其他认证凭据。
     *   **安全提示:**
-        *   强调 API Key 的权限配置（仅开启交易权限，关闭提现权限）。
-        *   告知用户 API Key 将被加密存储。
-        *   链接到各交易所创建 API Key 的教程。
-    *   API Key 连通性测试。
+        *   强调 API凭据的权限配置（例如，仅开启交易权限，关闭资金划转/提现权限，除非策略明确需要）。
+        *   告知用户 API 凭据将被加密存储。
+        *   链接到各市场/经纪商创建 API 凭据的教程。
+    *   API 凭据连通性测试。
 *   **5.1.3 LLM 模型选择与配置:**
     *   选择 LLM 提供商 (OpenAI, Anthropic, Google 等)。
     *   选择具体的模型 (e.g., GPT-4, Claude 3 Sonnet, Gemini Pro)。
@@ -438,7 +511,9 @@ graph TD
         *   例如：RSI震荡策略模板、均线交叉趋势策略模板、布林带突破策略模板。
     *   **自然语言策略定义器:**
         *   核心功能！用户可以使用接近自然语言的方式描述自己的策略逻辑。
-        *   例如：“当比特币15分钟K线的RSI指标上穿30时做多，同时要求MACD的快线在慢线上方。止损设置在入场价下方2%，当盈利达到风险的1.5倍时部分止盈一半仓位，剩余仓位追踪止损。”
+        *   例如（加密货币）：“当比特币15分钟K线的RSI指标上穿30时做多，同时要求MACD的快线在慢线上方。止损设置在入场价下方2%，当盈利达到风险的1.5倍时部分止盈一半仓位，剩余仓位追踪止损。”
+        *   例如（股票）：“当 AAPL 股票日线图突破前高，并且交易量放大超过20日均量的1.5倍时买入。初始止损设置在突破点下方一个ATR。”
+        *   例如（外汇）：“当 EUR/USD 4小时图形成看涨Pin Bar，且随机指标从超卖区向上时做多。目标盈利为入场点上方100点。”
         *   Agent (LLM) 负责将此描述解析为内部可执行的规则和工具调用序列。
     *   **结构化策略构建器 (UI辅助):**
         *   提供表单、下拉框、条件连接符 (AND/OR) 等UI元素，辅助用户构建策略规则，降低纯自然语言的模糊性。
@@ -459,11 +534,11 @@ graph TD
                 *   固定名义价值 (e.g., 1000 USDT)。
                 *   账户余额百分比 (e.g., 每次交易使用可用保证金的2%)。
                 *   基于风险的仓位计算 (e.g., 确保单笔最大亏损不超过账户的1%)。
-            *   **币种选择逻辑 (Pair Selection Logic):**
-                *   固定交易对: 只交易用户指定的几个币对。
+            *   **交易标的选择逻辑 (Instrument/Symbol Selection Logic):**
+                *   固定交易标的: 只交易用户指定的几个标的 (如 BTC/USDT, AAPL, EUR/USD)。
                 *   动态扫描:
-                    *   如用户描述的：“监控合约市场中24小时涨幅榜前5的币种，寻找符合策略A的做多机会。”
-                    *   Agent 需要调用 `list_tradable_pairs` (含筛选排序参数) 等工具。
+                    *   如用户描述的：“监控**特定市场（如纳斯达克）**中24小时涨幅榜前5的**股票**，寻找符合策略A的做多机会。”
+                    *   Agent 需要调用 `scan_market_opportunities` (含市场类型、筛选排序参数) 等工具。
     *   **策略参数化:** 允许用户为策略中的关键数值（如RSI周期、均线长度、止损百分比）设置可调参数。
     *   **策略启用/禁用开关。**
     *   **策略回测接口 (高级功能 - V2.0+):**
@@ -489,36 +564,37 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
 
 ### 6.1 市场数据类 (Market Data Tools)
 *   **`get_historical_klines`**
-    *   **描述:** 获取指定交易对、时间周期、数量的历史K线数据。
-    *   **参数:** `pair` (string, e.g., "BTC/USDT"), `interval` (string, e.g., "1h", "4h", "1d"), `limit` (int, e.g., 200), `end_time` (optional long, unix timestamp ms, for pagination)
-    *   **输出:** K线数据数组 (每条K线包含: 开盘时间, 开盘价, 最高价, 最低价, 收盘价, 成交量, 收盘时间, 成交额等)。
+    *   **描述:** 获取指定**交易标的**、时间周期、数量的历史K线数据。
+    *   **参数:** `symbol` (string, e.g., "BTC/USDT", "AAPL", "EUR/USD"), `market_type` (optional enum: "crypto", "stock", "forex", etc. - 根据实际支持的市场定义), `interval` (string, e.g., "1h", "4h", "1d"), `limit` (int, e.g., 200), `end_time` (optional long, unix timestamp ms, for pagination)
+    *   **输出:** K线数据数组 (每条K线包含: 开盘时间, 开盘价, 最高价, 最低价, 收盘价, 成交量, 收盘时间, 成交额等 - 需注意不同市场可能存在的细微差异)。
 *   **`get_current_ticker_info`**
-    *   **描述:** 获取一个或多个指定交易对的最新行情摘要信息。
-    *   **参数:** `pairs` (array of strings or single string, e.g., ["BTC/USDT", "ETH/USDT"]).
-    *   **输出:** 交易对信息数组 (每个对象包含: 交易对, 最新价, 24h最高/最低, 24h涨跌幅, 24h成交量/额)。
+    *   **描述:** 获取一个或多个指定**交易标的**的最新行情摘要信息。
+    *   **参数:** `symbols` (array of strings or single string, e.g., ["BTC/USDT", "AAPL"]), `market_type` (optional enum).
+    *   **输出:** **交易标的**信息数组 (每个对象包含: 标的标识, 最新价, 24h最高/最低, 24h涨跌幅, 24h成交量/额 - 需注意不同市场指标的可用性)。
 *   **`get_order_book`**
-    *   **描述:** 获取指定交易对的当前深度订单簿。
-    *   **参数:** `pair` (string), `limit` (optional int, e.g., 20, 返回买卖盘档位数)。
+    *   **描述:** 获取指定**交易标的**的当前深度订单簿。
+    *   **参数:** `symbol` (string), `market_type` (optional enum), `limit` (optional int, e.g., 20, 返回买卖盘档位数)。
     *   **输出:** 包含 `bids` (买盘) 和 `asks` (卖盘) 的数组，每档包含价格和数量。
 *   **`scan_market_opportunities`**
-    *   **描述:** 根据特定条件筛选市场上的交易对。
+    *   **描述:** 根据特定条件筛选不同市场上的**交易标的**。
     *   **参数:**
-        *   `sort_by` (enum: "24h_change_percent", "24h_volume", "market_cap" (如果适用)),
+        *   `market_type` (enum: "crypto_futures", "crypto_spot", "stock", "forex", etc. - 必需，指定扫描的市场类型),
+        *   `sort_by` (enum: "24h_change_percent", "24h_volume", "market_cap" (如果适用), etc. - 需根据市场类型调整可用选项),
         *   `sort_order` (enum: "asc", "desc"),
         *   `limit` (int, 返回数量),
-        *   `min_volume_usd` (optional float, 最小24h成交额USD),
-        *   `market_type` (enum: "spot", "futures_usdt_m", "futures_coin_m")
-    *   **输出:** 符合条件的交易对列表及其关键筛选指标值。
+        *   `min_volume_usd` (optional float, 最小24h成交额USD或等值),
+        *   `exchange_or_broker` (optional string, 指定扫描的交易所或经纪商，如果适用)
+    *   **输出:** 符合条件的**交易标的**列表及其关键筛选指标值。
 
 ### 6.2 技术指标计算类 (Technical Indicator Tools)
 这些工具接收K线数据作为输入（通常是 `get_historical_klines` 的输出），计算并返回指标值。
 *   **`calculate_indicator`** (通用指标计算工具)
-    *   **描述:** 计算指定的技术指标。
+    *   **描述:** 计算指定的技术指标。适用于从各种市场获取的K线数据。
     *   **参数:**
         *   `indicator_name` (enum: "RSI", "SMA", "EMA", "MACD", "BOLL", "ATR", "KDJ", "ICHIMOKU", etc.),
-        *   `klines_data` (array of kline objects, from `get_historical_klines`),
+        *   `klines_data` (array of kline objects, from `get_historical_klines` - 结构应保持一致性，即使数据源自不同市场),
         *   `parameters` (object, 包含指标所需的参数，e.g., for RSI: `{"period": 14}`, for MACD: `{"fast_period": 12, "slow_period": 26, "signal_period": 9}`).
-    *   **输出:** 指标计算结果。格式取决于指标：
+    *   **输出:** 指标计算结果。格式取决于指标（通常为数值数组或包含多个数值数组的对象）：
         *   RSI/SMA/EMA: 一个数值数组，对应每根K线（除开计算期不足的K线）。
         *   MACD: 包含 `macd_line`, `signal_line`, `histogram` 三个数值数组的对象。
         *   BOLL: 包含 `upper_band`, `middle_band`, `lower_band` 三个数值数组的对象。
@@ -526,57 +602,58 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
 
 ### 6.3 账户与订单类 (Account & Order Tools)
 *   **`get_account_balance`**
-    *   **描述:** 获取当前交易所账户的各币种资产余额和总体资产估值。
-    *   **参数:** (无，或可选 `exchange_id` 如果支持多交易所账户)。
-    *   **输出:** 包含各币种余额 (总额, 可用, 冻结) 的对象数组，以及账户总值 (e.g., in USDT)。
+    *   **描述:** 获取指定交易账户 (可能通过 `account_id` 或 `exchange_id` 区分) 的各资产余额和总体资产估值。
+    *   **参数:** `account_id` (optional string, 用于区分不同经纪商或市场的账户)。
+    *   **输出:** 包含各资产余额 (总额, 可用, 冻结) 的对象数组，以及账户总值 (以用户设定或账户基础货币计价)。
 *   **`get_open_positions`**
     *   **描述:** 获取当前所有持仓的详细信息。
-    *   **参数:** `pair` (optional string, 获取特定交易对的持仓)。
-    *   **输出:** 持仓对象数组 (每个对象包含: 交易对, 方向, 持仓量, 开仓均价, 标记价, 未实现盈亏, 保证金, 杠杆, 预估强平价, 止损价, 止盈价等)。
+    *   **参数:** `symbol` (optional string, 获取特定交易标的的持仓), `market_type` (optional enum)。
+    *   **输出:** 持仓对象数组 (每个对象包含: 交易标的, 方向, 持仓量/手数/股数, 开仓均价, 标记价/现价, 未实现盈亏, 保证金 (如适用), 杠杆 (如适用), 预估强平价 (如适用), 止损价, 止盈价等 - 字段需根据市场类型适配)。
 *   **`get_order_details`**
     *   **描述:** 获取特定订单的详细信息。
-    *   **参数:** `order_id` (string), `pair` (optional string)。
-    *   **输出:** 订单详情对象。
+    *   **参数:** `order_id` (string), `symbol` (optional string), `market_type` (optional enum)。
+    *   **输出:** 订单详情对象 (字段需根据市场类型适配)。
 *   **`get_historical_orders`**
     *   **描述:** 获取历史订单记录。
-    *   **参数:** `pair` (optional string), `status` (optional enum: "filled", "canceled", "all"), `limit` (optional int), `start_time` (optional long), `end_time` (optional long)。
-    *   **输出:** 历史订单对象数组。
+    *   **参数:** `symbol` (optional string), `market_type` (optional enum), `status` (optional enum: "filled", "canceled", "all"), `limit` (optional int), `start_time` (optional long), `end_time` (optional long)。
+    *   **输出:** 历史订单对象数组 (字段需根据市场类型适配)。
 *   **`create_order`**
-    *   **描述:** 创建一个新订单。
+    *   **描述:** 创建一个新订单，适用于不同市场。
     *   **参数:**
-        *   `pair` (string),
+        *   `symbol` (string, e.g., "BTC/USDT", "AAPL", "EUR/USD"),
+        *   `market_type` (enum: "crypto_futures", "crypto_spot", "stock", "forex", etc. - 必需),
         *   `side` (enum: "buy", "sell"),
-        *   `type` (enum: "market", "limit", "stop_market", "stop_limit", "take_profit_market", "take_profit_limit"),
-        *   `amount` (float, 交易数量 - 币本位合约是币的数量，U本位合约是张数或币的数量，取决于交易所),
+        *   `type` (enum: "market", "limit", "stop_market", "stop_limit", etc. - 根据市场类型调整可用选项),
+        *   `amount` (float, 交易数量 - 对于股票是股数，外汇是手数或基础货币单位，加密货币是币的数量或合约张数，需明确),
         *   `price` (optional float, 仅限价单或条件限价单需要),
         *   `stop_price` (optional float, 仅条件单需要),
-        *   `leverage` (optional int, 杠杆倍数，部分交易所允许下单时设置),
-        *   `reduce_only` (optional boolean, 是否为只减仓订单),
-        *   `time_in_force` (optional enum: "GTC", "IOC", "FOK", "POST_ONLY" - 取决于交易所支持).
-    *   **输出:** 成功时返回订单ID和订单信息，失败时返回错误信息。
+        *   `leverage` (optional int, 杠杆倍数，仅适用于杠杆市场),
+        *   `reduce_only` (optional boolean, 是否为只减仓订单，主要用于衍生品市场),
+        *   `time_in_force` (optional enum: "GTC", "IOC", "FOK", "DAY", "POST_ONLY" - 根据市场类型和交易所支持情况调整).
+    *   **输出:** 成功时返回订单ID和订单信息 (字段需根据市场类型适配)，失败时返回错误信息。
 *   **`cancel_order`**
     *   **描述:** 取消一个未成交的订单。
-    *   **参数:** `order_id` (string), `pair` (optional string)。
+    *   **参数:** `order_id` (string), `symbol` (optional string), `market_type` (optional enum)。
     *   **输出:** 成功/失败状态。
 *   **`cancel_all_orders`**
-    *   **描述:** 取消指定交易对或所有交易对的全部未成交订单。
-    *   **参数:** `pair` (optional string)。
+    *   **描述:** 取消指定**交易标的**或所有**交易标的**的全部未成交订单。
+    *   **参数:** `symbol` (optional string), `market_type` (optional enum)。
     *   **输出:** 成功/失败状态及取消的订单列表。
 *   **`close_position`**
-    *   **描述:** 市价平掉指定交易对的现有仓位。
-    *   **参数:** `pair` (string), `side_to_close` (enum: "long", "short" - 即平掉哪个方向的仓位，需要和当前持仓方向相反的操作)。
+    *   **描述:** 市价平掉指定**交易标的**的现有仓位。
+    *   **参数:** `symbol` (string), `market_type` (optional enum), `side_to_close` (enum: "long", "short" - 根据持仓方向确定平仓操作)。
     *   **输出:** 平仓订单的结果。
-*   **`modify_position_margin`**
-    *   **描述:** 调整逐仓模式下仓位的保证金。
-    *   **参数:** `pair` (string), `amount` (float, 正数为增加，负数为减少), `type` (enum: "add", "reduce").
+*   **`modify_position_margin` (主要适用于杠杆市场)**
+    *   **描述:** 调整逐仓模式下仓位的保证金 (如加密货币合约)。
+    *   **参数:** `symbol` (string), `market_type` (enum, e.g., "crypto_futures"), `amount` (float, 正数为增加，负数为减少), `type` (enum: "add", "reduce").
     *   **输出:** 成功/失败状态。
-*   **`set_position_leverage`**
-    *   **描述:** 设置指定交易对的杠杆倍数。
-    *   **参数:** `pair` (string), `leverage` (int).
+*   **`set_position_leverage` (主要适用于杠杆市场)**
+    *   **描述:** 设置指定**交易标的**的杠杆倍数 (如加密货币合约)。
+    *   **参数:** `symbol` (string), `market_type` (enum, e.g., "crypto_futures"), `leverage` (int).
     *   **输出:** 成功/失败状态。
 *   **`set_position_tp_sl`**
     *   **描述:** 为现有持仓设置止盈止损。
-    *   **参数:** `pair` (string), `take_profit_price` (optional float), `stop_loss_price` (optional float), `tp_trigger_by` (optional enum: "mark_price", "last_price"), `sl_trigger_by` (optional enum: "mark_price", "last_price").
+    *   **参数:** `symbol` (string), `market_type` (optional enum), `take_profit_price` (optional float), `stop_loss_price` (optional float), `tp_trigger_by` (optional enum: "mark_price", "last_price", "bid_price", "ask_price" - 根据市场调整), `sl_trigger_by` (optional enum: "mark_price", "last_price", "bid_price", "ask_price" - 根据市场调整).
     *   **输出:** 成功/失败状态。
 
 ### 6.4 LLM 辅助与交互类 (LLM Assistance & Interaction Tools)
@@ -601,7 +678,7 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
     *   **参数 (XML示例):**
         ```xml
         <update_internal_belief_state>
-            <belief_key>BTC/USDT_1h_trend_assessment</belief_key>
+            <belief_key>SYMBOL_MARKET_TF_assessment</belief_key> <!-- e.g., BTC/USDT_CRYPTO_1h_trend, AAPL_STOCK_1d_momentum -->
             <new_value>{"trend": "upward_channel", "confidence": 0.75, "key_support": "16000", "key_resistance": "17500"}</new_value>
             <reasoning>EMA10 above EMA20, RSI bouncing from 40, volume profile shows accumulation.</reasoning>
         </update_internal_belief_state>
@@ -619,7 +696,7 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
     *   **参数 (XML示例):**
         ```xml
         <log_agent_activity>
-            <log_message>Market volatility has significantly increased in the last hour for ETH/USDT. Holding off on new entries for Strategy B for now.</log_message>
+            <log_message>Market volatility has significantly increased in the last hour for ETH/USDT (or specific stock/forex pair). Holding off on new entries for Strategy B for now.</log_message>
             <log_level>info</log_level> <!-- "info", "debug", "warning", "thought_process" -->
             <details_json>{"volatility_metric": 0.05, "previous_metric": 0.02}</details_json> <!-- Optional structured details -->
         </log_agent_activity>
@@ -637,16 +714,21 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
     *   **参数 (XML示例):**
         ```xml
         <self_reflect_on_last_trade>
-            <trade_id>ORDER_XYZ123_FILL_ABC</trade_id>
+            <trade_id>INTERNAL_TRADE_ID_XYZ123</trade_id> <!-- Internal unique ID for the trade across its lifecycle -->
+            <instrument_details>
+                <symbol>BTC/USDT</symbol>
+                <market_type>crypto_futures</market_type>
+                <!-- Add other relevant instrument identifiers if needed -->
+            </instrument_details>
             <strategy_snapshot>
                 <strategy_name>RSI_Bounce_15m</strategy_name>
                 <parameters>{"rsi_period": 14, "rsi_buy_threshold": 30, "stop_loss_atr_multiplier": 1.5, "take_profit_rr_ratio": 2.0}</parameters>
             </strategy_snapshot>
-            <decision_rationale_entry>RSI(14) on 15m chart for BTC/USDT dropped to 28.5, below threshold 30. Market was in a short-term consolidation range. Entered long.</decision_rationale_entry>
+            <decision_rationale_entry>RSI(14) on 15m chart for BTC/USDT (crypto_futures) dropped to 28.5, below threshold 30. Market was in a short-term consolidation range. Entered long.</decision_rationale_entry>
             <decision_rationale_exit>Position hit take profit target based on 2:1 risk/reward ratio.</decision_rationale_exit>
-            <actual_outcome>{"pnl_usd": 55.75, "pnl_percent": 2.5, "duration_minutes": 120}</actual_outcome>
-            <market_conditions_summary>During the trade, BTC price initially dipped slightly then rallied. Overall market sentiment was neutral. No major news events.</market_conditions_summary>
-            <llm_analysis_and_lessons_learned>This trade was successful due to good entry timing on RSI divergence. The 2:1 RR target was appropriate for this setup. Lesson: Confirm RSI signals with volume for higher probability. Consider partial take profit at 1.5R if volatility is high.</llm_analysis_and_lessons_learned>
+            <actual_outcome>{"pnl_currency": "USD", "pnl_value": 55.75, "pnl_percent": 2.5, "duration_minutes": 120}</actual_outcome>
+            <market_conditions_summary>During the trade, BTC price initially dipped slightly then rallied. Overall market sentiment for crypto was neutral. No major news events impacting this specific asset.</market_conditions_summary>
+            <llm_analysis_and_lessons_learned>This trade on BTC/USDT was successful due to good entry timing on RSI divergence. The 2:1 RR target was appropriate for this setup. Lesson: Confirm RSI signals with volume for higher probability. Consider partial take profit at 1.5R if volatility is high for this asset class.</llm_analysis_and_lessons_learned>
         </self_reflect_on_last_trade>
         ```
     *   **输出 (XML示例):**
@@ -700,8 +782,11 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
                         <column name="trade_timestamp_ms" type="BIGINT_TIMESTAMP_MS">
                             <description_for_llm>交易完成（通常指平仓）的时间戳，以毫秒为单位的Unix时间戳。</description_for_llm>
                         </column>
-                        <column name="pair" type="VARCHAR_交易对">
-                            <description_for_llm>交易的币对，标准格式，例如 'BTC/USDT'。</description_for_llm>
+                        <column name="symbol" type="VARCHAR_交易标的">
+                            <description_for_llm>交易的标的符号，例如 'BTC/USDT', 'AAPL', 'EUR/USD'。</description_for_llm>
+                        </column>
+                        <column name="market_type" type="VARCHAR_市场类型">
+                            <description_for_llm>交易标的所属的市场类型，例如 'crypto_futures', 'stock', 'forex'。</description_for_llm>
                         </column>
                         <column name="pnl_usd" type="DECIMAL_USD">
                             <description_for_llm>该笔交易以美元计价的盈亏金额，正数表示盈利，负数表示亏损。</description_for_llm>
@@ -729,7 +814,7 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
                             <description_for_llm>该信念或观察形成时的时间戳，以毫秒为单位的Unix时间戳。</description_for_llm>
                         </column>
                         <column name="belief_key" type="VARCHAR_索引键">
-                            <description_for_llm>对此信念进行分类或索引的键名，例如 'BTC/USDT_1h_trend_outlook', 'Market_Sentiment_Overall', 'ETH_Volatility_Spike_Detected'。应具有一定通用性以便于后续查询。</description_for_llm>
+                            <description_for_llm>对此信念进行分类或索引的键名，例如 'BTC/USDT_CRYPTO_1h_trend_outlook', 'AAPL_STOCK_Market_Sentiment', 'EUR/USD_FOREX_Volatility_Spike_Detected'。应包含标的和市场类型以便于后续精确查询。</description_for_llm>
                         </column>
                         <column name="belief_value_text" type="TEXT_信念内容">
                             <description_for_llm>LLM对该主题的具体信念内容、观察描述或分析结论。例如：“当前1小时图EMA(10)上穿EMA(20)，且成交量放大，短期看涨趋势形成初步信号。” 可以通过关键词进行模糊查询。</description_for_llm>
@@ -762,39 +847,41 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
                 <column>llm_generated_analysis_text</column> <!-- LLM可能会要求这个长文本字段以进行更深入的分析 -->
             </columns_to_select>
             <filter_conditions operator="AND"> <!-- 多个condition之间的逻辑关系，可以是 "AND" 或 "OR" -->
-                <condition field="pair" operator="equals" value="ETH/USDT"/>
-                <condition field="strategy_name_used" operator="contains" value="MACD_Crossover"/> <!-- 假设TradeReflections表有strategy_name_used字段 -->
-                <condition field="market_conditions_snapshot_text" operator="contains_any_keywords"> <!-- 针对TEXT字段的关键词模糊匹配 -->
+                <condition field="symbol" operator="equals" value="ETH/USDT"/>
+                <condition field="market_type" operator="equals" value="crypto_futures"/>
+                <condition field="strategy_name_used" operator="contains" value="MACD_Crossover"/>
+                <condition field="market_conditions_snapshot_text" operator="contains_any_keywords">
                     <keyword>震荡</keyword>
                     <keyword>choppy</keyword>
                     <keyword>range-bound</keyword>
                 </condition>
-                <condition field="trade_timestamp_ms" operator="greater_than_equals_ms_ago" value="2592000000"/> <!-- 例如查询过去30天 (30*24*60*60*1000 ms) -->
+                <condition field="trade_timestamp_ms" operator="greater_than_equals_ms_ago" value="2592000000"/>
             </filter_conditions>
             <sort_by>
                 <column>trade_timestamp_ms</column>
                 <order>desc</order>
             </sort_by>
-            <limit>3</limit> <!-- 获取最近的3条记录 -->
+            <limit>3</limit>
         </query_database>
         ```
     *   **输出 (XML示例 - 成功):**
         ```xml
         <tool_result tool_name="query_database">
             <status>success</status>
-            <query_details> <!-- 返回执行的查询摘要，帮助LLM确认 -->
+            <query_details>
                 <table_queried>TradeReflections</table_queried>
-                <filters_applied_summary>pair='ETH/USDT' AND strategy_name_used CONTAINS 'MACD_Crossover' AND market_conditions CONTAINS ('震荡' OR 'choppy' OR 'range-bound') AND timestamp >= (NOW - 30 days)</filters_applied_summary>
+                <filters_applied_summary>symbol='ETH/USDT' AND market_type='crypto_futures' AND strategy_name_used CONTAINS 'MACD_Crossover' AND market_conditions CONTAINS ('震荡' OR 'choppy' OR 'range-bound') AND timestamp >= (NOW - 30 days)</filters_applied_summary>
                 <rows_returned>3</rows_returned>
             </query_details>
             <data>
                 <records>
                     <record>
                         <trade_timestamp_ms>1672876800000</trade_timestamp_ms>
-                        <pair>ETH/USDT</pair>
+                        <symbol>ETH/USDT</symbol>
+                        <market_type>crypto_futures</market_type>
                         <pnl_usd>-15.20</pnl_usd>
                         <lessons_learned_summary_text>MACD crossover in choppy market needs volume confirmation. Wider stop might be needed.</lessons_learned_summary_text>
-                        <llm_generated_analysis_text>The entry was based on MACD signal, but market lacked clear direction and was highly volatile, resulting in stop-loss hit. Future consideration: add a volatility filter (e.g., ATR percentage) or require stronger trend confirmation for this strategy in similar choppy conditions. The stop loss at 1.5x ATR was insufficient for the observed whipsaws.</llm_generated_analysis_text>
+                        <llm_generated_analysis_text>The entry was based on MACD signal, but market lacked clear direction and was highly volatile, resulting in stop-loss hit. Future consideration: add a volatility filter (e.g., ATR percentage) or require stronger trend confirmation for this strategy in similar choppy conditions for this asset class. The stop loss at 1.5x ATR was insufficient for the observed whipsaws.</llm_generated_analysis_text>
                     </record>
                     <!-- ... 另外两条记录 ... -->
                 </records>
@@ -804,7 +891,7 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
     *   **支持的过滤操作符 (示例，需在后端实现):** `equals`, `not_equals`, `greater_than`, `less_than`, `greater_than_equals`, `less_than_equals`, `contains` (for text, case-insensitive), `not_contains` (for text), `starts_with` (for text), `ends_with` (for text), `in_list` (value is a comma-separated string or array), `not_in_list`, `is_null`, `is_not_null`, `contains_any_keywords` (for text search across multiple keywords with OR logic, case-insensitive), `contains_all_keywords` (for text search with AND logic, case-insensitive), `greater_than_equals_ms_ago` (value is milliseconds, compares against NOW - value), `less_than_equals_ms_ago` (value is milliseconds).
     *   **后端处理:** 工具后端将这些结构化参数安全地转换为参数化的SQL查询（或ORM操作），执行查询并返回结果。必须采取一切措施防止SQL注入，例如严格校验输入、使用参数化查询、限制可查询的表和字段等。
 
-## 7. 数据模型 (Database Schema - 初步)
+## 7. 数据模型 (Database Schema)
 
 ### 7.1 `Users`
 *   `user_id` (PK, UUID/INT)
@@ -934,43 +1021,43 @@ Agent 通过调用这些工具与外部交互。每个工具应有清晰的输�
 ```mermaid
 sequenceDiagram
     participant User
-    participant WebApp
-    participant Backend
+    participant NextJsApp_UI as Next.js App (UI)
+    participant FastAPI_Backend as Main Backend (FastAPI)
     participant LLM
     participant Exchange
 
-    User->>WebApp: 访问策略配置页面
-    WebApp->>User: 显示策略构建器/自然语言输入框
-    User->>WebApp: 定义策略 (e.g., "RSI < 30 买入 BTC")
-    WebApp->>Backend: 保存策略 (api/strategies/create)
-    Backend->>DB: 存储策略定义
-    User->>WebApp: 选择此策略并点击“启动Agent”
-    WebApp->>Backend: 启动Agent请求 (api/agents/start) with strategy_id
-    Backend->>Backend: 创建AgentInstance, 初始化状态
-    Backend->>DB: 记录AgentInstance
-    Backend->>LLM: 首次Prompt (SystemPrompt + "开始执行策略X" + 当前市场概览工具调用请求?)
-    LLM->>Backend: 响应 (可能包含思考 + 调用 `scan_market_opportunities` 或 `get_historical_klines` for BTC)
-    Backend->>Backend: (AgentCore) 解析工具调用
-    Backend->>Exchange: (ToolExecutor) 执行工具 (e.g., 获取BTC K线)
-    Exchange-->>Backend: K线数据
-    Backend->>LLM: 工具结果 (BTC K线数据)
-    LLM->>Backend: 响应 (可能包含思考 + 调用 `calculate_indicator` for RSI)
-    Backend->>Backend: (AgentCore) 解析工具调用
-    Backend->>IndicatorLib: (ToolExecutor) 计算RSI
-    IndicatorLib-->>Backend: RSI值
-    Backend->>LLM: 工具结果 (RSI值)
-    LLM->>Backend: 响应 (e.g., "RSI为28，满足条件，准备下单")
-    User->>WebApp: (在Agent思考日志Tab) 看到Agent的分析过程
-    LLM->>Backend: 响应 (包含调用 `create_order` 工具)
-    Backend->>Exchange: (ToolExecutor) 执行市价买入BTC订单
-    Exchange-->>Backend: 订单成交回报
-    Backend->>LLM: 工具结果 (订单成功)
-    Backend->>DB: 记录订单和持仓
-    Backend->>WebApp: (WebSocket) 推送新持仓信息 & 订单成交通知
-    WebApp->>User: 更新UI (持仓列表、图表标记、通知)
-    LLM->>Backend: 响应 ("已成功开仓BTC多单，当前RSI为...")
-    Backend->>WebApp: (WebSocket) 推送Agent聊天消息
-    WebApp->>User: (在聊天Tab) 看到Agent的确认消息
+    User->>NextJsApp_UI: 访问策略配置页面
+    NextJsApp_UI->>User: 显示策略构建器/自然语言输入框
+    User->>NextJsApp_UI: 定义策略 (e.g., "RSI < 30 买入 BTC")
+    NextJsApp_UI->>FastAPI_Backend: 保存策略 (api/strategies/create)
+    FastAPI_Backend->>DB: 存储策略定义
+    User->>NextJsApp_UI: 选择此策略并点击“启动Agent”
+    NextJsApp_UI->>FastAPI_Backend: 启动Agent请求 (api/agents/start) with strategy_id
+    FastAPI_Backend->>FastAPI_Backend: 创建AgentInstance, 初始化状态
+    FastAPI_Backend->>DB: 记录AgentInstance
+    FastAPI_Backend->>LLM: 首次Prompt (SystemPrompt + "开始执行策略X" + 当前市场概览工具调用请求?)
+    LLM->>FastAPI_Backend: 响应 (可能包含思考 + 调用 `scan_market_opportunities` 或 `get_historical_klines` for BTC)
+    FastAPI_Backend->>FastAPI_Backend: (AgentCore) 解析工具调用
+    FastAPI_Backend->>Exchange: (ToolExecutor) 执行工具 (e.g., 获取BTC K线)
+    Exchange-->>FastAPI_Backend: K线数据
+    FastAPI_Backend->>LLM: 工具结果 (BTC K线数据)
+    LLM->>FastAPI_Backend: 响应 (可能包含思考 + 调用 `calculate_indicator` for RSI)
+    FastAPI_Backend->>FastAPI_Backend: (AgentCore) 解析工具调用
+    FastAPI_Backend->>IndicatorLib: (ToolExecutor) 计算RSI
+    IndicatorLib-->>FastAPI_Backend: RSI值
+    FastAPI_Backend->>LLM: 工具结果 (RSI值)
+    LLM->>FastAPI_Backend: 响应 (e.g., "RSI为28，满足条件，准备下单")
+    User->>NextJsApp_UI: (在Agent思考日志Tab) 看到Agent的分析过程
+    LLM->>FastAPI_Backend: 响应 (包含调用 `create_order` 工具)
+    FastAPI_Backend->>Exchange: (ToolExecutor) 执行市价买入BTC订单
+    Exchange-->>FastAPI_Backend: 订单成交回报
+    FastAPI_Backend->>LLM: 工具结果 (订单成功)
+    FastAPI_Backend->>DB: 记录订单和持仓
+    FastAPI_Backend->>NextJsApp_UI: (WebSocket) 推送新持仓信息 & 订单成交通知
+    NextJsApp_UI->>User: 更新UI (持仓列表、图表标记、通知)
+    LLM->>FastAPI_Backend: 响应 ("已成功开仓BTC多单，当前RSI为...")
+    FastAPI_Backend->>NextJsApp_UI: (WebSocket) 推送Agent聊天消息
+    NextJsApp_UI->>User: (在聊天Tab) 看到Agent的确认消息
 ```
 
 ### 8.2 Agent 主动监控与执行 (简化)
@@ -1025,16 +1112,17 @@ graph TD
 
 ## 10. 技术栈建议 (高层次总结)
 
-*   **前端:** React / Vue / Svelte (配合 TypeScript) - 强大的生态和组件化能力。
-*   **后端:**
-    *   Node.js (TypeScript) with Express.js/NestJS - 高并发、非阻塞I/O，适合实时应用，JavaScript全栈。
-    *   Python with FastAPI/Django - 强大的数据科学生态，众多交易库，开发效率高。
-    *   Go - 高性能、高并发，适合构建核心交易引擎。
-*   **数据库:** PostgreSQL (主业务数据), MongoDB (日志、非结构化数据)。可选 Redis (缓存、消息队列中转)。
-*   **实时通信:** WebSockets (Socket.IO, uWebSockets.js)。
+*   **前端 (Frontend & BFF):** Next.js (基于 **React 19**, 采用 **Magic UI** 等现代化组件库, 包含 API Routes 作为 BFF 层)。
+    *   **国际化 (i18n):** 使用 `next-i18next` (或类似适用于 React 19 的方案)。
+*   **主后端服务 (Main Backend Services):** Python (使用 FastAPI 框架), SQLAlchemy (ORM)。
+    *   **国际化 (i18n):** API 响应需支持多语言 (如使用 `python-i18n` 或 `fastapi-babel`)。
+*   **数据库 (Database):** PostgreSQL - 成熟的关系型数据库，支持事务，JSONB 类型可灵活存储半结构化数据，适合作为核心业务数据存储。
+*   **实时通信 (Real-time Communication):** WebSockets - 在 FastAPI 主后端服务中实现，用于与 Next.js 前端进行高效的双向实时数据交换（如行情、Agent状态、日志流）。
 *   **消息队列 (可选，用于解耦和异步任务处理):** RabbitMQ, Kafka, Redis Streams。
-*   **图表库:** TradingView Lightweight Charts™ / Trading Platform。
-*   **部署:** Docker, Kubernetes, Serverless (取决于规模和复杂度)。
+*   **图表库:** TradingView Lightweight Charts™ / Trading Platform (需评估多资产类别适用性，以支持股票、外汇等市场)。
+*   **部署:**
+    *   **主要方式:** Docker 容器化部署前后端服务至云平台或自建服务器，通过域名访问 (Vercel 是 Next.js 前端的优秀选项)。
+    *   **未来探索:** 本地化运行 (打包成二进制文件，如 Electron/Tauri)。
 *   **监控:** Prometheus, Grafana, Sentry。
 
 ## 11. 未来展望与迭代计划
@@ -1092,4 +1180,4 @@ graph TD
 基于LLM Agent的自动交易系统是一个充满潜力但也极具挑战性的方向。通过精心的Agent设计思想，将LLM的强大理解和推理能力与结构化的工具调用相结合，有望创造出真正智能且用户可控的交易解决方案。成功的关键在于严谨的系统设计、强大的风险控制、友好的用户体验以及持续的迭代优化。
 
 ---
-*本文档为 loomtrade 项目的技术规格和设计蓝图。*
+*本文档为 vibetrade 项目的技术规格和设计蓝图。*
