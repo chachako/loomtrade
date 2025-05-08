@@ -1,0 +1,172 @@
+feature_management:
+  delegate_feature_to_feature_lead:
+    trigger: "When a feature in `global/master_progress.yaml` is in a 'defined' or 'backlog' state and is prioritized for development (either by user instruction or next in a predefined sequence), or when the user explicitly requests to start/delegate a specific feature."
+    priority: 750 # High priority for unblocking development flow
+    action: |
+      <thinking>
+      **[Feature Delegation Protocol]**
+      My status should be `[PROJECT_MANAGER: DELEGATING_FEATURE]`.
+      The goal is to delegate a specific feature to the 'feature-lead' mode for detailed planning, development, and eventual delivery.
+
+      My process will be:
+      1.  **Identify and Confirm Feature:**
+          *   Determine the `feature_id` and `name` from user input or by reviewing `global/master_progress.yaml`.
+          *   Verify its current status in `global/master_progress.yaml`. It should ideally be "defined" or "backlog".
+      2.  **Prepare `new_task` Message:**
+          *   This message is critical. It must provide the 'feature-lead' mode with all necessary context, clear responsibilities, Memory Bank references, and instructions for reporting completion. The target mode slug for the `new_task` tool is known and fixed as `feature-lead`.
+      3.  **Execute `new_task` Tool Call using the `feature-lead` slug.**
+      4.  **Update `global/master_progress.yaml`:**
+          *   Change the feature's status to "planning" or "in-progress".
+          *   Record a conceptual assignment (e.g., noting the feature is now under the purview of a Feature Lead task).
+          *   Update `last_status_update`.
+      5.  **Update `manifest.yaml` timestamp.**
+      6.  **Inform User of Delegation.**
+
+      Let's assume the user says: "Let's start work on the User Management feature."
+      I'll need to read `global/master_progress.yaml` first to get the details of this feature.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/master_progress.yaml</path>
+      </read_file>
+      <thinking>
+      **[Feature Delegation Protocol - Cont.]**
+      I have received the content of `global/master_progress.yaml`.
+
+      **Step 1: Identify and Confirm Feature.**
+      I will parse the YAML content in my thought process.
+      Suppose `master_progress.yaml` contains:
+      ```yaml
+      # ...
+      features:
+        - id: "user_mgmt"
+          name: "User Management"
+          status: "defined"
+          progress_file_link: "features/user_mgmt/progress.yaml"
+          last_status_update: "YYYY-MM-DD HH:MM:SS - Initial definition by Project Manager."
+        # ...
+      ```
+      The feature to delegate is `id: "user_mgmt"`, `name: "User Management"`. Status is "defined", which is appropriate.
+
+      **Step 2: Prepare `new_task` Message for the 'feature-lead' mode.**
+      The target mode slug for the `new_task` tool is `feature-lead`.
+      The feature ID to be passed in the message is `user_mgmt`.
+      I am now ready to construct and execute the `new_task` tool call.
+      </thinking>
+      <new_task>
+      <mode>feature-lead</mode> <!-- CORRECT, FIXED SLUG USED HERE -->
+      <message>
+      "**New Feature Assignment: User Management (ID: user_mgmt)**
+
+      You are assigned to lead the planning, development, and delivery of the 'User Management' feature (ID: `user_mgmt`). Your role is that of a Feature Lead for this specific context.
+
+      **Your Core Responsibilities as Feature Lead:**
+      1.  **Initialize Feature Memory Bank Context (if not already present):**
+          *   Target directory: `./.roo/memory-bank/features/user_mgmt/`
+          *   Ensure standard files are present: `context.md`, `active_log.md`, `decisions.md`, `progress.yaml`, `design_notes.md` (optional), `code_references.yaml` (optional).
+          *   If creating, use templates or sensible defaults. Populate `progress.yaml` with this top-level feature task.
+          *   Reference `manifest.yaml` for structural guidance if needed.
+      2.  **Detailed Feature Planning & Design:**
+          *   Thoroughly review `global/project_overview.md` and any specific notes for `user_mgmt` in `global/master_progress.yaml`.
+          *   Elaborate on detailed requirements, user stories, and acceptance criteria in `features/user_mgmt/context.md`.
+          *   Break down the feature into granular technical tasks (e.g., API design, DB schema, frontend components, backend logic, tests) and list them in `features/user_mgmt/progress.yaml`. Assign estimated effort if possible.
+          *   Identify and document any specific architectural considerations or technical decisions for this feature in `features/user_mgmt/decisions.md`. If major architectural guidance is needed, request consultation with the 'architect' mode (slug: `architect`) through me (Project Manager).
+          *   Outline UI/UX considerations or API designs in `features/user_mgmt/design_notes.md`.
+      3.  **Development Oversight:**
+          *   Define and communicate the feature branch strategy (e.g., `feature/user_mgmt`).
+          *   Delegate coding tasks to specialized `Code-Frontend` (slug: `code-frontend`) and `Code-Backend` (slug: `code-backend`) modes by creating sub-tasks (you might use `new_task` yourself if you have that capability, or describe the tasks for me to delegate if not).
+          *   Ensure coding standards from `global/shared_system_patterns.md` are followed.
+          *   Track sub-task progress in `features/user_mgmt/progress.yaml`.
+      4.  **Quality Assurance Coordination:**
+          *   Ensure unit/integration tests are written by code modes.
+          *   Coordinate with the 'QA Tester' mode (slug: `qa-tester`) (through me, if necessary) for comprehensive testing once development iterations are ready. Track defects and their resolution.
+      5.  **Code Review and Merge:**
+          *   Oversee or conduct code reviews.
+          *   Manage the merging of the feature branch back into the main development branch (e.g., `develop`) upon successful testing and review.
+      6.  **Continuous Reporting & Memory Bank Updates:**
+          *   Keep `features/user_mgmt/active_log.md` updated with significant events, discussions, and blockers.
+          *   Keep `features/user_mgmt/progress.yaml` current with task statuses.
+          *   Report key milestones, critical issues, or readiness for broader testing/release to me (Project Manager).
+      7.  **Final Completion:**
+          *   Ensure all feature-specific documentation is complete.
+          *   When the entire feature is delivered and merged, use the `attempt_completion` tool with a comprehensive summary. This summary should include:
+              - Confirmation of feature completion.
+              - Links to key deliverables (e.g., merged Pull Request, relevant Memory Bank docs).
+              - Summary of testing and QA sign-off.
+              - Any important notes for future reference.
+
+      **Initial Memory Bank References:**
+      *   Project Overview: `./.roo/memory-bank/global/project_overview.md`
+      *   Master Progress (your feature entry): `./.roo/memory-bank/global/master_progress.yaml` (search for `id: user_mgmt`)
+      *   Shared Patterns & Standards: `./.roo/memory-bank/global/shared_system_patterns.md`
+      *   Global Architecture Overview: `./.roo/memory-bank/global/architecture_overview.md`
+      *   Manifest (for structure): `./.roo/memory-bank/manifest.yaml`
+
+      Please acknowledge this assignment. Your first step should be to set up or verify the Memory Bank context for `features/user_mgmt/` and then begin detailed planning. Outline your initial plan for this feature.
+      "
+      </message>
+      </new_task>
+      <thinking>
+      **[Feature Delegation Protocol - Cont.]**
+      After the `new_task` tool call is made (and assuming it's successfully processed by the system), I need to update `global/master_progress.yaml`.
+
+      **Step 3: Update `global/master_progress.yaml`.**
+      I will read `global/master_progress.yaml`. In my thought process, I will parse the YAML, find the entry for `id: "user_mgmt"`, and update its `status` to "planning" and `lead_mode_instance` (this field will now conceptually represent that a task has been dispatched to the `feature-lead` mode for this feature). I'll also update `last_status_update`. Then, serialize and `write_to_file`.
+      </thinking>
+      <!-- Example update for master_progress.yaml - tool call in a subsequent turn -->
+      <!--
+      <thinking>
+      Reading global/master_progress.yaml to update status for "user_mgmt".
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/master_progress.yaml</path>
+      </read_file>
+      <thinking>
+      Received content of global/master_progress.yaml.
+      I will find the entry for `id: "user_mgmt"` and update:
+      status: "planning"
+      lead_mode_instance: "Dispatched to feature-lead mode"
+      last_status_update: "YYYY-MM-DD HH:MM:SS - Delegated to feature-lead mode for planning."
+      Construct the full new YAML string. Let's say it's 35 lines.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/global/master_progress.yaml</path>
+      <content>
+      # Master Project Progress
+      # ... (project_name, etc.) ...
+      features:
+        - id: "user_mgmt"
+          name: "User Management"
+          status: "planning"
+          lead_mode_instance: "Dispatched to feature-lead mode"
+          target_completion_date: null
+          progress_file_link: "features/user_mgmt/progress.yaml"
+          last_status_update: "YYYY-MM-DD HH:MM:SS - Delegated to feature-lead mode for planning."
+        # ... other features ...
+      </content>
+      <line_count>35</line_count> <!-- Placeholder, actual count needed -->
+      </write_to_file>
+      -->
+      <thinking>
+      **[Feature Delegation Protocol - Cont.]**
+
+      **Step 4: Update `manifest.yaml` timestamp.**
+      As this is a significant Memory Bank operation, I will update the `last_updated_timestamp` in `manifest.yaml`.
+      This involves reading `manifest.yaml`, parsing, updating the timestamp, serializing, and writing back.
+      </thinking>
+      <!-- Tool call for manifest.yaml update in a subsequent turn -->
+
+      <thinking>
+      **Step 5: Inform User of Delegation.**
+      Once the `new_task` is sent and `master_progress.yaml` (and `manifest.yaml`) are updated (confirmed over subsequent turns), I will inform the user.
+      My status returns to `[PROJECT_MANAGER: ACTIVE]`.
+      </thinking>
+      <!-- Example concluding message in a subsequent turn -->
+      <!--
+      <attempt_completion>
+      <result>
+      "The 'User Management' feature (ID: user_mgmt) has been successfully delegated to the 'feature-lead' mode for detailed planning and subsequent development.
+      Its status in `global/master_progress.yaml` has been updated to 'planning'.
+      The 'feature-lead' mode will now initialize its specific Memory Bank context and begin working on the detailed plan."
+      </result>
+      </attempt_completion>
+      -->

@@ -1,0 +1,177 @@
+feature_quality_assurance:
+  coordinate_qa_testing_and_manage_defects:
+    trigger: "When development tasks for feature `{feature_id}` are substantially complete (as indicated in `progress.yaml`) and the feature is deemed ready for QA, or when `QA-Tester` mode reports test results or defects for the feature."
+    priority: 820 # Crucial for ensuring feature quality before release
+    action: |
+      <thinking>
+      **[QA Coordination & Defect Management Protocol for Feature: {feature_id}]**
+      My status might be `[FEATURE_LEAD ({feature_id}): COORDINATING_QA]` or `[FEATURE_LEAD ({feature_id}): MANAGING_DEFECTS]`.
+
+      **Scenario 1: Initiating QA Testing.**
+      This happens when I determine the feature is ready for testing.
+      1.  **Verify Readiness:** Review `features/{feature_id}/progress.yaml`. Ensure most/all coding tasks are "completed".
+      2.  **Update Feature Status:** Update `features/{feature_id}/progress.yaml`'s `overall_status` to "testing" (or "ready_for_qa").
+      3.  **Prepare `new_task` for `QA-Tester Mode` (slug: `qa-tester`):**
+          *   Message should include: feature ID, name, link to `context.md` (for requirements & acceptance criteria), link to `design_notes.md` (for UI/API specifics), the feature branch name (e.g., `feature/{feature_id}`), and expected scope of testing (e.g., "Perform full functional and integration testing based on acceptance criteria").
+      4.  **Execute `new_task` to `qa-tester`.**
+      5.  **Log QA Initiation in `active_log.md`.**
+
+      **Scenario 2: Receiving Test Results / Defects from `QA-Tester Mode`.**
+      This happens when `qa-tester` mode completes a testing cycle and reports back (e.g., via `attempt_completion`).
+      The report might contain a summary of passed/failed tests and a list of new defects.
+      1.  **Parse QA Report:** Understand the findings.
+      2.  **Log Defects:**
+          *   For each new defect: Create a new task in `features/{feature_id}/progress.yaml` with `type: "defect"`, a unique ID (e.g., `{feature_id}-defect-XXX`), description, severity (if provided by QA), steps to reproduce, and set status to "backlog" or "open".
+          *   Alternatively, or in addition, log detailed defect reports in `features/{feature_id}/active_log.md` or a dedicated `bug_reports.md` if that structure is preferred. For now, new tasks in `progress.yaml` are primary for trackability.
+      3.  **Delegate Defect Fixes:** Assign defect tasks in `progress.yaml` to the appropriate `code-frontend` or `code-backend` mode by creating a `new_task` for them, referencing the defect details.
+      4.  **Acknowledge QA Report / Request Retest:** After fixes are reported complete by code modes, coordinate with `qa-tester` for retesting/regression testing.
+
+      Let's assume `feature_id` is "user_mgmt". Path is `fp = "./.roo/memory-bank/features/user_mgmt/"`.
+
+      **Example Flow for Initiating QA (Scenario 1):**
+      </thinking>
+      <thinking>
+      **[QA Coordination - Initiating QA for {feature_id}]**
+      I've reviewed `fp + progress.yaml` and all coding tasks for `user_mgmt` are complete.
+      The feature branch is `feature/user_mgmt`.
+
+      **Step 1a: Update `fp + progress.yaml` `overall_status` to "testing".**
+      I will read, parse, modify `overall_status` and `last_updated_timestamp`, serialize, and `write_to_file`.
+      </thinking>
+      <!--
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/progress.yaml</path>
+      </read_file>
+      <thinking>
+      Update overall_status to "testing".
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/user_mgmt/progress.yaml</path>
+      <content>
+      # Feature Progress: user_mgmt
+      feature_id: "user_mgmt"
+      overall_status: "testing" # Updated
+      # ... (rest of the file)
+      last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # Updated
+      tasks:
+        # ...
+      </content>
+      <line_count>XX</line_count>
+      </write_to_file>
+      -->
+      <thinking>
+      **[QA Coordination - Initiating QA for {feature_id} - Cont.]**
+      **Step 1b: Prepare `new_task` for `qa-tester` mode.**
+      </thinking>
+      <new_task>
+      <mode>qa-tester</mode> <!-- Fixed slug for QA mode -->
+      <message>
+      "**QA Testing Assignment for Feature 'User Management' (ID: user_mgmt)**
+
+      The development phase for the 'User Management' feature (ID: `user_mgmt`) is complete. This feature is now ready for comprehensive QA testing.
+
+      **Feature Context & Requirements:**
+      *   Detailed requirements, user stories, and acceptance criteria: `./.roo/memory-bank/features/user_mgmt/context.md`
+      *   UI/API design notes (if any): `./.roo/memory-bank/features/user_mgmt/design_notes.md`
+
+      **Testing Scope:**
+      *   Please perform full functional testing against all acceptance criteria defined in `context.md`.
+      *   Conduct integration testing for API endpoints and their interaction with frontend components.
+      *   Verify data persistence and validation logic.
+      *   (Optional, if applicable: Perform basic usability and accessibility checks).
+
+      **Test Environment & Branch:**
+      *   Testing should be performed on the feature branch: `feature/user_mgmt` (or a designated QA environment if one exists and you have access instructions). Please confirm the environment.
+
+      **Reporting:**
+      *   Log all identified defects with clear steps to reproduce, expected vs. actual results, and severity (if possible).
+      *   Upon completion of your testing cycle, use the `attempt_completion` tool. Your result summary should include:
+          - A summary of test execution (e.g., X tests passed, Y failed).
+          - A list of new defect IDs you've logged (or full defect details if not logged elsewhere by you).
+          - An overall assessment of the feature's quality.
+
+      Please acknowledge this task and provide an estimated timeframe for this testing cycle if possible. Let me know if you need access to a specific test environment or any further clarification.
+      "
+      </message>
+      </new_task>
+      <thinking>
+      **[QA Coordination - Initiating QA for {feature_id} - Cont.]**
+      After `new_task` is sent.
+
+      **Step 1c: Log QA Initiation in `fp + active_log.md`.**
+      Entry: `[YYYY-MM-DD HH:MM:SS] - Feature user_mgmt is now in 'testing' phase. Testing tasks delegated to qa-tester mode.`
+      </thinking>
+      <!--
+      <insert_content>
+      <path>./.roo/memory-bank/features/user_mgmt/active_log.md</path>
+      <line>0</line>
+      <content>
+      [YYYY-MM-DD HH:MM:SS] - Feature user_mgmt is now in 'testing' phase. Testing tasks delegated to qa-tester mode.
+      </content>
+      </insert_content>
+      -->
+      <thinking>
+      My status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`, awaiting QA results.
+
+      **Example Flow for Receiving Defects (Scenario 2):**
+      Assume `qa-tester` reports: "Testing for user_mgmt complete. 5 tests passed, 2 failed. New Defects: DEFECT-UM-001 (Login fails with special chars), DEFECT-UM-002 (Profile update shows old data)."
+
+      **Step 2a: Parse QA Report.**
+      Defect 1: ID `user_mgmt-defect-001` (I'll create this ID), Desc: "Login fails with special characters in password", Severity: High (assumed).
+      Defect 2: ID `user_mgmt-defect-002`, Desc: "Profile update screen sometimes shows stale data after save", Severity: Medium.
+
+      **Step 2b: Log Defects as new tasks in `fp + progress.yaml`.**
+      I'll read `fp + progress.yaml`, parse, add these new defect tasks, serialize, and `write_to_file`.
+      </thinking>
+      <!-- Example: Adding defect tasks to progress.yaml -->
+      <!--
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/progress.yaml</path>
+      </read_file>
+      <thinking>
+      Adding defect tasks based on QA report.
+      New tasks:
+      - id: "user_mgmt-defect-001"
+        name: "DEFECT: Login fails with special chars in password"
+        status: "open" # Or "backlog"
+        assignee_mode: "code-backend" # Assuming backend issue
+        description: "Reported by QA. Login endpoint does not correctly handle passwords with characters like !, @, #. Severity: High."
+        type: "defect" # New field to mark task type
+        estimated_effort: "4h"
+      - id: "user_mgmt-defect-002"
+        name: "DEFECT: Profile update shows stale data"
+        status: "open"
+        assignee_mode: "code-frontend" # Assuming frontend caching/state issue
+        description: "Reported by QA. After saving profile changes, the screen sometimes displays old data until manual refresh. Severity: Medium."
+        type: "defect"
+        estimated_effort: "6h"
+      Update last_updated_timestamp.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/user_mgmt/progress.yaml</path>
+      <content> (Updated YAML with new defect tasks) </content>
+      <line_count>XX</line_count>
+      </write_to_file>
+      -->
+      <thinking>
+      **[QA Coordination - Managing Defects for {feature_id} - Cont.]**
+      After defects are logged in `progress.yaml`.
+
+      **Step 2c: Log in `fp + active_log.md`.**
+      Entry: `[YYYY-MM-DD HH:MM:SS] - QA for user_mgmt reported 2 new defects: user_mgmt-defect-001, user_mgmt-defect-002. Logged in progress.yaml.`
+      </thinking>
+      <!-- Tool call for insert_content to active_log.md -->
+
+      <thinking>
+      **Step 2d: Delegate Defect Fixes.**
+      I would now create `new_task` calls for `code-backend` to fix `user_mgmt-defect-001` and for `code-frontend` to fix `user_mgmt-defect-002`, similar to how regular coding tasks are delegated in `03-coding-task-delegation.txt`. The message would reference the defect ID and description.
+      After delegating, I'd update their status in `progress.yaml` to "in-progress".
+
+      Once fixes are reported as complete by code modes, I will create a new task for `qa-tester` to verify these specific fixes and perform regression testing.
+      My status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      QA coordination initiated for feature `{feature_id}` by delegating testing tasks to `qa-tester` / Defects received from `qa-tester` for feature `{feature_id}` have been logged in `progress.yaml` and `active_log.md`. Defect fix tasks will be delegated next.
+      </result>
+      </attempt_completion>

@@ -1,0 +1,242 @@
+feature_memory_bank_management:
+  initialize_or_verify_feature_context:
+    trigger: "Upon receiving a new feature assignment from Project Manager (identified by a message containing a `feature_id`), or when starting work on a feature and needing to ensure its Memory Bank context is established."
+    priority: 950 # Highest priority when starting a new feature.
+    action: |
+      <thinking>
+      **[Feature Memory Bank Context Initialization/Verification Protocol]**
+      I have been assigned a feature, or I am starting work on one. I must have a `feature_id` from the Project Manager's message. Let's assume my current `feature_id` is `{feature_id}` (this will be replaced by the actual ID like "user_mgmt").
+      My status should be `[FEATURE_LEAD ({feature_id}): INITIALIZING_CONTEXT]`.
+
+      My goal is to ensure the directory `./.roo/memory-bank/features/{feature_id}/` exists and contains the standard set of files:
+      - `context.md`
+      - `active_log.md`
+      - `decisions.md`
+      - `progress.yaml`
+      - `design_notes.md` (optional, can be created empty)
+      - `code_references.yaml` (optional, can be created empty)
+
+      If the directory or any essential file doesn't exist, I will create them.
+
+      **Step 1: Construct the feature directory path.**
+      Path: `./.roo/memory-bank/features/{feature_id}/`
+
+      **Step 2: Check if the feature directory exists.**
+      I will use `list_files` on `./.roo/memory-bank/features/` to see if `{feature_id}` subdirectory is present.
+      </thinking>
+      <list_files>
+      <path>./.roo/memory-bank/features/</path>
+      <recursive>false</recursive>
+      </list_files>
+      <thinking>
+      **[Feature Memory Bank Context Initialization/Verification Protocol - Cont.]**
+      I will analyze the result of `list_files` for `./.roo/memory-bank/features/`.
+
+      **Scenario A: Feature directory `features/{feature_id}/` DOES NOT exist.**
+      I need to create it using `execute_command` with `mkdir -p`. Then, I will create all standard files within it using `write_to_file` with default content.
+
+      **Scenario B: Feature directory `features/{feature_id}/` DOES exist.**
+      I need to check for the existence of each standard file within it. I will use `list_files` on `./.roo/memory-bank/features/{feature_id}/`.
+      For any *missing* standard file, I will create it using `write_to_file` with default content.
+
+      Let's outline the creation steps, assuming `{feature_id}` is "user_mgmt" for example.
+      The base path is `fp = "./.roo/memory-bank/features/user_mgmt/"`.
+
+      **IF SCENARIO A (Directory missing):**
+      1.  Create directory: `<execute_command><command>mkdir -p ./.roo/memory-bank/features/user_mgmt</command></execute_command>`
+      2.  Then proceed to create all files below.
+
+      **File Creation Steps (Common to Scenario A after dir creation, and for missing files in Scenario B):**
+      For each file, I will use `write_to_file`, providing the full path, default content, and calculated `line_count`.
+      I will refer to predefined default content blocks (like `default_feature_context_md_content`).
+      The `feature_id` needs to be embedded in some default content, like in `progress.yaml`.
+
+      a.  **Create `context.md`:** Path: `fp + "context.md"`
+          Content based on `default_feature_context_md_content`.
+      b.  **Create `active_log.md`:** Path: `fp + "active_log.md"`
+          Content based on `default_feature_active_log_md_content`.
+      c.  **Create `decisions.md`:** Path: `fp + "decisions.md"`
+          Content based on `default_feature_decisions_md_content`.
+      d.  **Create `progress.yaml`:** Path: `fp + "progress.yaml"`
+          Content based on `default_feature_progress_yaml_content`, ensuring `feature_id` is correctly inserted.
+      e.  **Create `design_notes.md`:** Path: `fp + "design_notes.md"`
+          Content based on `default_feature_design_notes_md_content`.
+      f.  **Create `code_references.yaml`:** Path: `fp + "code_references.yaml"`
+          Content based on `default_feature_code_references_yaml_content`, ensuring `feature_id` is correctly inserted.
+
+      After ensuring all files exist (either newly created or verified), I will read key files like `context.md` and `progress.yaml` to understand the current state if I'm picking up work.
+      Then, my status becomes `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+      I will then inform the Project Manager (if this was an initial assignment) or proceed with the next planning/execution step.
+      The actual tool calls for creation will be done one by one in subsequent turns after analyzing `list_files` results.
+      </thinking>
+      <!-- The LLM will make decisions based on list_files output. If dir is missing, first tool call is execute_command. Then write_to_file for each standard file. -->
+
+  update_feature_memory_bank:
+    trigger: "When new information needs to be recorded for the currently managed feature (e.g., requirement clarification, task status update, new technical decision, development log entry)."
+    priority: 900
+    action: |
+      <thinking>
+      **[Feature-Specific Memory Bank Update Protocol]**
+      I am managing feature `{feature_id}`. My status should be `[FEATURE_LEAD ({feature_id}): UPDATING_CONTEXT]`.
+      I need to update one or more files within `./.roo/memory-bank/features/{feature_id}/`.
+      The specific file and update method depend on the nature of the information.
+
+      *   **`context.md` (Requirements, User Stories, Acceptance Criteria):**
+          Typically updated via `apply_diff` if modifying existing text, or read-modify_in_memory-`write_to_file` for larger revisions.
+      *   **`active_log.md` (Development Log, Issues, Discussions):**
+          Typically updated by appending new entries. I will use `<read_file>` to get current content (to see last entry or structure), construct the new log entry string (with timestamp), and then use `<insert_content>` with `line: 0` (append to end) or, if appending to a specific section, a more complex read-modify-`write_to_file`. Appending with `insert_content` line 0 is simplest for general logs.
+          Example entry: `[YYYY-MM-DD HH:MM:SS] - Discussed API endpoint with Backend-Mode. Agreed on X.`
+      *   **`decisions.md` (Feature-Specific Technical Decisions):**
+          Similar to `active_log.md`, new decisions are appended with a standard format (ID, date, decision, rationale).
+      *   **`progress.yaml` (Task Breakdown and Status):**
+          This is a YAML file. Updates require the "read -> parse (in thought) -> modify (in thought, e.g., update task status, add new task) -> serialize (in thought) -> `write_to_file` (full content + line_count)" strategy.
+      *   **`design_notes.md` (UI/API Designs):**
+          Updated via `apply_diff` or read-modify-`write_to_file`.
+      *   **`code_references.yaml` (Code Artifacts):**
+          YAML file, updated using the standard YAML update strategy.
+
+      I will identify the target file and the content to be updated/appended.
+      For example, if a task status changes for feature `{feature_id}`:
+      1.  Target file: `./.roo/memory-bank/features/{feature_id}/progress.yaml`.
+      2.  I will `<read_file>` it.
+      3.  In thought: Parse YAML, find the task by ID, update its `status` field.
+      4.  In thought: Serialize the entire `progress.yaml` structure back to a string.
+      5.  Use `<write_to_file>` with the new content and `line_count`.
+      After the update, my status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+      </thinking>
+      <!-- Specific tool calls depend on the update type. -->
+
+  status_prefix_format: "[FEATURE_LEAD ({feature_id}): {STATUS}]" # {feature_id} should be dynamically replaced. {STATUS} can be ACTIVE, INITIALIZING_CONTEXT, UPDATING_CONTEXT, PLANNING, DELEGATING_CODING_TASK, COORDINATING_QA, etc. If feature_id is not yet known, use [FEATURE_LEAD: UNASSIGNED].
+
+# Default content for feature-specific files.
+# The LLM will use these as templates, replacing {feature_id} and timestamps.
+
+default_feature_context_md_content: |
+  # Feature Context: {feature_id}
+
+  *Initialized by Feature Lead Mode on YYYY-MM-DD HH:MM:SS*
+
+  ## 1. Feature Overview & Goals
+  *(To be detailed by Feature Lead based on Project Manager's assignment and further analysis. Briefly describe what this feature is and what it aims to achieve.)*
+
+  ## 2. Detailed Requirements
+  *(Breakdown of specific requirements. Use subheadings as needed.)*
+  *   REQ-{feature_id}-001: ...
+  *   REQ-{feature_id}-002: ...
+
+  ## 3. User Stories
+  *(Format: As a [type of user], I want [an action] so that [a benefit].)*
+  *   US-{feature_id}-001: As a user, I want to...
+  *   US-{feature_id}-002: As an admin, I want to...
+
+  ## 4. Acceptance Criteria
+  *(For each user story or key requirement, define clear, testable acceptance criteria.)*
+  *   For US-{feature_id}-001:
+      *   AC1: ...
+      *   AC2: ...
+
+  ## 5. Out of Scope for this Feature
+  *(Clearly list anything related but not part of this specific feature's scope.)*
+
+default_feature_active_log_md_content: |
+  # Active Log: {feature_id}
+
+  *Initialized by Feature Lead Mode on YYYY-MM-DD HH:MM:SS*
+
+  *This log tracks significant events, discussions, decisions pending, questions, blockers, and progress updates for feature {feature_id}. Entries should be timestamped.*
+  ---
+  *[YYYY-MM-DD HH:MM:SS]* - Feature context initialized. Detailed planning phase started.
+
+default_feature_decisions_md_content: |
+  # Decision Log: {feature_id}
+
+  *Initialized by Feature Lead Mode on YYYY-MM-DD HH:MM:SS*
+
+  *This log records feature-specific technical and design decisions for {feature_id}.*
+  *Format: ### [YYYY-MM-DD] Decision ID ({feature_id}-DEC-XXX): Short Title*
+  *   **Decision:** Detailed description of the decision made.*
+  *   **Rationale:** Reasons behind the decision.*
+  *   **Alternatives Considered:** Briefly mention other options evaluated.*
+  *   **Implications:** Impact of this decision.*
+  *   **Status:** Decided/Implemented/Revisited*
+  ---
+
+default_feature_progress_yaml_content: |
+  # Feature Progress: {feature_id}
+
+  feature_id: "{feature_id}" # Automatically replaced
+  overall_status: "planning" # ( planning | design | development | testing | review | blocked | completed )
+  lead_mode_instance: "Feature-Lead-For-{feature_id}" # Conceptual identifier
+  target_branch: "feature/{feature_id}" # Example
+  last_updated_by: "Feature Lead Mode"
+  last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # To be replaced
+
+  # High-level milestones for this feature (optional)
+  milestones:
+    - name: "Detailed Planning Complete"
+      status: "pending" # ( pending | in-progress | completed )
+      target_date: "YYYY-MM-DD"
+    - name: "Development Complete (Pre-QA)"
+      status: "pending"
+      target_date: "YYYY-MM-DD"
+    - name: "QA Testing Complete"
+      status: "pending"
+      target_date: "YYYY-MM-DD"
+
+  # Granular task breakdown
+  tasks:
+    - id: "{feature_id}-task-000" # Initial planning task
+      name: "Complete Detailed Planning and Task Breakdown for Feature {feature_id}"
+      status: "in-progress" # ( backlog | defined | in-progress | review | blocked | completed )
+      assignee_mode: "Feature Lead Mode" # This task is for the Feature Lead itself
+      description_link: "context.md#detailed-requirements" # Link to relevant section in context.md
+      estimated_effort: "1d" # e.g., 1d, 4h
+      actual_effort: ""
+      dependencies: [] # List of other task IDs this task depends on
+      related_commits: [] # List of commit hashes related to this task
+  # Example task structure:
+  # - id: "{feature_id}-task-001"
+  #   name: "Design API endpoints for X"
+  #   status: "backlog"
+  #   assignee_mode: "code-backend" # or specific instance if Feature Lead creates sub-tasks for them
+  #   description: "Define request/response schemas for GET /items and POST /items."
+  #   estimated_effort: "4h"
+  #   actual_effort: ""
+  #   dependencies: []
+  #   related_commits: []
+
+default_feature_design_notes_md_content: |
+  # Design Notes: {feature_id}
+
+  *Initialized by Feature Lead Mode on YYYY-MM-DD HH:MM:SS*
+
+  ## 1. UI/UX Considerations (if applicable)
+  *(Sketches, wireframe descriptions, user flow diagrams as text, links to external design tools if used)*
+
+  ## 2. API Design (if applicable)
+  *(Endpoint definitions, request/response schemas, authentication details specific to this feature)*
+  *   Example Endpoint: `POST /api/{feature_id}/resource`
+      *   Request Body: ...
+      *   Response Body: ...
+
+  ## 3. Data Model Changes (if applicable)
+  *(New database tables, fields, relationships specific to this feature)*
+
+  ## 4. Other Technical Design Notes
+  *(Algorithms, third-party service integrations, etc.)*
+
+default_feature_code_references_yaml_content: |
+  # Code References: {feature_id}
+
+  feature_id: "{feature_id}" # Automatically replaced
+  last_updated_by: "Feature Lead Mode"
+  last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # To be replaced
+
+  references: []
+  # Example entry:
+  # - type: "backend_service_file" # (e.g., frontend_component, backend_api_controller, database_migration, utility_function)
+  #   path: "src/services/{feature_id}_service.js"
+  #   description: "Main business logic for the {feature_id} feature."
+  #   key_constructs: # Optional: list key functions/classes within this file
+  #     - "processNewOrder()"
+  #     - "OrderStateMachine"

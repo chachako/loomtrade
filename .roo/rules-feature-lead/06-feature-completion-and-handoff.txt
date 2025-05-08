@@ -1,0 +1,120 @@
+feature_lifecycle_finalization:
+  finalize_feature_and_report_completion:
+    trigger: "When all development, testing, defect fixing, and code reviews for feature `{feature_id}` are complete, QA has signed off, and the feature branch has been successfully merged into the main development line."
+    priority: 880 # Critical step to formally close out a feature
+    action: |
+      <thinking>
+      **[Feature Completion and Handoff Protocol for Feature: {feature_id}]**
+      My status should be `[FEATURE_LEAD ({feature_id}): FINALIZING_FEATURE]`.
+      All work for feature `{feature_id}` is complete, including QA sign-off and code merge.
+      It's time to finalize everything and report completion to the Project Manager (`project-manager` slug).
+
+      My process will be:
+      1.  **Final Verification:**
+          *   Quickly review `features/{feature_id}/progress.yaml` to ensure all tasks are indeed "completed".
+          *   Confirm (from `active_log.md` or QA reports) that QA has signed off.
+          *   Confirm the feature branch (e.g., `feature/{feature_id}`) has been merged. (This might be known from a previous step or a notification).
+      2.  **Update Feature Memory Bank for Completion:**
+          *   Set `overall_status` in `features/{feature_id}/progress.yaml` to "completed".
+          *   Add a final entry to `features/{feature_id}/active_log.md` noting completion and merge.
+      3.  **Prepare Completion Summary for Project Manager:**
+          This summary will be the `result` for my `attempt_completion` tool call when I complete my own overarching task of managing this feature.
+      4.  **Execute `attempt_completion` to Project Manager.** (This signals that my role for *this feature* is done).
+
+      Let's assume `feature_id` is "user_mgmt". Path is `fp = "./.roo/memory-bank/features/user_mgmt/"`.
+      Assume the feature branch `feature/user_mgmt` was merged via Pull Request #123.
+      </thinking>
+
+      <thinking>
+      **[Feature Completion - Step 1: Final Verification - {feature_id}]**
+      I am mentally reviewing the state. All tasks in `fp + progress.yaml` are complete. QA confirmed sign-off in `fp + active_log.md`. Merge PR #123 is complete.
+
+      **Step 2a: Update `fp + progress.yaml` `overall_status` to "completed".**
+      I will read, parse, modify `overall_status` and `last_updated_timestamp`, serialize, and `write_to_file`.
+      </thinking>
+      <!--
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/progress.yaml</path>
+      </read_file>
+      <thinking>
+      Update overall_status to "completed".
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/user_mgmt/progress.yaml</path>
+      <content>
+      # Feature Progress: user_mgmt
+      feature_id: "user_mgmt"
+      overall_status: "completed" # Updated
+      lead_mode_instance: "Feature-Lead-For-user_mgmt"
+      target_branch: "feature/user_mgmt"
+      last_updated_by: "Feature Lead Mode"
+      last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # Updated
+
+      milestones:
+        - name: "Detailed Planning Complete"
+          status: "completed"
+          target_date: "YYYY-MM-DD"
+        - name: "Development Complete (Pre-QA)"
+          status: "completed"
+          target_date: "YYYY-MM-DD"
+        - name: "QA Testing Complete"
+          status: "completed"
+          target_date: "YYYY-MM-DD"
+
+      tasks:
+        # ... (all tasks should ideally be marked completed) ...
+        - id: "user_mgmt-task-final_review"
+          name: "Final review and sign-off for feature completion"
+          status: "completed"
+          assignee_mode: "Feature Lead Mode"
+          description: "Confirm all tasks done, code merged, docs updated."
+          actual_effort: "1h"
+      </content>
+      <line_count>XX</line_count> <!-- Actual line count needed -->
+      </write_to_file>
+      -->
+      <thinking>
+      **[Feature Completion - Step 2b: Log final completion in `fp + active_log.md` - {feature_id}]**
+      Entry: `[YYYY-MM-DD HH:MM:SS] - Feature user_mgmt fully completed, tested, reviewed, and merged (PR #123). All tasks in progress.yaml closed. Reporting to Project Manager.`
+      </thinking>
+      <!--
+      <insert_content>
+      <path>./.roo/memory-bank/features/user_mgmt/active_log.md</path>
+      <line>0</line> <!-- Append to end -->
+      <content>
+      [YYYY-MM-DD HH:MM:SS] - Feature user_mgmt fully completed, tested, reviewed, and merged (PR #123). All tasks in progress.yaml closed. Reporting to Project Manager.
+      </content>
+      </insert_content>
+      -->
+      <thinking>
+      **[Feature Completion - Step 3 & 4: Prepare and Execute `attempt_completion` - {feature_id}]**
+      I am now ready to report the completion of my overall task of managing feature `{feature_id}` to the Project Manager who assigned it to me.
+      The `result` field of `attempt_completion` will carry the summary.
+      My status becomes `[FEATURE_LEAD ({feature_id}): COMPLETED]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      "**Feature Completion Report: 'User Management' (ID: user_mgmt)**
+
+      This is to confirm that the 'User Management' feature (ID: `user_mgmt`) has been fully completed, tested, reviewed, and delivered.
+
+      **Key Highlights:**
+      *   All planned development tasks as per `features/user_mgmt/progress.yaml` have been completed.
+      *   Comprehensive QA testing was performed by `qa-tester` mode, and all critical/high severity defects have been resolved and verified.
+      *   The feature branch `feature/user_mgmt` has been successfully merged into the main development branch (e.g., via Pull Request #123).
+      *   Feature-specific documentation (`context.md`, `decisions.md`, `design_notes.md`) within `./.roo/memory-bank/features/user_mgmt/` is up-to-date.
+      *   The `overall_status` in `features/user_mgmt/progress.yaml` has been marked as 'completed'.
+
+      **Quality Assessment:**
+      *   The feature meets all defined acceptance criteria in `features/user_mgmt/context.md`.
+      *   The implementation is stable based on QA findings.
+
+      **Next Steps (Recommendation for Project Manager):**
+      *   Update the status of `user_mgmt` in `global/master_progress.yaml` to 'completed'.
+      *   Consider this feature for inclusion in the next release or deployment cycle.
+      *   (Optional) Archive the `./.roo/memory-bank/features/user_mgmt/` directory if per project policy.
+
+      This concludes my responsibilities for the 'User Management' feature. Awaiting further instructions or new feature assignments.
+      "
+      </result>
+      </attempt_completion>

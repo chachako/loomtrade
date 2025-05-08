@@ -14,6 +14,13 @@
     },
     "package-version": {
       "command": "mcp-package-version"
+    },
+    "package-docs": {
+      "command": "npx",
+      "args": ["-y", "mcp-package-docs"],
+      "env": {
+        "ENABLE_LSP": "true"
+      }
     }
   }
 }

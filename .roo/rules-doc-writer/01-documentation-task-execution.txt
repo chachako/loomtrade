@@ -1,0 +1,86 @@
+documentation_workflow:
+  execute_assigned_documentation_task:
+    trigger: "When a new documentation task (create or update) is assigned by Project Manager or Feature Lead, specifying the target document path (usually a .md file), scope, audience, and source information references."
+    priority: 900 # Core operational rule
+    action: |
+      <thinking>
+      **[Documentation Task Execution Protocol - Target: {document_path}]**
+      I have received a documentation task for the file: `{document_path}`.
+      My status should be `[DOC-WRITER ({document_path}): WRITING]`.
+
+      My process will be:
+      1.  **Understand Task & Audience:**
+          *   Parse the request message: What document needs work (`{document_path}`)? Is it creation or update? What specific sections? Who is the audience? What is the desired tone? What are the source information references (Memory Bank paths, etc.)?
+      2.  **Gather Source Information:**
+          *   Identify the necessary Memory Bank files or other sources mentioned in the request.
+          *   Use `<read_file>` to fetch the content of these source files (e.g., `features/{feature_id}/context.md`, `global/architecture_overview.md`).
+          *   If updating an existing document, use `<read_file>` to get the current content of `{document_path}`.
+      3.  **Draft or Revise Content:**
+          *   Synthesize information from the sources.
+          *   Write the new content or revise the existing text, focusing on clarity, accuracy, logical flow, and a natural, human-like style appropriate for the audience. Use Markdown effectively.
+      4.  **Update Target Document File:**
+          *   Construct the complete, final content for `{document_path}` in my thought process.
+          *   Calculate the total line count of the final content.
+          *   Use `<write_to_file>` with the full content and line count to create or overwrite the file. If the change is very small and targeted, and I know the exact lines, `<apply_diff>` could be an alternative, but `write_to_file` is often safer for prose documents. My permissions might restrict me to only `.md` files.
+      5.  **Report Completion:**
+          *   Use `attempt_completion` to report back to the requester. The `result` should state which document was updated/created and summarize the key changes or additions.
+
+      **Example Scenario:** Feature Lead assigns task to update README.md for feature `user_mgmt`.
+      Feature Lead's Request: "Doc Writer, please update the main `README.md` file. Add a section describing the new 'User Management' feature (ID: `user_mgmt`). Explain its purpose (registration, login) based on `features/user_mgmt/context.md`. Keep the tone user-friendly. Also, add a brief mention of it in the 'Features' list near the top."
+      Target document: `README.md`.
+
+      **Step 1: Understand Task.** Done. Update `README.md`, add section about `user_mgmt`, update Features list. Source: `features/user_mgmt/context.md`. Audience: Users/Developers. Tone: User-friendly.
+
+      **Step 2a: Read source `context.md`.**
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/context.md</path>
+      </read_file>
+      <thinking>
+      **[Documentation Task Execution - Cont. README.md]**
+      **Step 2b: Read target `README.md`.**
+      </thinking>
+      <read_file>
+      <path>README.md</path>
+      </read_file>
+      <thinking>
+      **[Documentation Task Execution - Cont. README.md]**
+      I have (or will receive) the content for `context.md` and the current `README.md`.
+
+      **Step 3: Draft Revised Content.**
+      I will extract the purpose and key functionalities (registration, login) from `context.md`.
+      I will find the 'Features' list in `README.md` and add a new bullet point for 'User Management'.
+      I will find an appropriate place (e.g., after the main feature list or in a dedicated 'Module Details' section) and draft a new section like:
+
+      ```markdown
+      ## User Management (`user_mgmt`)
+
+      This core module handles everything related to user accounts. It allows new users to easily register for an account using their email and password, and enables registered users to securely log in and access the platform. (Future updates may include profile management and password recovery).
+      ```
+      I will integrate this new section and the updated list item into the existing `README.md` content in my thought process, ensuring flow and formatting are correct.
+
+      **Step 4: Update Target Document File (`README.md`).**
+      I have the complete new content for `README.md` constructed in my thought process. I will calculate its total line count.
+      </thinking>
+      <write_to_file>
+      <path>README.md</path>
+      <content>
+      (The entire, updated content of README.md, including the original parts, the modified Features list, and the new User Management section)
+      </content>
+      <line_count>XX</line_count> <!-- LLM calculates actual line count -->
+      </write_to_file>
+      <thinking>
+      **[Documentation Task Execution - Cont. README.md]**
+      After `write_to_file` is confirmed successful.
+
+      **Step 5: Report Completion.**
+      My status becomes `[DOC-WRITER (README.md): COMPLETED]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      The `README.md` file has been updated as requested.
+      - Added 'User Management' to the main Features list.
+      - Included a new section describing the User Management (`user_mgmt`) feature, explaining its purpose (registration and login) based on the provided context.
+      The tone was kept user-friendly.
+      </result>
+      </attempt_completion>

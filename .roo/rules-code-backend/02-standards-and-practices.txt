@@ -1,0 +1,200 @@
+# Backend Development Standards, Practices, and Dependency Management
+#
+# This document outlines mandatory standards, recommended practices,
+# and required dependency management protocols for backend code.
+# It should be referenced during task execution.
+
+general_guidelines:
+  title: "General Coding Standards and Best Practices"
+  description: "Ensure code is readable, maintainable, performant, secure, and robust."
+  principles:
+    - "Follow SOLID principles in service and module design."
+    - "Adhere to the DRY (Don't Repeat Yourself) principle; create reusable services and utilities."
+    - "Write code that is self-explanatory; use comments primarily for complex logic, rationale, or API contracts (if not using a dedicated spec)."
+    - "Prioritize consistency in naming, structure, and patterns throughout the backend codebase."
+    - "Implement comprehensive error handling and logging."
+
+code_style_and_formatting:
+  linter_formatter:
+    rule: "Appropriate linters and formatters MUST be used (e.g., ESLint/Prettier for Node.js, Black/Flake8/Ruff for Python). Adhere strictly to the project's configurations."
+    note: "Resolve all reported errors/warnings before considering a task complete."
+  indentation:
+    rule: "Use 2 spaces (for Node.js/JS/TS) or 4 spaces (common for Python) as defined by project standard. Tabs are strictly prohibited." # Adjust based on language
+  naming_conventions: # Adjust based on language conventions (e.g., Python uses snake_case)
+    variables_functions: "Use camelCase (Node.js/TS) or snake_case (Python) (e.g., `getUserProfile`, `calculate_order_total`)."
+    constants: "Use UPPER_SNAKE_CASE (e.g., `DATABASE_URL`, `MAX_CONNECTIONS`)."
+    classes: "Use PascalCase (e.g., `UserService`, `OrderController`)."
+    files: "Use kebab-case or snake_case based on project convention (e.g., `user-service.js`, `order_controller.py`)."
+  file_structure:
+    rule: "Follow the established project directory structure (e.g., routes, controllers, services, models, utils). If unsure, ask the Feature Lead or refer to existing structure."
+
+documentation_and_comments:
+  language:
+    rule: "All comments, documentation (e.g., JSDoc, Python Docstrings), logs, and commit messages MUST be written in English."
+  api_documentation: # If not using separate spec files like OpenAPI
+    rule: "Public API endpoints MUST have documentation comments (e.g., JSDoc for Node.js, Docstrings for Python/Flask/FastAPI) explaining purpose, parameters, request body structure, response structure (including status codes), and potential errors."
+  function_class_documentation:
+    rule: "Key public functions, classes, and complex internal logic should have documentation explaining their purpose, parameters, return values, and any side effects or exceptions."
+  inline_comments:
+    rule: "Use inline comments sparingly for complex algorithms, non-obvious logic, or critical business rules."
+  todo_fixme_notes:
+    rule: "Use `# TODO:` or `// TODO:` for planned work. Use `# FIXME:` or `// FIXME:` for known issues needing fixes. Include description and task ID if available."
+
+technology_stack_and_practices:
+  framework: # Example: Assuming Node.js/Express or Python/FastAPI - Adjust
+    rule: "Adhere strictly to the idioms and best practices of the primary backend framework (e.g., Express middleware patterns, FastAPI dependency injection and async patterns)."
+  api_design:
+    rule: "Follow RESTful principles or the project's chosen API style (e.g., GraphQL). Use standard HTTP verbs correctly. Implement consistent URL naming conventions. Use appropriate HTTP status codes for responses."
+    versioning: "Follow the project's API versioning strategy (e.g., URL path `/v1/`, Accept header)."
+    request_response_format: "Use JSON for request and response bodies unless specified otherwise. Follow consistent naming conventions (e.g., camelCase) for JSON keys."
+  database_interaction:
+    orm_query_builder: # If applicable
+      rule: "Utilize the project's designated ORM (e.g., Prisma, TypeORM, SQLAlchemy, Django ORM) or query builder correctly and efficiently."
+      best_practice: "Avoid N+1 query problems. Use transactions for operations requiring atomicity. Understand lazy vs. eager loading."
+    raw_sql: # If used
+      rule: "If writing raw SQL queries, ensure they are parameterized to prevent SQL injection vulnerabilities. Keep queries readable and maintainable."
+    migrations: # Coordination might be needed
+      rule: "Database schema changes MUST be handled through migration files using the project's migration tool (e.g., Prisma Migrate, Alembic, Django Migrations). Ensure migrations are reversible where possible."
+      note: "Creating or running migrations might be a separate task assigned by the Feature Lead or handled by a specific role/process."
+  asynchronous_operations:
+    rule: "Use async/await (Node.js, Python 3.7+) or appropriate asynchronous patterns (callbacks, promises) correctly. Avoid blocking the event loop (Node.js)."
+    background_jobs: # If applicable
+      rule: "Use the project's designated background job processing system (e.g., Celery, BullMQ, Kafka consumers) for long-running or deferrable tasks."
+  error_handling_and_logging:
+    rule: "Implement robust error handling. Catch specific errors where possible. Avoid swallowing exceptions silently. Return meaningful error responses in APIs (e.g., consistent JSON error format)."
+    logging:
+      rule: "Use the project's standard logging library (e.g., Winston, Pino, Python's logging module). Log important events, errors, and relevant context information. Avoid logging sensitive data (passwords, keys)."
+      levels: "Use appropriate log levels (e.g., DEBUG, INFO, WARN, ERROR)."
+
+testing:
+  unit_tests:
+    rule: "Business logic in services, utility functions, and complex algorithms MUST have unit tests. Mock external dependencies (database, external APIs)."
+    framework: "Use the project's standard backend testing framework (e.g., Jest, Mocha for Node.js; Pytest for Python)."
+  integration_tests:
+    rule: "API endpoints MUST have integration tests covering common success and error scenarios. These tests may interact with a test database or mocked external services."
+  test_clarity:
+    rule: "Test names should describe the scenario and expected outcome. Tests should be readable and maintainable."
+
+version_control:
+  branching:
+    rule: "All work MUST be done on the feature branch specified by the Feature Lead."
+  commits:
+    rule: "Make atomic commits with clear, descriptive messages following the Conventional Commits specification (all lowercase). Reference the task ID. Example: 'feat(api): add user registration endpoint (user_mgmt-task-002)'"
+    best_practice: "Commit frequently. Ensure each commit represents a logical unit of work."
+
+security:
+  input_validation:
+    rule: "ALL input from external sources (API requests, message queues, etc.) MUST be validated and sanitized on the server-side. Use validation libraries (e.g., Zod, class-validator, Pydantic) where appropriate."
+  authentication_authorization:
+    rule: "Ensure proper authentication and authorization checks are implemented for all protected endpoints or resources, following project standards (e.g., verifying JWT, checking roles/permissions)."
+  dependency_security:
+    rule: "Be mindful of backend dependencies added. Use reputable libraries. Keep dependencies updated to patch known vulnerabilities (see Dependency Management Protocols)."
+  secrets_management:
+    rule: "NEVER commit secrets (API keys, database passwords, etc.) directly into the codebase. Use environment variables or a dedicated secrets management solution as defined by the project."
+
+performance:
+  optimization:
+    rule: "Write efficient code, especially for database queries and computationally intensive tasks. Consider caching strategies where appropriate (e.g., using Redis)."
+    profiling: "Profile and optimize only when necessary based on identified bottlenecks or performance requirements."
+
+# --- Dependency Management Protocols ---
+# These define specific procedures involving tools for managing backend dependencies.
+
+dependency_management_protocols:
+
+  documentation_lookup:
+    # This protocol defines WHEN and HOW to look up library documentation using MCP tools.
+    trigger_conditions:
+      - "When planning to use a specific external library/package (e.g., npm, PyPI, Maven, Go module) for the first time or for a non-trivial new feature."
+      - "When encountering errors or uncertainty related to the usage of a specific external backend library."
+      - "When asked by the Feature Lead or user to research a library's best practices or specific usage pattern."
+    priority: 700
+    required_action: |
+      <thinking>
+      **[Protocol Triggered: Library Documentation Lookup]**
+      I need information about an external backend library ('<Identify Library Name>') to ensure correct usage, implement best practices, or resolve an issue.
+      **I MUST consult the latest documentation using MCP servers (`context7`, `package-docs`) before proceeding.**
+
+      Plan:
+      1.  **Identify Library, Context & Ecosystem:** Determine the library name (e.g., 'express', 'fastapi', 'sqlalchemy'), the specific need, and the ecosystem (e.g., 'npm', 'python', 'java', 'go').
+      2.  **Choose MCP Tool:**
+          *   For **broad topic understanding**, use `context7` (if available): Resolve ID, then get docs.
+          *   For **specific lookup/search**, use `package-docs` (if available): Use appropriate tool like `describe_npm_package`, `describe_pypi_package`, `search_package_docs` specifying the language/ecosystem.
+      3.  **Analyze & Apply:** Use fetched info to generate/correct code following documented patterns, resolve errors, or answer questions.
+      </thinking>
+      <!-- Example Tool Call Placeholder (Python library example) -->
+      <!--
+      <use_mcp_tool>
+        <server_name>package-docs</server_name>
+        <tool_name>describe_pypi_package</tool_name>
+        <arguments>{"package": "fastapi"}</arguments>
+      </use_mcp_tool>
+      -->
+
+  dependency_version_check:
+    # This protocol defines WHEN and HOW to check dependency versions using MCP tools.
+    trigger_conditions:
+      - "When adding a new external library/package to the project's dependency file (e.g., `package.json`, `requirements.txt`, `pyproject.toml`, `pom.xml`, `go.mod`)."
+      - "When updating an existing dependency in the dependency file."
+      - "When asked by the Feature Lead or user to check for outdated dependencies."
+    priority: 500
+    required_action: |
+      <thinking>
+      **[Protocol Triggered: Dependency Version Check]**
+      The task involves adding/updating backend dependencies, or a check was requested.
+      **I MUST use the `package-version` MCP server (if available) to check versions.**
+
+      Plan:
+      1.  **Identify Dependency File:** Locate the correct file (e.g., `requirements.txt`, `pyproject.toml` for Python; `package.json` for Node.js).
+      2.  **Read Dependency File:** Use `<read_file>` to get current dependencies.
+      3.  **Prepare MCP Tool Call:** Extract dependencies. Select the appropriate tool from `package-version` server based on file type (e.g., `check_python_versions`, `check_pyproject_versions`, `check_npm_versions`).
+      4.  **Execute MCP Tool Call.**
+      5.  **Analyze Results:** Review for outdated packages.
+      6.  **Apply Changes (If Adding/Updating):** If adding/updating, modify the dependency file using the check results and project versioning policy. Use read-modify-`write_to_file`.
+      7.  **Inform Feature Lead:** Report results and changes.
+      </thinking>
+      <!-- Example Tool Call Placeholder (Python requirements.txt example) -->
+      <!--
+      <read_file>
+        <path>./requirements.txt</path>
+      </read_file>
+      <thinking>Extracted requirements: ["fastapi==0.100.0", "uvicorn[standard]>=0.20.0"]</thinking>
+      <use_mcp_tool>
+        <server_name>package-version</server_name>
+        <tool_name>check_python_versions</tool_name>
+        <arguments>
+        {
+          "requirements": ["fastapi==0.100.0", "uvicorn[standard]>=0.20.0"]
+        }
+        </arguments>
+      </use_mcp_tool>
+      -->
+
+  auto_install_dependencies:
+    # This protocol defines the automatic installation trigger after dependency file changes.
+    trigger_conditions:
+      - "Immediately after this mode successfully modifies a backend dependency file (e.g., `package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`)."
+    priority: 100
+    required_action: |
+      <thinking>
+      **[Protocol Triggered: Auto-Install Dependencies]**
+      I have just successfully modified a backend dependency file.
+      **I SHOULD now execute the appropriate command to install/update dependencies.**
+
+      Plan:
+      1.  **Identify Package Manager & Command:**
+          - If `package.json` changed: `pnpm install` (assuming pnpm)
+          - If `requirements.txt` changed: `pip install -r requirements.txt`
+          - If `pyproject.toml` changed: `poetry install` (if Poetry project) or `pip install .`
+          - If `go.mod` changed: `go mod tidy` then `go mod download`
+          (Determine based on file type or project convention). Let's assume Python `requirements.txt`.
+      2.  **Identify Working Directory:** Directory containing the modified file. Assume project root (`.`) or specific backend directory (`./backend/`). Assume `./backend/`.
+      3.  **Construct Command:** `pip install -r requirements.txt`
+      4.  **Execute Command:** Use `execute_command`.
+      5.  **Inform Feature Lead:** Mention command execution in final `attempt_completion` for the main task.
+      </thinking>
+      <execute_command>
+      <command>pip install -r requirements.txt</command>
+      <cwd>./backend/</cwd> <!-- Specify relevant directory -->
+      </execute_command>
+      <thinking>Command execution requested. I will mention this in my final report for the main task.</thinking>

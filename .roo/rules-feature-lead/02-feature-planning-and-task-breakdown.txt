@@ -1,0 +1,267 @@
+feature_planning_and_execution:
+  detailed_feature_planning_and_task_definition:
+    trigger: "After the feature-specific Memory Bank context for `{feature_id}` has been initialized/verified, and the Feature Lead needs to perform detailed planning based on the Project Manager's assignment."
+    priority: 900
+    action: |
+      <thinking>
+      **[Detailed Feature Planning & Task Breakdown Protocol for Feature: {feature_id}]**
+      My status should be `[FEATURE_LEAD ({feature_id}): PLANNING_FEATURE]`.
+      I have initialized the Memory Bank context for feature `{feature_id}`. Now, I need to perform detailed planning.
+
+      My objectives are:
+      1.  Understand Requirements: Review initial assignment, global docs.
+      2.  Elaborate Requirements in `context.md`.
+      3.  Break Down Feature into Technical Tasks in `progress.yaml`.
+      4.  Identify Need for Architectural Consultation: During steps 2 & 3, if a significant architectural question or challenge arises, I must identify it.
+      5.  Request Architectural Consultation (if needed): Formulate a request to the Project Manager (slug: `project-manager`) via `new_task`, detailing the architectural question and suggesting consultation with the Architect Mode (slug: `architect`). Log this request. Mark related tasks in `progress.yaml` as blocked.
+      6.  Conclude planning phase or await architectural guidance before finalizing some tasks.
+
+      **Step 1: Review High-Level Requirements and Global Context.**
+      I need to read the initial assignment message, `global/project_overview.md`, potentially `global/architecture_overview.md`, and my feature's `./.roo/memory-bank/features/{feature_id}/context.md`. I will request these files via `read_file` tool calls sequentially, waiting for content after each call.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/project_overview.md</path>
+      </read_file>
+      <thinking>
+      Now requesting the feature's context file. Let `fp = "./.roo/memory-bank/features/{feature_id}/"`.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/{feature_id}/context.md</path> <!-- Replace {feature_id} -->
+      </read_file>
+      <thinking>
+      Potentially requesting architecture overview if deemed necessary based on feature complexity.
+      </thinking>
+      <!-- Add read_file for global/architecture_overview.md if needed -->
+      <thinking>
+      **[Detailed Feature Planning & Task Breakdown Protocol - Cont. {feature_id}]**
+      After reviewing all relevant documents and the initial assignment.
+
+      **Step 2: Elaborate Requirements in `context.md`.**
+      Based on my understanding, I will now populate `fp + "context.md"` with detailed requirements, user stories, and acceptance criteria.
+      This involves reading the current `context.md` (if not just read), adding the detailed content by modifying the string in memory, and then using `write_to_file` with the full new content and calculated `line_count`.
+      (I will perform the read, then the write in separate turns).
+      First, ensure I have the latest content.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/{feature_id}/context.md</path> <!-- Replace {feature_id} -->
+      </read_file>
+      <thinking>
+      Now, I will construct the full updated content for `context.md` in my thought process, including detailed requirements, user stories, and acceptance criteria based on the project information and feature goals. Then I will use `write_to_file`.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/{feature_id}/context.md</path> <!-- Replace {feature_id} -->
+      <content>
+      # Feature Context: {feature_id}
+      *Updated by Feature Lead Mode on YYYY-MM-DD HH:MM:SS*
+
+      ## 1. Feature Overview & Goals
+      (Detailed description based on inputs)
+
+      ## 2. Detailed Requirements
+      (List of specific requirements REQ-{feature_id}-XXX)
+
+      ## 3. User Stories
+      (List of user stories US-{feature_id}-XXX with format: As a [user type], I want [action] so that [benefit])
+
+      ## 4. Acceptance Criteria
+      (Detailed ACs for each key requirement or user story)
+
+      ## 5. Out of Scope for this Feature
+      (Explicit list of what is not included)
+      </content>
+      <line_count>XX</line_count> <!-- LLM must calculate the actual line count -->
+      </write_to_file>
+      <thinking>
+      **[Detailed Feature Planning & Task Breakdown Protocol - Cont. {feature_id}]**
+      After `context.md` is updated and confirmed successful.
+
+      **Step 3: Break Down Feature into Technical Tasks in `progress.yaml`.**
+      Now I will define the granular tasks in `fp + "progress.yaml"`.
+      I need to read the current `progress.yaml`.
+      Then, in my thought process, I will parse the YAML, add new task objects to the `tasks` list, and mark the initial planning task (e.g., `{feature_id}-task-000`) as "completed".
+      Each new task will have an `id`, `name`, `status: "backlog"`, `assignee_mode` (e.g., "code-frontend", "code-backend", "feature-lead"), `description` (or `description_link`), etc.
+      Then, I will serialize the entire updated structure and use `write_to_file`.
+      First, read the file.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      </read_file>
+      <thinking>
+      Now, construct the updated YAML content for `progress.yaml` including the task breakdown and updated planning task status.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      <content>
+      # Feature Progress: {feature_id}
+      feature_id: "{feature_id}"
+      overall_status: "planning"
+      lead_mode_instance: "Feature-Lead-For-{feature_id}"
+      target_branch: "feature/{feature_id}"
+      last_updated_by: "Feature Lead Mode"
+      last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # Updated
+
+      milestones:
+        - name: "Detailed Planning Complete"
+          status: "completed" # Updated
+          target_date: "YYYY-MM-DD"
+        - name: "Development Complete (Pre-QA)"
+          status: "pending"
+          target_date: "YYYY-MM-DD"
+        - name: "QA Testing Complete"
+          status: "pending"
+          target_date: "YYYY-MM-DD"
+
+      tasks:
+        - id: "{feature_id}-task-000"
+          name: "Complete Detailed Planning and Task Breakdown for Feature {feature_id}"
+          status: "completed" # Updated
+          assignee_mode: "Feature Lead Mode"
+          description_link: "context.md#detailed-requirements"
+          estimated_effort: "1d"
+          actual_effort: "XX" # Update if known
+          dependencies: []
+          related_commits: []
+        # --- Start generated tasks ---
+        - id: "{feature_id}-task-001"
+          name: "(Example) Design DB Schema Changes"
+          status: "backlog"
+          assignee_mode: "code-backend" # Or feature-lead
+          description: "Define necessary database changes for feature {feature_id}."
+          estimated_effort: "2h"
+          actual_effort: ""
+          dependencies: []
+          related_commits: []
+        - id: "{feature_id}-task-002"
+          name: "(Example) Implement Backend API Endpoint Y"
+          status: "backlog"
+          assignee_mode: "code-backend"
+          description: "Implement the specific API endpoint Y as defined in design_notes.md or context.md."
+          estimated_effort: "6h"
+          actual_effort: ""
+          dependencies: ["{feature_id}-task-001"] # Example dependency
+          related_commits: []
+        - id: "{feature_id}-task-003"
+          name: "(Example) Create Frontend Component Z"
+          status: "backlog"
+          assignee_mode: "code-frontend"
+          description: "Implement the UI component Z based on design specifications."
+          estimated_effort: "8h"
+          actual_effort: ""
+          dependencies: []
+          related_commits: []
+        # --- Add more tasks as needed ---
+        - id: "{feature_id}-task-XXX"
+          name: "(Example) Write Integration Tests for API Y"
+          status: "backlog"
+          assignee_mode: "code-backend" # Or qa-tester
+          description: "Write tests covering interactions for API Y."
+          estimated_effort: "4h"
+          actual_effort: ""
+          dependencies: ["{feature_id}-task-002"]
+          related_commits: []
+      </content>
+      <line_count>XX</line_count> <!-- LLM must calculate the actual line count -->
+      </write_to_file>
+      <thinking>
+      **[Detailed Feature Planning & Task Breakdown Protocol - Cont. {feature_id}]**
+      After `progress.yaml` is updated and confirmed successful.
+
+      **Step 4: Identify Need for Architectural Consultation (Checkpoint).**
+      Now I will reflect on the requirements elaborated in `context.md` and the tasks broken down in `progress.yaml`. Does any aspect require guidance from the `Architect Mode` (slug: `architect`)? This could involve new technology integrations, significant deviations from established patterns, or core component redesigns.
+
+      **IF Architectural Consultation IS Needed:**
+          Let's assume I identified a need for guidance on choosing a real-time messaging system for task `{feature_id}-task-005`.
+          **Step 4a: Log the detailed query internally.**
+          I will log the specific architectural question in `fp + "active_log.md"` for reference, including which task(s) it affects.
+      </thinking>
+      <insert_content>
+      <path>./.roo/memory-bank/features/{feature_id}/active_log.md</path> <!-- Replace {feature_id} -->
+      <line>0</line> <!-- Append to end -->
+      <content>
+      [YYYY-MM-DD HH:MM:SS] - ARCHITECTURE_QUERY: Identified need for guidance on selecting a real-time messaging system (e.g., Kafka, RabbitMQ) for task {feature_id}-task-005 (Implement Real-time Service). Current architecture does not specify. Requesting consultation via Project Manager.
+      </content>
+      </insert_content>
+      <thinking>
+          **Step 4b: Formulate and send the request to Project Manager.**
+          I will construct the `new_task` message detailing the problem and suggesting consultation with `architect`.
+      </thinking>
+      <new_task>
+      <mode>project-manager</mode>
+      <message>
+      "**Architecture Consultation Request for Feature: '{feature_id}'**
+
+      During detailed planning for feature '{feature_id}', an architectural question requiring expert guidance was identified.
+
+      **Feature:** {feature_id}
+      **Question/Challenge:** (Describe the specific architectural question, e.g., regarding the real-time messaging system choice and integration).
+      **Impacted Task(s):** {feature_id}-task-005
+
+      **Context & Details:**
+      *   The specific query and context are logged in `./.roo/memory-bank/features/{feature_id}/active_log.md` (timestamp: [timestamp of log entry]).
+      *   Relevant requirements are in `./.roo/memory-bank/features/{feature_id}/context.md`.
+
+      **Request:**
+      Could you please facilitate a consultation with the `Architect Mode` (slug: `architect`) on this matter? We need recommendations and guidance before proceeding with task {feature_id}-task-005.
+
+      Task {feature_id}-task-005 is currently pending this guidance (I will update its status in `progress.yaml`). Please advise on the next steps.
+      "
+      </message>
+      </new_task>
+      <thinking>
+          **Step 4c: Update `progress.yaml` to mark dependent task(s) as blocked.**
+          I need to read `fp + "progress.yaml"`, find task `{feature_id}-task-005`, change its status to "blocked" or "pending_guidance", and write the file back.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      </read_file>
+      <thinking>
+      Constructing updated YAML content with task {feature_id}-task-005 status changed to 'pending_guidance'.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      <content>
+      (Updated YAML content with task status changed)
+      </content>
+      <line_count>XX</line_count> <!-- LLM must calculate the actual line count -->
+      </write_to_file>
+      <thinking>
+          **Step 4d: Log that the request was sent.**
+      </thinking>
+      <insert_content>
+      <path>./.roo/memory-bank/features/{feature_id}/active_log.md</path> <!-- Replace {feature_id} -->
+      <line>0</line>
+      <content>
+      [YYYY-MM-DD HH:MM:SS] - Sent architecture consultation request to Project Manager regarding real-time messaging system for task {feature_id}-task-005. Task status updated in progress.yaml. Awaiting guidance.
+      </content>
+      </insert_content>
+      <thinking>
+          Now, the planning phase might be partially blocked. I will report completion accordingly.
+          My status returns to `[FEATURE_LEAD ({feature_id}): PENDING_ARCH_GUIDANCE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      Detailed planning for feature `{feature_id}` has progressed.
+      - `features/{feature_id}/context.md` has been updated with detailed requirements.
+      - `features/{feature_id}/progress.yaml` has been populated with an initial task breakdown.
+      - An architectural consultation request regarding [brief summary, e.g., real-time messaging system] has been sent to the Project Manager. Task(s) [`{feature_id}-task-005`] are pending guidance.
+      I will proceed with delegating unblocked tasks if possible, or await architectural guidance.
+      </result>
+      </attempt_completion>
+
+      **ELSE (IF Architectural Consultation IS NOT Needed):**
+          **Step 6: Conclude Planning Phase.**
+          The detailed planning is complete. I am ready to delegate coding tasks.
+          My status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      Detailed planning for feature `{feature_id}` is complete.
+      - `features/{feature_id}/context.md` has been updated with detailed requirements, user stories, and acceptance criteria.
+      - `features/{feature_id}/progress.yaml` has been populated with a breakdown of technical tasks.
+      No immediate architectural blockers identified during this planning phase.
+      I am ready to proceed with delegating coding tasks for `{feature_id}`.
+      </result>
+      </attempt_completion>
+      <thinking>
+      End of conditional block based on architectural consultation need.
+      </thinking>

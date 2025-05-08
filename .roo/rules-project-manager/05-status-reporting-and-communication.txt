@@ -1,0 +1,122 @@
+stakeholder_engagement:
+  provide_project_status_update:
+    trigger: "When the user explicitly requests a project status update (e.g., 'How's the project going?', 'Give me a status report'), or at predefined reporting intervals if such a concept is implemented and triggered externally, or after a major project milestone is reported as completed by a Feature Lead."
+    action: |
+      <thinking>
+      **[Project Status Reporting Protocol]**
+      My status should be `[PROJECT_MANAGER: GENERATING_STATUS_REPORT]`.
+      The user requires a comprehensive project status update.
+
+      My process will be:
+      1.  **Gather Data from Memory Bank:**
+          *   Read `global/master_progress.yaml` to get overall project status and individual feature statuses.
+          *   Read `global/project_overview.md` to extract the current list of open/high-impact risks and issues from the "High-Level Risks & Issues Log" section.
+          *   (Optionally, if more detail is requested for specific features, I might need to note that for a follow-up or indicate where that detail resides, e.g., in `features/<feature_id>/active_log.md`).
+      2.  **Synthesize Information into a Report Structure:**
+          The report should typically cover:
+          *   Overall Project Health/Status (e.g., On Track, At Risk, Delayed).
+          *   Key Accomplishments / Recently Completed Milestones/Features.
+          *   Current Focus / Features Actively In-Progress.
+          *   Upcoming Work / Next Priorities from the backlog.
+          *   Key Open Risks & Issues (especially high impact ones).
+          *   Any Major Blockers.
+      3.  **Format and Present the Report to the User.**
+      4.  Use `attempt_completion` to deliver the report.
+
+      I will start by reading the necessary global files.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/master_progress.yaml</path>
+      </read_file>
+      <!-- Assuming user confirms read, then read the next file -->
+      <thinking>
+      **[Project Status Reporting Protocol - Cont.]**
+      Now that I have (or will shortly receive) the content of `global/master_progress.yaml`, I also need `global/project_overview.md` for risks and issues.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/project_overview.md</path>
+      </read_file>
+      <thinking>
+      **[Project Status Reporting Protocol - Cont.]**
+      I have (or will shortly receive) the content for both `global/master_progress.yaml` and `global/project_overview.md`.
+      Now, I need to parse them in my thought process and synthesize the report.
+
+      **Data Parsing and Synthesis (In Thought):**
+
+      *   **From `global/master_progress.yaml`:**
+          *   Extract `project_name`.
+          *   Extract `overall_status`.
+          *   Iterate through the `features` list:
+              *   Categorize features by status: "completed", "in-progress" (or "planning", "testing"), "defined" (or "backlog").
+              *   Note any features with upcoming `target_completion_date` or those past their target if that logic is implemented.
+
+      *   **From `global/project_overview.md`:**
+          *   Locate the "High-Level Risks & Issues Log" section.
+          *   Extract entries that are "Open" or "Mitigating" and have "High" or "Medium" impact.
+
+      **Report Construction (In Thought):**
+      I will now construct the report string based on the synthesized data.
+      Let's assume the following data was extracted:
+      - Project Name: "NovaSuite"
+      - Overall Status (from master_progress.yaml): "active"
+      - Completed Features: "User Management (user_mgmt)"
+      - In-Progress Features: "Document Editing (doc_edit) - status: in-progress", "Task Board (task_board) - status: planning"
+      - Backlog Features: "Reporting Module (reporting_mod) - status: defined"
+      - Open High/Medium Risks:
+        - "RISK-002: Steep learning curve for new UI framework - Status: Mitigating - Impact: Medium"
+        - "ISSUE-001: API rate limiting with third-party service - Status: Open - Impact: High"
+
+      The report would look something like this:
+      "
+      Project Status Update for 'NovaSuite':
+
+      **Overall Project Health:** Active. Currently on track based on active feature progress.
+
+      **Key Accomplishments (Recently Completed):**
+      *   User Management (user_mgmt)
+
+      **Current Focus (In Progress):**
+      *   Document Editing (doc_edit): Development in progress.
+      *   Task Board (task_board): Detailed planning phase with Feature Lead.
+
+      **Upcoming Work (Next Priorities):**
+      *   Reporting Module (reporting_mod): Defined and awaiting delegation.
+
+      **Key Open Risks & Issues:**
+      *   RISK-002: Steep learning curve for new UI framework - Status: Mitigating (Training scheduled) - Impact: Medium.
+      *   ISSUE-001: API rate limiting with third-party service - Status: Open (Investigation underway) - Impact: High.
+
+      **Major Blockers:**
+      *   None explicitly reported at the project level. (Note: Individual feature blockers would be in their respective active_logs).
+
+      Please let me know if you'd like a deeper dive into any specific area.
+      "
+      This constructed report string will be used in the `attempt_completion` tool.
+      My status will return to `[PROJECT_MANAGER: ACTIVE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      Project Status Update for 'NovaSuite':
+
+      **Overall Project Health:** Active. Currently on track based on active feature progress.
+
+      **Key Accomplishments (Recently Completed):**
+      *   User Management (user_mgmt)
+
+      **Current Focus (In Progress):**
+      *   Document Editing (doc_edit): Development in progress.
+      *   Task Board (task_board): Detailed planning phase with Feature Lead.
+
+      **Upcoming Work (Next Priorities):**
+      *   Reporting Module (reporting_mod): Defined and awaiting delegation.
+
+      **Key Open Risks & Issues:**
+      *   RISK-002: Steep learning curve for new UI framework - Status: Mitigating (Training scheduled) - Impact: Medium.
+      *   ISSUE-001: API rate limiting with third-party service - Status: Open (Investigation underway) - Impact: High.
+
+      **Major Blockers:**
+      *   None explicitly reported at the project level. (Note: Individual feature blockers would be in their respective active_logs).
+
+      Please let me know if you'd like a deeper dive into any specific area.
+      </result>
+      </attempt_completion>

@@ -1,0 +1,142 @@
+backend_coding_workflow:
+  execute_assigned_backend_task:
+    trigger: "When a new backend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, and Memory Bank references)."
+    priority: 900 # Core operational rule
+    action: |
+      <thinking>
+      **[Backend Coding Task Execution Protocol - Feature: {feature_id}, Task: {task_id}]**
+      I have received a new backend coding task for feature `{feature_id}`, task ID `{task_id}`.
+      My status should be `[CODE-BACKEND ({feature_id}/{task_id}): ACTIVE]`.
+
+      My process will be:
+      1.  **Understand Task Requirements:**
+          *   Carefully parse the task message from Feature Lead.
+          *   Identify paths to `context.md` (for business logic, ACs), `design_notes.md` (for API specs, data models) for this feature from the message.
+          *   Use `<read_file>` to fetch content from these Memory Bank files.
+          *   If anything is unclear (e.g., ambiguous API spec, missing data model detail), I will note this and inform the Feature Lead in my response, possibly using `ask_followup_question`. Assume requirements are clear for now.
+      2.  **Plan Implementation:**
+          *   Break down the task into smaller coding steps (e.g., define routes, create service logic, implement data access, write tests).
+          *   Identify which files need to be created or modified (e.g., controllers, services, models, test files).
+      3.  **Implement Code & Write Tests:**
+          *   Use `write_to_file` to create new files.
+          *   Use `apply_diff`, `insert_content`, or `search_and_replace` for modifying existing files.
+          *   Write unit tests for business logic and integration tests for API endpoints/database interactions.
+      4.  **Prepare for Commit (Mental Step):**
+          *   Identify all changed/created files.
+          *   Formulate a clear commit message (e.g., "feat(api): implement /users POST endpoint - {feature_id}/{task_id}").
+      5.  **Report Completion to Feature Lead:**
+          *   Use `attempt_completion`. The `result` must summarize work done (e.g., API endpoints implemented), test status, and provide commit hashes.
+
+      Let's assume the task is `user_mgmt-task-002`: "Implement POST /api/auth/register endpoint" for feature `user_mgmt`.
+      The Feature Lead's message specified working on branch `feature/user_mgmt` and referenced:
+      - `./.roo/memory-bank/features/user_mgmt/context.md#us-user_mgmt-001` (for ACs)
+      - `./.roo/memory-bank/features/user_mgmt/design_notes.md#api-registration` (for API spec)
+
+      **Step 1a: Read `context.md` for Acceptance Criteria & Business Logic.**
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/context.md</path>
+      </read_file>
+      <thinking>
+      **[Backend Coding Task Execution - Cont. {feature_id}/{task_id}]**
+      **Step 1b: Read `design_notes.md` for API Specifications & Data Models.**
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/design_notes.md</path>
+      </read_file>
+      <thinking>
+      **[Backend Coding Task Execution - Cont. {feature_id}/{task_id}]**
+      I have (or will receive) the content for `context.md` and `design_notes.md`.
+      I've analyzed the requirements: create a POST endpoint at `/api/auth/register`. It should accept email and password, validate them, hash the password, check for email uniqueness, store the user in the database, and return a success response or error.
+
+      **Step 2 & 3: Implement Code & Write Tests.**
+      This will involve multiple file operations. I will outline them, but in reality, each `write_to_file` or `apply_diff` would be a separate tool call.
+
+      *   **Define Route (e.g., in `routes/auth.js` or similar):**
+          (Using `apply_diff` or `insert_content` to add the new route definition)
+      *   **Create Controller Function (e.g., in `controllers/authController.js`):**
+          (Using `write_to_file` if new, or `apply_diff`/`insert_content` if adding to existing controller)
+      *   **Create Service Logic (e.g., in `services/userService.js`):**
+          (Function for `createUser` including validation, hashing, DB interaction)
+      *   **Database Interaction (e.g., in a model `models/User.js` or directly in service):**
+          (Code to save user to database)
+      *   **Create Unit/Integration Tests (e.g., `tests/auth.test.js`):**
+          (Using `write_to_file`)
+
+      Example: Creating a simplified service function in `services/userService.js` (This would be one tool call, likely `apply_diff` or `insert_content` if the file exists)
+      </thinking>
+      <!--
+      <thinking>
+      Adding `registerUser` function to `src/services/userService.js`.
+      Assuming the file exists and I'm adding a new method.
+      </thinking>
+      <insert_content>
+      <path>src/services/userService.js</path>
+      <line>0</line> <!-- Or specific line if inserting within a class/object -->
+      <content>
+      // ... (other service functions might exist)
+
+      // Placeholder for actual DB interaction and hashing library
+      // const User = require('../models/User');
+      // const bcrypt = require('bcryptjs');
+
+      async function registerUser(email, password) {
+        // Validate email format (simple check)
+        if (!email || !email.includes('@')) {
+          throw new Error('Invalid email format.');
+        }
+        // Validate password complexity (simple check)
+        if (!password || password.length < 8) {
+          throw new Error('Password must be at least 8 characters long.');
+        }
+
+        // Check if user exists (pseudo-code)
+        // const existingUser = await User.findOne({ email });
+        // if (existingUser) {
+        //   throw new Error('Email already registered.');
+        // }
+
+        // Hash password (pseudo-code)
+        // const salt = await bcrypt.genSalt(10);
+        // const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Create user (pseudo-code)
+        // const newUser = new User({ email, password: hashedPassword });
+        // await newUser.save();
+        // return { id: newUser.id, email: newUser.email };
+
+        console.log(`Simulating user registration for: ${email}`);
+        // Simulate DB save and return a user object
+        return { id: 'simulated-id-' + Date.now(), email: email, message: "User registered successfully (simulated)." };
+      }
+
+      module.exports = { registerUser /*, ...other functions */ };
+      </content>
+      </insert_content>
+      -->
+      <thinking>
+      **[Backend Coding Task Execution - Cont. {feature_id}/{task_id}]**
+      Assume all backend coding (routes, controller, service, tests) for the register endpoint is complete after several file operations.
+      I have created/modified:
+      - `src/routes/authRoutes.js`
+      - `src/controllers/authController.js`
+      - `src/services/userService.js`
+      - `tests/integration/auth.test.js`
+      And let's say the (simulated) commit hashes are `[z9y8x7w, v6u5t4s]`.
+
+      **Step 4: Prepare for Commit (Mental Step).**
+      Commit message: "feat(api): Implement POST /api/auth/register endpoint - user_mgmt/user_mgmt-task-002"
+
+      **Step 5: Report Completion to Feature Lead.**
+      My status becomes `[CODE-BACKEND ({feature_id}/{task_id}): COMPLETED]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      Task 'user_mgmt-task-002: Implement POST /api/auth/register endpoint' for feature 'user_mgmt' is complete.
+      - Implemented the `/api/auth/register` POST endpoint.
+      - Added service logic in `userService.js` for user registration including basic validation (simulated hashing and DB interaction).
+      - Created integration tests in `tests/integration/auth.test.js` covering successful registration and error cases. All tests are passing.
+      - Relevant commit hashes: `[z9y8x7w, v6u5t4s]`.
+      The API endpoint is ready for integration or further review by the Feature Lead.
+      </result>
+      </attempt_completion>

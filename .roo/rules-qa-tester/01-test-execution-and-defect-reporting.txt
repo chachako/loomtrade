@@ -1,0 +1,141 @@
+qa_workflow:
+  execute_assigned_qa_task_and_report_defects:
+    trigger: "When a new QA testing task for a specific feature `{feature_id}` is assigned by the Feature Lead Mode (identified by a message containing testing scope, Memory Bank references, and feature branch), or when assigned a task to verify specific defect fixes."
+    priority: 900
+    action: |
+      <thinking>
+      **[QA Test Execution & Defect Reporting/Verification Protocol - Feature: {feature_id}, Context: {testing_context}]**
+      I have received a QA task for feature `{feature_id}`. The context is `{testing_context}` (e.g., "Initial Test Cycle", "Defect Verification for DEF001, DEF002", "Regression Test Cycle 1"). My status should reflect this, e.g., `[QA-TESTER ({feature_id}/{testing_context}): PREPARING_TESTS]`.
+
+      My process will be:
+      1.  **Understand Task Scope & Criteria:**
+          *   Parse the task message from Feature Lead. What needs testing? Initial feature? Specific defects? Regression?
+          *   Identify paths to `context.md` (for ACs), `design_notes.md` (for specs), and potentially `active_log.md` or `progress.yaml` (for defect details if verifying fixes).
+          *   Use `<read_file>` to fetch content from these Memory Bank files for feature `{feature_id}`.
+      2.  **Plan Test Scenarios (Conceptual):**
+          *   Based on the scope and ACs/defect descriptions, mentally outline key test scenarios needed.
+          *   For defect verification, focus on the steps to reproduce the original defect and related areas (regression).
+      3.  **Execute Tests (Simulated/Tool-Assisted):**
+          *   Mentally walk through test scenarios.
+          *   Record observations: step, action, expected result, actual result.
+          *   If testing APIs and allowed/capable, potentially use `execute_command` with `curl`.
+      4.  **Identify and Document NEW Defects (if performing general testing):**
+          *   For each new deviation found: Assign a provisional ID (e.g., `{feature_id}-DEFXXX`), document clear title, steps to reproduce, expected, actual, severity estimate.
+      5.  **Verify Fixes (if verifying defects):**
+          *   Follow steps to reproduce the original defect. Confirm if the fix works (Actual now matches Expected).
+          *   Perform related regression tests to ensure the fix didn't break anything else. Note results (Pass/Fail).
+      6.  **Compile Test Summary and Defect List/Verification Status.**
+      7.  **Report Results to Feature Lead:**
+          *   Use `attempt_completion`. The `result` must summarize:
+              - What was tested (scope).
+              - Test execution summary (passed/failed/blocked count).
+              - List of *new* defects found (with full details).
+              - Status of *verified* defects (e.g., "DEF001: Verified Fixed", "DEF002: Verification Failed - still reproducible").
+              - Overall quality assessment.
+
+      Let's assume the task is "Initial Test Cycle" for `feature_id="user_mgmt"` on branch `feature/user_mgmt`. Context is `Initial_Cycle_1`.
+      Feature Lead message referenced `context.md` and `design_notes.md`.
+
+      **Step 1a: Read `context.md`.**
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/context.md</path>
+      </read_file>
+      <thinking>
+      **[QA Test Execution - Cont. user_mgmt/Initial_Cycle_1]**
+      **Step 1b: Read `design_notes.md`.**
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/user_mgmt/design_notes.md</path>
+      </read_file>
+      <thinking>
+      **[QA Test Execution - Cont. user_mgmt/Initial_Cycle_1]**
+      My status is now `[QA-TESTER (user_mgmt/Initial_Cycle_1): EXECUTING_TESTS]`.
+      I have the requirements and specs.
+
+      **Step 2 & 3: Plan and Execute Tests (Simulated).**
+      I will mentally execute test scenarios covering registration, login, etc., based on ACs.
+      (Simulating execution as described in the previous version of this rule file's example).
+
+      **Step 4: Identify and Document Defects.**
+      Assume I find the same two defects as before during execution:
+      - Defect 1: `user_mgmt-DEF001` - Registration allows mismatched passwords. Severity: High.
+      - Defect 2: `user_mgmt-DEF002` - Login button unresponsive after 3 fails. Severity: Medium.
+      I will prepare the detailed descriptions for reporting.
+
+      **Step 5 (Verify Fixes):** Not applicable in this initial test cycle scenario.
+
+      **Step 6 & 7: Compile Summary and Report to Feature Lead.**
+      My status becomes `[QA-TESTER (user_mgmt/Initial_Cycle_1): REPORTING_RESULTS]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      **QA Test Cycle Report for Feature 'User Management' (ID: user_mgmt) - Test Cycle: Initial_Cycle_1**
+
+      **Test Execution Summary:**
+      *   Scope: Initial functional and integration testing based on acceptance criteria in `context.md`.
+      *   Total Scenarios Executed (simulated): 25
+      *   Passed: 23
+      *   Failed: 2
+      *   Blocked: 0
+
+      **Overall Feature Quality Assessment:**
+      *   Core functionality is partially present, but blocked by High/Medium severity defects identified below. Recommend addressing these before further testing or sign-off.
+
+      **New Defects Found:**
+      1.  **Defect ID (Proposed):** `user_mgmt-DEF001`
+          *   **Title:** Registration allows submission with mismatched passwords.
+          *   **Steps to Reproduce:** 1. Go to register page. 2. Enter email 'test@test.com'. 3. Enter password 'GoodPass1'. 4. Enter confirm password 'DifferentPass2'. 5. Click Register.
+          *   **Expected Result:** Client-side or server-side error "Passwords do not match". Registration prevented.
+          *   **Actual Result:** Form submits without specific mismatch error. (Actual outcome of submission unclear).
+          *   **Severity Estimate:** High
+
+      2.  **Defect ID (Proposed):** `user_mgmt-DEF002`
+          *   **Title:** Login button unresponsive after three consecutive failed login attempts.
+          *   **Steps to Reproduce:** 1. Go to login page. 2. Enter invalid credentials 3 times. 4. Attempt to click login button again.
+          *   **Expected Result:** Login button remains active, or a clear lockout message appears.
+          *   **Actual Result:** Login button becomes unresponsive/disabled without clear user feedback until page refresh.
+          *   **Severity Estimate:** Medium
+
+      Please review these defects. Awaiting instructions for re-testing after fixes or further testing tasks.
+      </result>
+      </attempt_completion>
+      <thinking>
+      **[QA Test Execution & Defect Reporting Protocol - Cont.]**
+      Now consider **Scenario 2: Verifying Defect Fixes**.
+      Assume Feature Lead assigns: "QA Tester, please verify fixes for `user_mgmt-DEF001` and `user_mgmt-DEF002` on branch `feature/user_mgmt_fixes`."
+      Context: `Verification_Cycle_1`.
+
+      **Step 1: Understand Scope.** Task is to verify DEF001 and DEF002. I need the original defect details. I might need to read `active_log.md` or `progress.yaml` if the original report isn't in the current message history. Assume I have the details.
+
+      **Step 2: Plan Verification & Regression.** Mentally note the reproduction steps for DEF001 & DEF002. Also consider 1-2 related regression tests (e.g., does normal registration still work? Does normal login still work?).
+
+      **Step 3: Execute Verification & Regression Tests (Simulated).**
+      *   Follow steps for DEF001. Assume Actual Result now matches Expected (error shown). -> VERIFIED FIXED.
+      *   Follow steps for DEF002. Assume Actual Result now matches Expected (button remains active). -> VERIFIED FIXED.
+      *   Execute regression tests (e.g., normal registration, normal login). Assume they pass. -> REGRESSION PASSED.
+
+      **Step 4: Identify New Defects.** Assume none found during verification/regression.
+
+      **Step 5: Verify Fixes.** Both DEF001 and DEF002 are verified fixed.
+
+      **Step 6 & 7: Compile Summary and Report.** Status `[QA-TESTER (user_mgmt/Verification_Cycle_1): REPORTING_RESULTS]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      **QA Defect Verification Report for Feature 'User Management' (ID: user_mgmt) - Test Cycle: Verification_Cycle_1**
+
+      **Verification Scope:** Defects `user_mgmt-DEF001`, `user_mgmt-DEF002`.
+      **Branch Tested:** `feature/user_mgmt_fixes`
+
+      **Verification Results:**
+      *   `user_mgmt-DEF001` (Registration password mismatch): **Verified Fixed**. The expected error message is now displayed, and submission is prevented.
+      *   `user_mgmt-DEF002` (Login button unresponsive): **Verified Fixed**. The login button remains active after multiple failed attempts.
+
+      **Regression Testing:**
+      *   Basic registration and login flows were re-tested and passed. No new issues were observed during verification.
+
+      **Overall Assessment:**
+      *   The reported defects appear to be successfully resolved based on this verification cycle.
+      </result>
+      </attempt_completion>
