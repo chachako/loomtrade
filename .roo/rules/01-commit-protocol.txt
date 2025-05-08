@@ -1,0 +1,78 @@
+# Universal Commit Protocol
+# This rule defines the mandatory protocol ALL modes must follow when committing
+# changes to a version control repository (Git). It ensures consistency,
+# verification of changes, and adherence to commit message standards.
+
+version_control_procedures:
+  standard_commit_protocol:
+    trigger: "When a mode (typically Code-Frontend, Code-Backend, Doc-Writer, or potentially others modifying version-controlled files) has completed a logical unit of work involving file modifications within its assigned task and feature branch, and determines it is appropriate to commit these changes."
+    priority: 800
+    action: |
+      <thinking>
+      **[Standard Commit Protocol Triggered]**
+      I have completed a unit of work involving file changes and need to commit them to the feature branch.
+      **I MUST follow this precise protocol:**
+      1.  **Identify Changed Files:** Recall or determine the exact list of files I have created or modified during this unit of work.
+      2.  **Stage Changes:** Use `git add` to stage *only* the specific files identified in Step 1. Avoid broad `git add .` if possible.
+      3.  **Review Staged Changes:** Use `git diff --staged` to carefully review the exact changes that are about to be committed.
+      4.  **Verify Changes:** Confirm that the staged diff accurately reflects ONLY the intended modifications for this unit of work and contains no unexpected changes or debugging artifacts. **If the diff is not correct, I MUST unstage changes (`git reset HEAD <file>...`), fix the files, and restart this protocol from Step 1.**
+      5.  **Construct Commit Message:** Create a commit message adhering strictly to the project standard:
+          *   Format: Conventional Commits (`type(scope): description`).
+          *   Case: **All lowercase**.
+          *   **Type:** Choose the most appropriate type (e.g., `feat`, `fix`, `build`, `chore`, `ci`, `docs`, `perf`, `refactor`, `revert`, `style`, `test`).
+          *   **Scope (Optional but Recommended):** Indicate the part of the codebase affected (e.g., `auth`, `ui`, `api`, `memory-bank`, `docs`, specific component name). Keep scope concise.
+          *   **Description:**
+              *   **MUST be concise and summarize the change (WHAT was done).** Aim for clarity and brevity for the entire subject line (`type(scope): description`), ideally ~50-70 characters.
+              *   **MUST use imperative, present tense** (e.g., "add feature", "fix bug").
+              *   **MUST AVOID repeating information already conveyed by the `type` or `scope`.** If `scope` is `memory-bank`, describe the specific action (e.g., `initialize global structure`), not just "update memory bank".
+              *   **Focus on a single logical change per commit (Atomic Commits).** If multiple distinct changes were made, consider splitting them into separate commits, each following this protocol.
+          *   **Task ID:** **Must** include the relevant task ID (e.g., `({feature_id}/{task_id})` or `(task-id)`) at the end of the description or in the footer. Parentheses are recommended.
+          *   **Example Improved Messages:**
+              - `feat(auth): implement registration validation logic (user_mgmt-task-006)`
+              - `fix(api): correct pagination calculation for user list (user_mgmt-task-010)`
+              - `docs(readme): add setup instructions for backend service (project-docs-task-001)`
+              - `chore(deps): update react and react-dom to v18.3 (common-task-123)`
+              - `refactor(ui): extract user avatar component (user_profile-task-005)`
+          *   **Commit Body (Optional):** If more explanation (WHY the change was made, context, breaking changes) is needed, add a blank line after the subject line and write a detailed body.
+      6.  **Execute Commit:** Use `git commit -m "..."` with the constructed message (potentially multi-line if a body is included).
+      7.  Confirm commit success (based on tool execution result) before proceeding.
+
+      Let's assume I am `Code-Backend` working on task `user_mgmt-task-006` and I have modified `src/services/validation.js` and created `tests/validation.test.js`.
+      </thinking>
+
+      <thinking>
+      **Step 1 & 2: Identify and Stage Changed Files.**
+      Files: `src/services/validation.js`, `tests/validation.test.js`
+      </thinking>
+      <execute_command>
+      <command>git add src/services/validation.js tests/validation.test.js</command>
+      </execute_command>
+      <thinking>
+      **Step 3: Review Staged Changes.**
+      Requesting staged diff.
+      </thinking>
+      <execute_command>
+      <command>git diff --staged</command>
+      </execute_command>
+      <thinking>
+      **Step 4: Verify Changes.**
+      [Internal Check: Analyze `git diff --staged` output. Assume it's correct.]
+
+      **Step 5: Construct Commit Message.**
+      Type: `feat`
+      Scope: `auth`
+      Description: `implement registration validation logic`
+      Task ID: `user_mgmt-task-006`
+      Final Message: `feat(auth): implement registration validation logic (user_mgmt-task-006)`
+      </thinking>
+      <thinking>
+      **Step 6: Execute Commit.**
+      </thinking>
+      <execute_command>
+      <command>git commit -m "feat(auth): implement registration validation logic (user_mgmt-task-006)"</command>
+      </execute_command>
+      <thinking>
+      **Step 7: Confirm Commit Success.**
+      I will wait for the confirmation that the `git commit` command executed successfully.
+      Once confirmed, the commit process for this unit of work is complete. I can now proceed with the next step of my main task (e.g., working on another part, or preparing the final `attempt_completion` report if this commit concluded the task).
+      </thinking>
