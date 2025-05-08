@@ -8,23 +8,56 @@ tool_usage_guidance:
 
       I need to reflect on whether I attempted a tool use previously:
       *   **If I did not attempt a tool use:** I must re-examine the user's request and my System Prompt (especially the "TOOL USE" and "Tools" sections), identify the required tool, and immediately construct a correct tool use.
-      *   **If I believe I did attempt a tool use, but it was not recognized or failed:** It's highly likely my tool use was formatted incorrectly. I must check for the following common error patterns related to "Tool Use Formatting":
-          1.  **Incorrect main tool tag:** A common mistake is misunderstanding how to use the `<tool_name>` placeholder from the System Prompt's "Tool Use Formatting" example. I might have literally written `<tool_name>actual_tool_name</tool_name>` instead of using the actual tool's name as the tag itself. The correct format is `<ACTUAL_TOOL_NAME>...</ACTUAL_TOOL_NAME>`, for example: `<read_file>...</read_file>`.
-          2.  **Unclosed XML-style tags:** Did I forget to close any tags, either for the main tool (e.g., `</ACTUAL_TOOL_NAME>`) or for its parameters (e.g., `</PARAM1_NAME>`)? For example, writing `<read_file><path>src/main.js</path>` but omitting the final `</read_file>`.
-          3.  **Incorrect parameter tags:** Are the parameter names spelled correctly as per the specific tool's definition in the "Tools" section of my System Prompt? Are all parameter tags correctly closed?
+      *   **If I believe I did attempt a tool use, but it was not recognized or failed:** It's highly likely my tool use was formatted incorrectly. I must check for the following common error patterns:
+          1.  **Incorrect main tool tag (XML-style structure):** Misunderstanding the `<tool_name>` placeholder (e.g., writing `<tool_name>actual_tool_name</tool_name>` instead of `<ACTUAL_TOOL_NAME>...</ACTUAL_TOOL_NAME>`).
+          2.  **Unclosed XML-style tags (XML-style structure):** Forgetting to close tool or parameter tags.
+          3.  **Incorrect parameter tags (XML-style structure):** Misspelling parameter names or forgetting their closing tags.
+          4.  **Parameter Value Formatting (Content of parameters):** The content *inside* a parameter tag (e.g., the value for `<diff>VALUE</diff>`) must be provided *exactly* as specified by that tool's documentation in the System Prompt. This is paramount for parameters expecting specific multi-line blocks or raw strings containing special characters.
+              **My rule of thumb: I should NEVER automatically XML-escape or wrap parameter values in `<![CDATA[...]]>` myself.** I must use the raw string literal if the tool's documentation in the System Prompt shows it or implies it through its examples.
+              For instance, with the `apply_diff` tool, its `diff` parameter expects a raw, multi-line block:
 
-      I will strictly adhere to the "Tool Use Formatting" instructions for XML-style tags provided in my System Prompt.
+              **Incorrect LLM Behavior (e.g., adding CDATA to `apply_diff`'s `diff` parameter):**
+              ```xml
+              <apply_diff>
+                <path>file.py</path>
+                <diff>
+                <![CDATA[<<<<<<< SEARCH
+                :start_line:1
+                [exact content to find including whitespace]
+                =======
+                [new content to replace with]
+                >>>>>>> REPLACE]]>
+                </diff>
+              </apply_diff>
+              ```
+
+              **Correct Behavior (providing the raw block exactly as per `apply_diff` tool specification):**
+              ```xml
+              <apply_diff>
+                <path>file.py</path>
+                <diff>
+                <<<<<<< SEARCH
+                :start_line:1
+                [exact content to find including whitespace]
+                =======
+                [new content to replace with]
+                >>>>>>> REPLACE
+                </diff>
+              </apply_diff>
+              ```
+
+      I will strictly adhere to the "Tool Use Formatting" for the overall XML-style structure (tool name and parameter name tags). For the *content* (value) of each parameter, I will ensure it precisely matches the format shown or implied in that specific tool's documentation in the System Prompt's "Tools" section, without adding my own escaping or CDATA wrappers.
 
       Therefore, my next steps are:
       1.  **Review Context and System Prompt Instructions Carefully:**
-          *   Cross-reference my System Prompt, ensuring I fully understand the XML structure for "Tool Use Formatting" and all related specifications for the intended tool.
-          *   Analyze the latest user message and conversation history to clarify the required operation and the most appropriate tool for the current task.
+          *   Cross-reference my System Prompt: understand the overall XML structure for "Tool Use Formatting" and, critically, the specific formatting requirements (raw string, multi-line block, etc.) for each parameter's *value* for the intended tool.
+          *   Analyze the latest user message and conversation history to clarify the required operation and the most appropriate tool.
       2.  **Construct and Execute Tool Use:**
-          *   I will be vigilant about the common errors previously listed (e.g., incorrect main tool tag, unclosed tags).
-          *   I will strictly follow the correct XML format (as referenced below and in my System Prompt) to construct a tool use.
+          *   I will be vigilant about common errors, especially the rule for parameter value formatting: provide values *exactly* as shown/implied in their respective tool documentation (System Prompt, "Tools" section), without adding XML escaping or CDATA wrappers myself.
+          *   I will use the correct overall XML structure for the tool call and provide parameter values precisely as documented.
           *   My response must contain a correctly formatted tool use.
 
-          **Correct Tool Use XML Format Reference (from System Prompt):**
+          **Correct Tool Use XML Format Reference (Overall Structure - from System Prompt):**
           ---
           <ACTUAL_TOOL_NAME>
             <PARAM1_NAME>value1</PARAM1_NAME>
@@ -32,11 +65,7 @@ tool_usage_guidance:
             ...
           </ACTUAL_TOOL_NAME>
           ---
-          For example:
-          ---
-          <read_file>
-            <path>src/main.js</path>
-          </read_file>
-          ---
+          (Example: For `<read_file>`, `value1` for `path` is a simple string. For `<apply_diff>`, the value for its `diff` parameter would be its specific multi-line block format, provided raw.)
+
       This corrective action is my highest priority.
       </thinking>
