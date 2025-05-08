@@ -1,0 +1,110 @@
+project_lifecycle_management:
+  delegate_initial_architecture_design:
+    trigger: "After high-level project planning is complete (i.e., `global/project_overview.md` is populated with scope/goals, and `global/master_progress.yaml` lists initial major features), and before delegating the first feature to a Feature Lead, or when explicitly instructed by the user to define the initial architecture."
+    priority: 850 # Critical step after initial planning and before feature development starts
+    action: |
+      <thinking>
+      **[Delegate Initial Architecture Design Protocol]**
+      My status should be `[PROJECT_MANAGER: DELEGATING_ARCHITECTURE]`.
+      High-level project planning is complete. The next crucial step is to establish the foundational architecture and technology stack for the project. This task should be delegated to the `Architect Mode` (slug: `architect`).
+
+      My process will be:
+      1.  Confirm Prerequisite State: Ensure `global/project_overview.md` contains necessary project goals and scope information, and `global/architecture_overview.md` exists.
+      2.  Construct `new_task` Message for `Architect Mode`.
+      3.  Execute `new_task` Tool Call to `architect` mode.
+      4.  Log Delegation (Conceptual/Internal Tracking).
+      5.  Update `manifest.yaml` timestamp.
+      6.  Inform User of Delegation.
+
+      I will first verify that `global/project_overview.md` has enough information to guide the Architect.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/project_overview.md</path>
+      </read_file>
+      <thinking>
+      **[Delegate Initial Architecture Design - Cont.]**
+      I have received the content of `global/project_overview.md`. I will mentally verify that key sections like "Project Goal & Vision" and "Scope" are sufficiently filled to provide context to the Architect. Assume they are adequate.
+
+      The target mode slug for the `new_task` tool is `architect`.
+      I am now ready to construct the `new_task` message. Variable `{project_name}` should be replaced with the actual project name obtained from `global/master_progress.yaml` or `project_overview.md`. I'll need to read `master_progress.yaml` if I haven't already to get the project name reliably.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/global/master_progress.yaml</path>
+      </read_file>
+      <thinking>
+      Now I have the project name (let's assume it's 'NovaSuite'). Constructing the message for the Architect.
+      </thinking>
+      <new_task>
+      <mode>architect</mode>
+      <message>
+      "**Task: Define Initial System Architecture for Project: 'NovaSuite'**
+
+      Project: 'NovaSuite' (Refer to `global/project_overview.md` for full details)
+
+      You are tasked with defining the initial high-level system architecture and core technology stack for this project.
+
+      **Objectives:**
+      1.  **Define Overall Architecture:** Based on the project goals, scope, and anticipated functionalities outlined in `./.roo/memory-bank/global/project_overview.md`, propose a suitable high-level architecture (e.g., monolith, microservices, event-driven, etc.).
+      2.  **Select Core Technology Stack:** Recommend key technologies for:
+          *   Frontend (if applicable)
+          *   Backend (language(s), framework(s))
+          *   Database(s) (primary store, caching, etc.)
+          *   Real-time communication (if applicable)
+          *   Key libraries or services for core functionalities (e.g., authentication, search).
+          *   Deployment environment considerations (e.g., cloud provider preferences if known, containerization).
+      3.  **Establish Architectural Principles:** Define a preliminary set of architectural principles (e.g., scalability, security, maintainability focus) that should guide development.
+      4.  **Document Outputs:**
+          *   Update `./.roo/memory-bank/global/architecture_overview.md` with the defined architecture, technology stack, and principles.
+          *   If any significant, overarching patterns or standards are decided at this stage, document them in `./.roo/memory-bank/global/shared_system_patterns.md`.
+          *   Log any major architectural decisions (e.g., choice of microservices vs. monolith, primary database selection) along with their rationale in `./.roo/memory-bank/global/global_decisions.md`.
+
+      **Inputs/References:**
+      *   Primary Context: `./.roo/memory-bank/global/project_overview.md`
+      *   Target Document for Architecture: `./.roo/memory-bank/global/architecture_overview.md` (currently may be a template)
+      *   Target Document for Patterns: `./.roo/memory-bank/global/shared_system_patterns.md`
+      *   Target Document for Decisions: `./.roo/memory-bank/global/global_decisions.md`
+      *   Memory Bank Manifest (for structure): `./.roo/memory-bank/manifest.yaml`
+
+      Please proceed with this architectural design. Upon completion, use the `attempt_completion` tool with a summary of your design, key decisions, and a list of Memory Bank documents you have updated.
+      If you require further clarification on project goals or constraints, please state so.
+      "
+      </message>
+      </new_task>
+      <thinking>
+      **[Delegate Initial Architecture Design - Cont.]**
+      After the `new_task` tool call is successfully sent to the `architect` mode.
+
+      **Step 4: Log Delegation (Conceptual).**
+      Internal tracking updated.
+
+      **Step 5: Update `manifest.yaml` timestamp.**
+      This delegation is a significant step. I will update `last_updated_timestamp` in `manifest.yaml`.
+      This involves reading `manifest.yaml`, parsing, updating the timestamp, serializing, and writing back.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/manifest.yaml</path>
+      </read_file>
+      <thinking>
+      Updating manifest.yaml timestamp. Constructing the full updated YAML.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/manifest.yaml</path>
+      <content>
+      (Full modified YAML string with new timestamp)
+      </content>
+      <line_count>XX</line_count> <!-- LLM calculates actual line count -->
+      </write_to_file>
+      <thinking>
+      **[Delegate Initial Architecture Design - Cont.]**
+      After manifest update is confirmed successful.
+
+      **Step 6: Inform User of Delegation.**
+      My status returns to `[PROJECT_MANAGER: ACTIVE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      The task to define the initial system architecture and technology stack for project 'NovaSuite' has been delegated to the `Architect Mode` (slug: `architect`).
+      The Architect Mode will use `./.roo/memory-bank/global/project_overview.md` as primary input and will document its findings in `global/architecture_overview.md`, `global/shared_system_patterns.md`, and `global/global_decisions.md`.
+      I will await the Architect's report.
+      </result>
+      </attempt_completion>
