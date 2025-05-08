@@ -1,0 +1,90 @@
+feature_planning_and_execution:
+  delegate_coding_tasks_to_code_modes:
+    trigger: "When tasks in `./.roo/memory-bank/features/{feature_id}/progress.yaml` are in 'backlog' or 'defined' status, have their `assignee_mode` set to 'code-frontend' or 'code-backend', and are ready for development (e.g., dependencies met, prioritized by Feature Lead)."
+    priority: 850
+    action: |
+      <thinking>
+      **[Coding Task Delegation Protocol for Feature: {feature_id}]**
+      My status should be `[FEATURE_LEAD ({feature_id}): DELEGATING_CODING_TASK]`.
+      I need to delegate one or more coding tasks from `features/{feature_id}/progress.yaml` to the appropriate specialized coding modes (`code-frontend` or `code-backend`).
+
+      My process for each task:
+      1.  Identify Task from `progress.yaml`.
+      2.  Gather Context for the Task.
+      3.  Determine Target Code Mode Slug (`code-frontend` or `code-backend`).
+      4.  Construct `new_task` Message including **clear final status reporting instructions**.
+      5.  Execute `new_task` Tool Call.
+      6.  Update `progress.yaml` task status to "in-progress".
+      7.  Log Delegation in `active_log.md`.
+
+      Assume I need to delegate task `user_mgmt-task-002` to `code-backend`.
+      </thinking>
+      <new_task>
+      <mode>code-backend</mode>
+      <message>
+      "**New Backend Coding Task for Feature 'User Management' (ID: user_mgmt)**
+
+      **Task ID:** `user_mgmt-task-002`
+      **Task Name:** Implement POST /api/auth/register endpoint
+
+      **Description:**
+      (Detailed description of implementation requirements...)
+
+      **Key Requirements & Acceptance Criteria Reference:**
+      *   Refer to `./.roo/memory-bank/features/user_mgmt/context.md`...
+
+      **API Design & Data Model Reference:**
+      *   Consult `./.roo/memory-bank/features/user_mgmt/design_notes.md`...
+
+      **Version Control:**
+      *   Work on branch: `feature/user_mgmt`.
+      *   Commit with Conventional Commits (lowercase), reference task ID. Example: 'feat(api): implement registration endpoint (user_mgmt-task-002)'
+
+      **Testing:**
+      *   Implement relevant unit and/or integration tests.
+
+      **Memory Bank & Reporting (CRITICAL):**
+      *   You DO NOT directly update the feature-level Memory Bank files.
+      *   Upon completion of this task (coding and tests), use `attempt_completion`. Your result summary MUST clearly state what was implemented, the status of tests (e.g., 'All unit tests passing'), and a list of relevant commit hashes. Indicate the final status as **'Completed Successfully'**.
+      *   **If you encounter an unrecoverable error** preventing task completion, use `attempt_completion` to report the failure, explain the reason, and indicate the status as **'Failed'**.
+      *   **If you are explicitly instructed by the user (human operator) or me (Feature Lead) to stop work on this task before completion**, use `attempt_completion` to report this. State the task was stopped by instruction and indicate the status as **'Cancelled'**. Briefly describe the state of work if possible.
+      *   **Reporting a final status (Completed Successfully, Failed, or Cancelled) via `attempt_completion` is mandatory to conclude this task.**
+
+      Please acknowledge this task and ask any clarifying questions before starting.
+      "
+      </message>
+      </new_task>
+      <thinking>
+      **[Coding Task Delegation Protocol - Cont. {feature_id}]**
+      After the `new_task` is successfully sent.
+      Update `features/{feature_id}/progress.yaml` for task `user_mgmt-task-002` status to "in-progress".
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      </read_file>
+      <thinking>
+      Constructing updated YAML content for progress.yaml.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      <content> (Updated YAML content with task status changed to 'in-progress') </content>
+      <line_count>XX</line_count>
+      </write_to_file>
+      <thinking>
+      Log delegation in `features/{feature_id}/active_log.md`.
+      </thinking>
+      <insert_content>
+      <path>./.roo/memory-bank/features/{feature_id}/active_log.md</path> <!-- Replace {feature_id} -->
+      <line>0</line>
+      <content>
+      [YYYY-MM-DD HH:MM:SS] - Delegated task "user_mgmt-task-002: Implement POST /api/auth/register endpoint" to code-backend mode.
+      </content>
+      </insert_content>
+      <thinking>
+      Delegation complete. My status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      Task "user_mgmt-task-002: Implement POST /api/auth/register endpoint" for feature `{feature_id}` has been delegated to the `code-backend` mode with clear instructions on final status reporting. Task status updated to "in-progress".
+      </result>
+      </attempt_completion>

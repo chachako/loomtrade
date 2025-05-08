@@ -1,0 +1,92 @@
+feature_quality_assurance:
+  coordinate_qa_testing_and_manage_defects:
+    trigger: "When development tasks for feature `{feature_id}` are substantially complete (as indicated in `progress.yaml`) and the feature is deemed ready for QA, or when `QA-Tester` mode reports test results or defects for the feature."
+    priority: 820
+    action: |
+      <thinking>
+      **[QA Coordination & Defect Management Protocol for Feature: {feature_id}]**
+      My status might be `[FEATURE_LEAD ({feature_id}): COORDINATING_QA]` or `[FEATURE_LEAD ({feature_id}): MANAGING_DEFECTS]`.
+
+      **Scenario 1: Initiating QA Testing.**
+      Assume feature `{feature_id}` is ready for QA.
+      1.  Update `progress.yaml` `overall_status` to "testing".
+      2.  Prepare `new_task` for `qa-tester` mode (slug: `qa-tester`), including **clear final status reporting instructions**.
+      3.  Execute `new_task`.
+      4.  Log QA Initiation in `active_log.md`.
+      </thinking>
+      <read_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      </read_file>
+      <thinking>
+      Constructing updated YAML content for progress.yaml with overall_status 'testing'.
+      </thinking>
+      <write_to_file>
+      <path>./.roo/memory-bank/features/{feature_id}/progress.yaml</path> <!-- Replace {feature_id} -->
+      <content> (Updated YAML content) </content>
+      <line_count>XX</line_count>
+      </write_to_file>
+      <thinking>
+      Now, prepare and send the task to QA Tester.
+      </thinking>
+      <new_task>
+      <mode>qa-tester</mode>
+      <message>
+      "**QA Testing Assignment for Feature '{feature_name}' (ID: {feature_id})**
+
+      The development phase for feature '{feature_id}' is complete. This feature is now ready for comprehensive QA testing.
+
+      **Feature Context & Requirements:**
+      *   Acceptance criteria: `./.roo/memory-bank/features/{feature_id}/context.md`
+      *   UI/API specifics: `./.roo/memory-bank/features/{feature_id}/design_notes.md`
+
+      **Testing Scope:**
+      *   Perform full functional testing against acceptance criteria.
+      *   Conduct integration testing.
+      *   (Optional extras like usability/accessibility checks).
+
+      **Test Environment & Branch:**
+      *   Branch: `feature/{feature_id}`. Confirm test environment if applicable.
+
+      **Reporting (CRITICAL):**
+      *   Log identified defects with clear reproduction steps, expected vs. actual results, and severity.
+      *   Upon completion of your testing cycle, use `attempt_completion`. Your result summary MUST include:
+          - Summary of tests executed (passed/failed/blocked count).
+          - A list/details of NEW defects found.
+          - An overall quality assessment.
+          - Indicate the final status as **'Completed Successfully'** (meaning the test cycle finished, even if defects were found).
+      *   **If you encounter a critical blocker** preventing further testing (e.g., environment unavailable, core functionality broken), use `attempt_completion` to report this blocker immediately, indicate the status as **'Blocked'**, and describe the blocking issue.
+      *   **If you are explicitly instructed by the user or me (Feature Lead) to stop testing before completion**, use `attempt_completion` to report this. State the task was stopped by instruction, indicate the status as **'Cancelled'**, and summarize findings up to that point.
+      *   **Reporting a final status (Completed Successfully, Blocked, or Cancelled) via `attempt_completion` is mandatory to conclude this testing task.**
+
+      Please acknowledge this task and provide an estimated timeframe if possible.
+      "
+      </message>
+      </new_task>
+      <thinking>
+      After `new_task` is sent. Log QA Initiation in `active_log.md`.
+      </thinking>
+      <insert_content>
+      <path>./.roo/memory-bank/features/{feature_id}/active_log.md</path> <!-- Replace {feature_id} -->
+      <line>0</line>
+      <content>
+      [YYYY-MM-DD HH:MM:SS] - Feature {feature_id} is now in 'testing' phase. Testing tasks delegated to qa-tester mode.
+      </content>
+      </insert_content>
+      <thinking>
+      QA initiation complete. My status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+
+      **Scenario 2: Receiving Test Results / Defects from `QA-Tester Mode`.**
+      Assume QA Tester reports back via `attempt_completion` with status 'Completed Successfully' and lists defects.
+      1.  Parse QA Report (from the `result` field of `attempt_completion`).
+      2.  Log Defects as new tasks in `progress.yaml` (read-modify-write).
+      3.  Log receipt of QA report and defects in `active_log.md`.
+      4.  Delegate Defect Fixes to appropriate Code Modes using `new_task` (following the same principle of requiring final status reporting from them).
+      5.  Update defect task statuses in `progress.yaml` after delegation.
+      (Detailed steps for defect logging and delegation follow similar patterns as task delegation, using read/write/insert/new_task).
+      My status returns to `[FEATURE_LEAD ({feature_id}): ACTIVE]`.
+      </thinking>
+      <attempt_completion>
+      <result>
+      QA testing for feature `{feature_id}` has been initiated and delegated to the `qa-tester` mode with clear instructions on final status reporting. / OR / Received QA test results for feature `{feature_id}`. Defects logged and fix tasks will be delegated.
+      </result>
+      </attempt_completion>
