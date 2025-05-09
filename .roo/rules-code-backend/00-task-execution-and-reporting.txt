@@ -1,84 +1,88 @@
 backend_coding_workflow:
   execute_assigned_backend_task:
-    trigger: "When a new backend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch)."
-    priority: 900 # Core operational rule
+    trigger: "When a new backend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch which will be 'main')."
+    priority: 900
     action: |
       <thinking>
       **[Backend Coding Task Execution Protocol - Feature: {context.feature_id}, Task: {context.task_id}]**
       I have received task: '{context.task_name}' for feature '{context.feature_name}' (ID: {context.feature_id}, Task ID: {context.task_id}).
-      Branch: `{context.feature_branch}`. Backend source dir: `backend/`.
+      Target Branch for all work: `main`. Backend source dir: `backend/`.
       My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_UNDERSTANDING_REQS]`.
 
       Process:
-      1.  **Understand Requirements:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `01-standards-and-practices.txt`. If unclear, report 'blocked_needs_clarification'. (Assume clear).
+      1.  **Understand Requirements & Ensure `main` is Up-to-Date:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `.roo/rules-code-backend/01-standards-and-practices.txt`.
+          Before coding, execute `git checkout main` then `git pull origin main`. If unclear on requirements, report 'blocked_needs_clarification'. (Assume clear).
       2.  **Plan Implementation:** Mental breakdown. Identify files in `backend/` to create/modify.
-      3.  **Implement Code & Tests (Iterative):** Use `write_to_file` or `apply_diff`/`insert_content`. Generate TypeScript/Python/Go code per standards. Write unit/integration tests.
-      4.  **Commit Changes:** After coding and local tests pass:
+      3.  **Implement Code & Tests (Iterative):** Use `write_to_file` or `apply_diff`/`insert_content`. Write unit/integration tests.
+      4.  **Commit Changes to `main`:** After coding and local tests pass:
           a.  Identify all changed/created files within the `backend/` directory relevant to this task.
           b.  Use `execute_command` to `git add <specific_files>`.
           c.  Formulate commit message per standards (e.g., `feat({context.feature_id}): ... - {context.task_id}`).
           d.  Use `execute_command` to `git commit -m "message"`.
           e.  Use `execute_command` to `git log -1 --pretty=format:"%H"` to get the commit hash.
-          f.  (Optional, based on Feature Lead's instruction) Use `execute_command` to `git push origin {context.feature_branch}`.
+          f.  Use `execute_command` to `git push origin main` (as instructed by Feature Lead for work on `main`).
       5.  **Report Completion:** Use `attempt_completion` with summary, test status, and actual commit hash.
 
-      Example Task: `{context.task_id}` = `user_mgmt-task-002`: "Implement POST /api/auth/register endpoint". Feature `{context.feature_id}` = `user_mgmt`. Branch: `feature/user_mgmt`.
+      Example Task: `{context.task_id}` = `user_mgmt-task-002`: "Implement POST /api/auth/register endpoint". Feature `{context.feature_id}` = `user_mgmt`.
 
-      **Step 1: Read Memory Bank files.**
+      **Step 1: Read Memory Bank files & Update `main` branch.**
       </thinking>
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
       <!-- Wait -->
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
       <!-- Wait -->
+      <execute_command><command>git checkout main</command><cwd>.</cwd></execute_command>
+      <!-- Wait -->
+      <execute_command><command>git pull origin main</command><cwd>.</cwd></execute_command>
+      <!-- Wait for confirmation -->
       <thinking>
       **[Backend Task - Cont. {context.feature_id}/{context.task_id}]**
       My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_PLANNING_IMPL]`.
-      Requirements & API specs analyzed.
+      Requirements & API specs analyzed. `main` branch is up-to-date.
 
       **Step 2 & 3: Implement Code & Write Tests (Iterative Process).**
-      I will now perform a sequence of file operations to implement the feature and its tests.
-      Each `write_to_file` or `apply_diff` implies a successful confirmation before the next.
       (Assume I am creating/modifying files like `backend/src/routes/authRoutes.js`, `backend/src/controllers/authController.js`, `backend/src/services/userService.js`, `backend/tests/integration/auth.test.js` etc., adhering to `01-standards-and-practices.txt`.)
 
       *Simulating completion of coding and local testing for `user_mgmt-task-002`.*
-      Let's assume the following files were created/modified:
+      Files created/modified:
       - `backend/src/routes/authRoutes.js`
       - `backend/src/services/userService.js`
       - `backend/tests/integration/auth.test.js`
       All local unit and integration tests are passing.
       My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_COMMITTING]`.
 
-      **Step 4: Commit Changes to branch `{context.feature_branch}`.**
-      First, I need to add the specific files I changed.
+      **Step 4: Commit Changes to `main`.**
       </thinking>
       <execute_command>
         <command>git add backend/src/routes/authRoutes.js backend/src/services/userService.js backend/tests/integration/auth.test.js</command>
-        <cwd>.</cwd> <!-- Assuming commands are run from project root -->
+        <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for confirmation of git add -->
+      <!-- Wait -->
       <thinking>
-      Files added. Now, construct commit message according to `01-standards-and-practices.txt`.
-      Commit message: `feat({context.feature_id}): implement POST /api/auth/register endpoint - {context.task_id}`
-      (Replacing {context.feature_id} and {context.task_id} with actual values).
+      Files added. Commit message: `feat({context.feature_id}): implement POST /api/auth/register endpoint - {context.task_id}`
       </thinking>
       <execute_command>
         <command>git commit -m "feat({context.feature_id}): implement POST /api/auth/register endpoint - {context.task_id}"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for confirmation of git commit. The command output might include the commit hash or a summary. -->
+      <!-- Wait -->
       <thinking>
-      Commit successful. Now, get the commit hash.
+      Commit successful. Get commit hash.
       </thinking>
       <execute_command>
         <command>git log -1 --pretty=format:"%H"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for output, which should be the commit hash. Let's assume the output is `actual_commit_hash_from_git_log`. -->
+      <!-- Wait for output: {actual_commit_hash_from_git_log}. -->
       <thinking>
-      I have the commit hash: `{actual_commit_hash_from_git_log}`.
-      Feature Lead might also require pushing the changes. Assuming for now that push is handled by Feature Lead after review or I'm explicitly told to push.
-      If I were told to push, the command would be: `git push origin {context.feature_branch}`.
-
+      Commit hash: `{actual_commit_hash_from_git_log}`. Now push to `origin main`.
+      </thinking>
+      <execute_command>
+        <command>git push origin main</command>
+        <cwd>.</cwd>
+      </execute_command>
+      <!-- Wait for confirmation of push -->
+      <thinking>
       **Step 5: Report Completion to Feature Lead.**
       My status becomes `[CODE-BACKEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
@@ -87,11 +91,11 @@ backend_coding_workflow:
       Task '{context.task_id}: Implement POST /api/auth/register endpoint' for feature '{context.feature_id}' is complete.
       **Summary of Work:**
       - Implemented the `/api/auth/register` POST endpoint logic within `backend/` directory structure.
-      - Developed service layer for user registration including validation, (simulated) hashing, and (simulated) DB interaction.
-      - Created unit and integration tests covering success and error cases.
+      - Developed service layer for user registration.
+      - Created unit and integration tests.
       **Test Status:** All local unit and integration tests are passing.
       **Code Standards:** Adhered to guidelines in `.roo/rules-code-backend/01-standards-and-practices.txt`.
-      **Branch:** All work performed and committed on branch `{context.feature_branch}`.
+      **Branch:** All work performed, committed, and pushed on `main` branch.
       **Commit Hash:** `{actual_commit_hash_from_git_log}`.
       The API endpoint implementation is ready for review or next steps by the Feature Lead.
       </result>

@@ -1,210 +1,78 @@
-version_control_feature_branch_management:
-  feature_branch_creation:
-    trigger: "When Feature-Lead starts detailed planning for a new feature {context.feature_id} and a dedicated branch is needed, typically after `feature_context_initialization`."
-    priority: 860
-    action: |
-      <thinking>
-      **[Feature Branch Creation - Feature Lead]**
-      My status is `[FEATURE_LEAD: MANAGING_VERSION_CONTROL]`. Feature ID: `{context.feature_id}`.
-      I need to ensure a feature branch `feature/{context.feature_id}` exists for '{context.feature_name}'.
-      Base branch is **`main`** (or as per project standards, but defaulting to `main` for this flow).
-      1.  Update local **`main`** from remote.
-      2.  Create `feature/{context.feature_id}` from **`main`**.
-      3.  Log this in `features/{context.feature_id}/active_log.md`.
-      </thinking>
-
-      "Ensuring feature branch `feature/{context.feature_id}` exists for feature '{context.feature_name}' (based on `main`)."
-      <execute_command><command>git checkout main</command></execute_command>
-      <!-- Wait -->
-      <execute_command><command>git pull origin main</command></execute_command>
-      <!-- Wait -->
-      <execute_command><command>git checkout -b feature/{context.feature_id}</command></execute_command>
-      <!-- Wait for confirmation -->
-      <thinking>
-      Feature branch `feature/{context.feature_id}` should be created from `main`. Now log it.
-      </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
-      <!-- Wait for content -->
-      <thinking>
-      Prepending to `active_log.md`:
-      `[YYYY-MM-DD HH:MM:SS] - Created feature branch 'feature/{context.feature_id}' from 'main'. All development for this feature should be on this branch.`
-      </thinking>
-      <write_to_file>
-        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
-        <content><!-- Full new content of active_log.md --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait for confirmation -->
-      <attempt_completion>
-        <result>
-        Feature branch `feature/{context.feature_id}` has been created from `main` for '{context.feature_name}'. Development modes will be instructed to use this branch.
-        </result>
-      </attempt_completion>
-      My status becomes `[FEATURE_LEAD: ACTIVE]`. Feature ID: `{context.feature_id}`.
-
-  commit_guidance_for_coders:
-    trigger: "When delegating a coding sub-task to `Code-Frontend` or `Code-Backend` for feature {context.feature_id}."
+version_control_main_branch_guidance:
+  commit_guidance_for_coders_on_main:
+    trigger: "When delegating a coding sub-task to `Code-Frontend` or `Code-Backend` for feature {context.feature_id} that will be developed directly on the `main` branch."
     priority: 820
     action: |
       <thinking>
-      **[Commit Guidance for Coders - Feature Lead]**
-      This rule guides how I construct delegation messages when using `02-sub-task-delegation-and-tracking.txt`.
-      The `new_task` message to `Code-Frontend` or `Code-Backend` MUST include in its `detailed_task_description` or a dedicated `version_control_instructions` field:
-      - "All work MUST be done on the feature branch: `feature/{context.feature_id}` (which was branched from `main`)."
+      **[Commit Guidance for Coders on Main - Feature Lead]**
+      This rule guides how I construct delegation messages for tasks on the `main` branch.
+      The `new_task` message to `Code-Frontend` or `Code-Backend` (as defined in `02-sub-task-delegation-and-tracking.txt`) MUST include in its `detailed_task_description` or a dedicated `version_control_instructions` field:
+      - "All work MUST be done directly on the `main` branch."
+      - "Before starting work, ensure your local `main` branch is up-to-date with the remote `origin/main` by running `git checkout main` and then `git pull origin main`."
       - "Follow the Universal Commit Protocol (`.roo/rules/01-universal-commit-protocol.txt`) for all commits. This protocol requires atomic commits with Conventional Commit formatted messages (all lowercase), including the task ID `({context.feature_id}/{task_id_for_commit})`."
       - "Ensure all unit tests pass before committing."
       - "Report all relevant commit hashes in your `attempt_completion` message when the sub-task is done."
-      - "Push your changes to the remote feature branch (`origin feature/{context.feature_id}`) regularly, and especially before signaling task completion or requesting a code review."
+      - "Push your changes on `main` to `origin/main` frequently, and especially before signaling task completion or requesting a code review. If multiple coders are working on `main` for different sub-tasks of this feature, coordinate pushes or rebase frequently to avoid large conflicts, although ideally sub-tasks are granular enough to minimize simultaneous conflicting changes."
       </thinking>
-      "Commit guidance will be included in coding sub-task delegation messages for feature '{context.feature_name}'."
+      "Commit guidance for working on `main` branch will be included in coding sub-task delegation messages for feature '{context.feature_name}'."
 
-  feature_branch_merge_to_main: # Renamed from feature_branch_merge_to_develop
-    trigger: "When all sub-tasks for feature {context.feature_id} are completed, reviews passed, QA passed, and the feature is deemed ready for integration by Feature-Lead (status in `progress.yaml` is 'ready_for_merge' or similar)."
+  feature_integration_and_tagging_coordination: # Replaces merge logic
+    trigger: "When all sub-tasks for feature {context.feature_id} are completed, reviews passed, QA passed, and the feature is considered fully integrated and stable on the `main` branch (status in `progress.yaml` is 'qa_passed' or 'ready_for_tagging')."
     priority: 870
     action: |
       <thinking>
-      **[Merge Feature Branch to Main - Feature Lead]**
-      My status is `[FEATURE_LEAD: PREPARING_MERGE_TO_MAIN]`. Feature ID: `{context.feature_id}`.
-      Feature '{context.feature_name}' is ready to be merged from `feature/{context.feature_id}` into **`main`**.
-      I need to:
-      1.  Update local `feature/{context.feature_id}` and **`main`** branches from remote.
-      2.  Attempt to merge `feature/{context.feature_id}` into **`main`** using `--no-ff`.
-      3.  The outcome (success or conflict) will trigger a subsequent rule (`handle_successful_merge_to_main` or `handle_merge_conflicts_with_main`).
+      **[Feature Integration & Tagging Coordination - Feature Lead]**
+      My status is `[FEATURE_LEAD: COORDINATING_FEATURE_STABILIZATION_ON_MAIN]`. Feature ID: `{context.feature_id}`.
+      Feature '{context.feature_name}' is now stable on the `main` branch.
+      Since all development is on `main`, there's no feature branch to merge.
+      My role here is to:
+      1.  Ensure the `main` branch is indeed up-to-date and stable (this is largely confirmed by prior QA passing on `main`).
+      2.  Log the successful integration and stability in `features/{context.feature_id}/active_log.md`.
+      3.  Update feature status in `features/{context.feature_id}/progress.yaml` to 'completed_on_main' or 'ready_for_release_tagging'.
+      4.  Report feature completion and stability on `main` to Project-Manager (via `07-reporting-to-project-manager.txt` logic), possibly suggesting it's ready for a version tag if it constitutes a releasable increment.
       </thinking>
 
-      "Preparing to merge feature branch `feature/{context.feature_id}` into `main` for feature '{context.feature_name}'."
+      "Feature '{context.feature_name}' (ID: {context.feature_id}) is stable on `main`. Finalizing logs and status."
 
-      1.  **Update and switch branches:**
-          <execute_command><command>git checkout feature/{context.feature_id}</command></execute_command>
-          <!-- Wait -->
-          <execute_command><command>git pull origin feature/{context.feature_id}</command></execute_command>
-          <!-- Wait -->
+      1.  **Ensure Local `main` is Up-to-Date (Final Check):**
           <execute_command><command>git checkout main</command></execute_command>
           <!-- Wait -->
           <execute_command><command>git pull origin main</command></execute_command>
-          <!-- Wait -->
-          My status becomes `[FEATURE_LEAD: MERGING_TO_MAIN]`. Feature ID: `{context.feature_id}`.
-      2.  **Perform Merge:**
-          <execute_command>
-            <command>git merge --no-ff feature/{context.feature_id} -m "Merge feature {context.feature_id}: {context.feature_name}"</command>
-          </execute_command>
-          <!-- Wait for merge result. This result will be processed by handle_successful_merge_to_main or handle_merge_conflicts_with_main. -->
+          <!-- Wait for confirmation -->
+          <thinking>Local `main` is synchronized with remote.</thinking>
 
-  handle_successful_merge_to_main: # Renamed
-    trigger: "After `feature_branch_merge_to_main` has been attempted and the `execute_command` for `git merge` indicates a successful merge without conflicts for feature {context.feature_id}."
-    priority: 868
-    action: |
-      <thinking>
-      **[Handle Successful Merge to Main - Feature Lead]**
-      My status is `[FEATURE_LEAD: PROCESSING_SUCCESSFUL_MERGE_TO_MAIN]`. Feature ID: `{context.feature_id}`.
-      The merge of `feature/{context.feature_id}` into **`main`** was successful.
-      I need to:
-      1.  Push **`main`** to remote.
-      2.  Log success in `features/{context.feature_id}/active_log.md`.
-      3.  Update feature status in `features/{context.feature_id}/progress.yaml` to 'merged_to_main' or 'completed'.
-      4.  Report feature integration completion to Project-Manager (via `07-reporting-to-project-manager.txt` logic).
-      </thinking>
-      <execute_command><command>git push origin main</command></execute_command>
-      <!-- Wait -->
-      <thinking>
-      `main` branch pushed. Logging success and updating progress.
-      </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Prepending to `active_log.md`:
-      `[YYYY-MM-DD HH:MM:SS] - Successfully merged feature branch 'feature/{context.feature_id}' into 'main' and pushed 'main'.`
-      </thinking>
-      <write_to_file>
-        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
-        <content><!-- Full new content of active_log.md --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Updating feature status to 'merged_to_main' in `progress.yaml`.
-      </thinking>
-      <write_to_file>
-        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
-        <content><!-- Updated progress.yaml with feature status 'merged_to_main' --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
-      <attempt_completion>
-        <result>
-        Feature branch `feature/{context.feature_id}` for '{context.feature_name}' has been successfully merged into `main` and pushed. Local Memory Bank updated. The feature is now integrated into `main`. Next step is to report overall feature completion to Project Manager.
-        </result>
-      </attempt_completion>
-      My status becomes `[FEATURE_LEAD: FEATURE_MERGED_TO_MAIN]`. Feature ID: `{context.feature_id}`.
-
-  handle_merge_conflicts_with_main: # Renamed
-    trigger: "After `feature_branch_merge_to_main` has been attempted and the `execute_command` for `git merge` indicates merge conflicts for feature {context.feature_id}."
-    priority: 869
-    action: |
-      <thinking>
-      **[Handle Merge Conflicts with Main - Feature Lead]**
-      My status is `[FEATURE_LEAD: PREPARING_CONFLICT_RESOLUTION_DELEGATION]`. Feature ID: `{context.feature_id}`.
-      Merge conflicts occurred when merging `feature/{context.feature_id}` into **`main`**.
-      The `execute_command` output for the merge should list conflicting files: `{var_conflicting_files_list}`.
-      I need to:
-      1.  **First, log the conflict and delegation plan in `features/{context.feature_id}/active_log.md`.**
-      2.  Identify responsible coder(s) (e.g., `{var_responsible_coder_slug}`).
-      3.  **Then, delegate conflict resolution using `new_task`, providing structured context.**
-      My status after delegation will be `[FEATURE_LEAD: AWAITING_CONFLICT_RESOLUTION ({context.feature_id})]`.
-      </thinking>
-
-      "Merge conflicts detected when merging `feature/{context.feature_id}` into `main` for feature '{context.feature_name}'. Logging and preparing to delegate resolution."
-
-      1.  **Log Merge Conflict (Before Delegation):**
+      2.  **Log Feature Stability on `main`:**
           <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
-          <!-- Wait -->
+          <!-- Wait for content -->
           <thinking>
           Prepending to `active_log.md`:
-          `[YYYY-MM-DD HH:MM:SS] - MERGE CONFLICT (MAIN): Conflicts encountered when merging 'feature/{context.feature_id}' into 'main'. Conflicting files: {var_conflicting_files_list_as_string}. Delegating resolution to {var_responsible_coder_slug}. New task ID for resolution: {context.feature_id}-merge-conflict-main-01.`
+          `[YYYY-MM-DD HH:MM:SS] - Feature '{context.feature_name}' (ID: {context.feature_id}) is now considered stable and complete on the 'main' branch. All development, reviews, and QA have passed on 'main'.`
           </thinking>
           <write_to_file>
             <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
-            <content><!-- Full new content of active_log.md with conflict log --></content>
+            <content><!-- Full new content of active_log.md --></content>
             <line_count>...</line_count>
           </write_to_file>
-          <!-- Wait -->
+          <!-- Wait for confirmation -->
+
+      3.  **Update Feature Status in `progress.yaml`:**
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
+          <!-- Wait for content -->
           <thinking>
-          Merge conflict logged. Now, formulate message and delegate resolution.
-          My status after sending `new_task` will be `[FEATURE_LEAD: AWAITING_CONFLICT_RESOLUTION ({context.feature_id}-merge-conflict-main-01)]`.
+          Updating feature status to 'completed_on_main' (or 'ready_for_release_tagging') in `features/{context.feature_id}/progress.yaml`.
           </thinking>
-
-      2.  **Delegate Conflict Resolution Task:**
-          <new_task>
-            <mode>{var_responsible_coder_slug}</mode>
-            <message>
-            # EXAMPLE: YAML-like structure for Merge Conflict Resolution Task (with Main)
-            task_id: "{context.feature_id}-merge-conflict-main-01"
-            task_name: "Resolve Merge Conflicts for Feature {context.feature_id} into main"
-            feature_id: "{context.feature_id}"
-            feature_name: "{context.feature_name}"
-            feature_branch_with_conflicts: "feature/{context.feature_id}"
-            target_branch_for_merge: "main" # Branch to merge/rebase onto feature branch
-
-            conflicting_files: # List of files reported by git merge
-              # - path/to/file1.ext
-              # - path/to/file2.ext
-              # (This list {var_conflicting_files_list_as_yaml_list} should be populated by Feature Lead based on git output)
-
-            detailed_instructions: |
-              Merge conflicts were encountered when Feature Lead attempted to merge your feature branch `feature/{context.feature_id}` into `main`.
-              The conflicting files are listed above.
-
-            action_required:
-              - "Ensure your local `feature/{context.feature_id}` branch is clean and up-to-date with its remote counterpart (`origin feature/{context.feature_id}`)."
-              - "Fetch the latest changes from `origin main`."
-              - "Attempt to integrate the latest `main` into your `feature/{context.feature_id}` branch. Preferred method is `git rebase origin/main` (if project uses rebase workflow) or `git merge origin/main` (if project uses merge workflow). This should trigger the conflicts locally for you to resolve."
-              - "Carefully resolve all merge conflicts in the listed file(s) on the `feature/{context.feature_id}` branch. Ensure all application logic remains correct and all tests pass after resolution."
-              - "Commit the resolved changes to `feature/{context.feature_id}` with a clear commit message adhering to Universal Commit Protocol (e.g., 'fix({context.feature_id}): resolve merge conflicts with main ({context.feature_id}-merge-conflict-main-01)')."
-              - "Push the updated `feature/{context.feature_id}` branch (with resolved conflicts) to the remote repository."
-            
-            reporting_instructions: "Notify me (Feature-Lead for {context.feature_id}) via `attempt_completion` once this is done. Confirm that conflicts are resolved and the `feature/{context.feature_id}` branch is pushed and ready for another merge attempt into `main`. Include the commit hash for the resolution."
-            </message>
-          </new_task>
-          <!-- Feature-Lead's task is now frozen for this delegation. -->
+          <write_to_file>
+            <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+            <content><!-- Updated progress.yaml with feature status reflecting completion on main --></content>
+            <line_count>...</line_count>
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      <thinking>
+      Memory Bank updated.
+      The next step is to report this to Project Manager. The reporting rule in `07-...txt` will handle the `attempt_completion` to PM.
+      That report should highlight that the feature is complete and stable on `main`.
+      If this feature completion warrants a new version tag for the project, Project Manager will initiate that with DevOps.
+      </thinking>
+      "Feature '{context.feature_name}' successfully stabilized on `main`. Memory Bank updated. Ready to report to Project Manager."
+      My status becomes `[FEATURE_LEAD: FEATURE_STABLE_ON_MAIN]`. Feature ID: `{context.feature_id}`.
+      <!-- This rule execution ends here. The next action will be reporting to PM via rule 07. -->

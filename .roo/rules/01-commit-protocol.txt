@@ -13,7 +13,7 @@ version_control_procedures:
       <thinking>
       **[Standard Commit Protocol Activated - Initiating Commit Sequence]**
       I have been activated to perform a commit. I expect the following context to be available from the mode that activated me or from my current operational context:
-      - `{context.current_working_branch}`: The Git branch I am currently working on.
+      - `{git current branch}`: The Git branch I am currently working on.
       - `{context.changed_files_for_commit}`: A list of specific file paths (relative to `context.git_command_cwd`) to be committed.
       - `{context.commit_message_type}`: The Conventional Commit type (e.g., "feat", "fix").
       - `{context.commit_message_scope}` (optional): The scope for the Conventional Commit.

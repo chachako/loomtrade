@@ -1,12 +1,12 @@
 sub_task_delegation_and_tracking:
   delegate_sub_task:
-    trigger: "After feature {context.feature_id}'s `progress.yaml` has been populated with defined sub-tasks (status 'backlog' or 'defined') and Feature-Lead decides to initiate work on a specific sub-task."
+    trigger: "After feature {context.feature_id}'s `progress.yaml` has been populated with defined sub-tasks (status 'backlog' or 'defined') and Feature-Lead decides to initiate work on a specific sub-task, which will be developed directly on the `main` branch."
     priority: 850
     action: |
       <thinking>
       **[Delegate Sub-Task - Feature Lead]**
       My status is `[FEATURE_LEAD: PREPARING_SUB_TASK_DELEGATION]`. Feature ID: `{context.feature_id}`.
-      I need to delegate a sub-task for feature '{context.feature_name}'.
+      I need to delegate a sub-task for feature '{context.feature_name}' to be worked on directly on the `main` branch.
       1.  **Identify Sub-Task:** Read `features/{context.feature_id}/progress.yaml`. Select task `{var_task_id_to_delegate}` (name: `{var_task_name}`, assignee: `{var_assignee_slug}`, description link: `{var_desc_link}`).
       2.  **Update `progress.yaml`:** Mark task `{var_task_id_to_delegate}` as 'delegated'.
       3.  **Formulate `new_task` Message for `{var_assignee_slug}`:**
@@ -15,7 +15,7 @@ sub_task_delegation_and_tracking:
           - `task_name` (this is `{var_task_name}`)
           - `feature_id` (this is `{context.feature_id}`)
           - `feature_name` (this is `{context.feature_name}`)
-          - `feature_branch` (e.g., "feature/{context.feature_id}")
+          - `feature_branch`: "main" (explicitly state work is on main)
           - `detailed_task_description`: Specific instructions, using `{var_desc_link}`.
           - `feature_context_md_path`: Path to `./.roo/memory-bank/features/{context.feature_id}/context.md`
           - `feature_design_notes_md_path`: Path to `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`
@@ -24,17 +24,19 @@ sub_task_delegation_and_tracking:
           - `global_architecture_path`: Path to `./.roo/memory-bank/global/architecture_overview.md`
           - `deliverables_expected`: List of expected outputs.
           - `reporting_instructions`: How to report completion.
+          - `version_control_instructions`: Specific instructions for working on `main` (from `04-version-control-main-branch-guidance.txt`).
       4.  **Delegate using `new_task`.**
       My status after delegation will be `[FEATURE_LEAD: AWAITING_SUB_TASK_COMPLETION ({var_task_id_to_delegate})]`.
       </thinking>
 
-      <!-- Example: Delegating backend API design task {context.feature_id}-api-001 -->
+      <!-- Example: Delegating backend API design task {context.feature_id}-api-001 to be worked on main -->
       <thinking>
       Let `{var_task_id_to_delegate}` = `{context.feature_id}-api-001`.
       Let `{var_task_name}` = "Design product creation API endpoint".
       Let `{var_assignee_slug}` = `code-backend`.
-      Let `{var_desc_for_task}` = "Design the API endpoint contract (request/response schema, HTTP methods, status codes) for creating a new product. Ensure the design aligns with our global API design guidelines and specific requirements for this feature. Key details can be found in `context.md` (section 'Product Creation API Specs') and `design_notes.md` (section 'API Registration Endpoint')."
+      Let `{var_desc_for_task}` = "Design the API endpoint contract (request/response schema, HTTP methods, status codes) for creating a new product. Ensure the design aligns with our global API design guidelines and specific requirements for this feature. Key details can be found in `context.md` (section 'Product Creation API Specs') and `design_notes.md` (section 'API Registration Endpoint'). All work will be on the `main` branch."
       Let `{var_deliverables}` = ["A well-defined API contract (e.g., OpenAPI snippet or clear Markdown description).", "Document this design by creating/updating a section in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`."]
+      Let `{var_vc_instructions}` = "All work MUST be done directly on the `main` branch. Before starting, ensure your local `main` is up-to-date (`git checkout main && git pull origin main`). Follow Universal Commit Protocol, including task ID `({context.feature_id}/{var_task_id_to_delegate})`. Push changes to `origin main` upon completion."
 
       **Step 1: Update Sub-Task Status in `progress.yaml` (Before Delegation).**
       </thinking>
@@ -55,21 +57,28 @@ sub_task_delegation_and_tracking:
       </thinking>
 
       **Step 2: Formulate Message and Delegate the Sub-Task.**
-      "Delegating sub-task '{var_task_name}' to `{var_assignee_slug}`."
+      "Delegating sub-task '{var_task_name}' to `{var_assignee_slug}` (on `main` branch)."
       <new_task>
         <mode>{var_assignee_slug}</mode>
         <message>
-        # EXAMPLE: YAML-like structure for Sub-Task Assignment
-        task_id: "{context.feature_id}-api-001" # Actual value of {var_task_id_to_delegate}
-        task_name: "Design product creation API endpoint" # Actual value of {var_task_name}
+        # YAML-like structure for Sub-Task Assignment
+        task_id: "{context.feature_id}-api-001"
+        task_name: "Design product creation API endpoint"
         feature_id: "{context.feature_id}"
         feature_name: "{context.feature_name}"
-        feature_branch: "feature/{context.feature_id}"
+        feature_branch: "main" # Explicitly main branch
 
         detailed_task_description: |
           Design the API endpoint contract (request/response schema, HTTP methods, status codes) for creating a new product.
           Ensure the design aligns with our global API design guidelines and specific requirements for this feature.
           Key details can be found in `context.md` (section 'Product Creation API Specs') and `design_notes.md` (section 'API Registration Endpoint').
+
+        version_control_instructions: |
+          All work MUST be done directly on the `main` branch.
+          Before starting work, ensure your local `main` branch is up-to-date with the remote `origin/main` by running `git checkout main` and then `git pull origin main`.
+          Follow the Universal Commit Protocol (`.roo/rules/01-universal-commit-protocol.txt`) for all commits. This protocol requires atomic commits with Conventional Commit formatted messages (all lowercase), including this task ID `({context.feature_id}/{context.feature_id}-api-001)`.
+          Ensure all unit tests pass before committing.
+          Push your changes on `main` to `origin/main` frequently, and especially before signaling task completion.
 
         deliverables_expected:
           - "A well-defined API contract (e.g., OpenAPI snippet or clear Markdown description)."
@@ -82,10 +91,9 @@ sub_task_delegation_and_tracking:
         global_shared_patterns_path: "global/shared_system_patterns.md"
         global_architecture_path: "global/architecture_overview.md"
 
-        reporting_instructions: "Upon completion, use `attempt_completion` with a summary of the designed API contract and a reference to where it's documented (e.g., in `design_notes.md`)."
+        reporting_instructions: "Upon completion, use `attempt_completion` with a summary of the designed API contract, a reference to where it's documented, and the commit hash for changes made on `main`."
         </message>
       </new_task>
-      <!-- Feature-Lead's task is now frozen for this delegation. -->
 
   track_sub_task_completion:
     trigger: "When Feature-Lead receives an `attempt_completion` message from a sub-task mode (e.g., `code-backend`, `code-frontend`, `qa-tester`, `code-reviewer`) for a sub-task related to feature {context.feature_id}."
@@ -99,30 +107,29 @@ sub_task_delegation_and_tracking:
       - `task_id_completed`
       - `status_of_completion` (e.g., 'success', 'failure_with_blocker', 'needs_clarification')
       - `summary_of_work_done`
-      - `outputs_or_artifacts_paths` (e.g., commit hashes, path to new/updated docs)
+      - `outputs_or_artifacts_paths` (e.g., commit hashes on `main`, path to new/updated docs)
       - `new_issues_or_blockers_encountered` (if any)
 
       My process:
       1.  **Parse the sub-task's result.** (Extract the above fields).
       2.  **Update `features/{context.feature_id}/progress.yaml`:**
           *   Set status of `{context.completed_task_id}`.
-          *   Log commit hashes, links to artifacts from `outputs_or_artifacts_paths`.
+          *   Log commit hashes (on `main`) from `outputs_or_artifacts_paths`.
       3.  **Log significant events/issues from `new_issues_or_blockers_encountered` into `features/{context.feature_id}/active_log.md`.**
       4.  **Decision Point:** Based on `status_of_completion` and feature progress, decide next steps.
       </thinking>
 
-      <!-- Example: code-backend completes task {context.feature_id}-api-001 -->
       <thinking>
-      Received completion for task `{context.feature_id}-api-001`.
-      Parsing the result from `code-backend`...
-      Assume result: `task_id_completed: "{context.feature_id}-api-001", status_of_completion: "success", summary_of_work_done: "API design complete.", outputs_or_artifacts_paths: ["./.roo/memory-bank/features/{context.feature_id}/design_notes.md#product-creation-api"], new_issues_or_blockers_encountered: "None"`.
+      Received completion for task `{context.completed_task_id}`.
+      Parsing the result from `{context.reporting_mode_slug}`...
+      Assume result: `task_id_completed: "{context.completed_task_id}", status_of_completion: "success", summary_of_work_done: "API design complete.", outputs_or_artifacts_paths: ["Commit hash: {actual_commit_hash_on_main}", "./.roo/memory-bank/features/{context.feature_id}/design_notes.md#product-creation-api"], new_issues_or_blockers_encountered: "None"`.
 
       I will update `features/{context.feature_id}/progress.yaml`.
       </thinking>
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
       <!-- Wait -->
       <thinking>
-      Updating task `{context.feature_id}-api-001` status to 'completed' in `progress.yaml`.
+      Updating task `{context.completed_task_id}` status to 'completed' and logging commit hash in `progress.yaml`.
       </thinking>
       <write_to_file>
         <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
@@ -131,13 +138,13 @@ sub_task_delegation_and_tracking:
       </write_to_file>
       <!-- Wait -->
       <thinking>
-      Sub-task `{context.feature_id}-api-001` is marked complete.
-      Next, I'll check `progress.yaml` for dependent tasks, e.g., the implementation task.
+      Sub-task `{context.completed_task_id}` is marked complete.
+      Next, I'll check `progress.yaml` for dependent tasks.
       If ready, I will trigger `delegate_sub_task` logic for it.
       </thinking>
       <attempt_completion>
         <result>
-        Sub-task '{context.feature_id}-api-001' for feature '{context.feature_name}' has been processed as completed.
+        Sub-task '{context.completed_task_id}' for feature '{context.feature_name}' has been processed as completed. Changes are on the `main` branch.
         Preparing to delegate next sub-task if applicable.
         </result>
       </attempt_completion>
@@ -153,6 +160,6 @@ sub_task_delegation_and_tracking:
           `task_type: "status_inquiry"`
           `original_task_id: "{var_stalled_task_id}"`
           `feature_id: "{context.feature_id}"`
-          `query: "Status update for task '{var_stalled_task_name}'?"`
+          `query: "Status update for task '{var_stalled_task_name}'? All work is on main branch."`
       3.  Send `new_task`. My status becomes `[FEATURE_LEAD: AWAITING_STATUS_INQUIRY_RESPONSE ({var_stalled_task_id})]`.
       </thinking>

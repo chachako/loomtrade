@@ -1,82 +1,87 @@
 frontend_coding_workflow:
   execute_assigned_frontend_task:
-    trigger: "When a new frontend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch)."
-    priority: 900 # Core operational rule
+    trigger: "When a new frontend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch which will be 'main')."
+    priority: 900
     action: |
       <thinking>
       **[Frontend Coding Task Execution Protocol - Feature: {context.feature_id}, Task: {context.task_id}]**
       I have received task: '{context.task_name}' for feature '{context.feature_name}' (ID: {context.feature_id}, Task ID: {context.task_id}).
-      Branch: `{context.feature_branch}`. Frontend source dir: `frontend/`. All code TypeScript.
+      Target Branch for all work: `main`. Frontend source dir: `frontend/`. All code TypeScript.
       My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_UNDERSTANDING_REQS]`.
 
       Process:
-      1.  **Understand Requirements:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `.roo/rules-code-frontend/01-standards-and-practices.txt`. If unclear, report 'blocked_needs_clarification'. (Assume clear).
+      1.  **Understand Requirements & Ensure `main` is Up-to-Date:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `.roo/rules-code-frontend/01-standards-and-practices.txt`.
+          Before coding, execute `git checkout main` then `git pull origin main`. If unclear on requirements, report 'blocked_needs_clarification'. (Assume clear).
       2.  **Plan Implementation:** Mental breakdown. Identify files in `frontend/` (e.g., `frontend/src/components/`) to create/modify.
       3.  **Implement Code & Tests (Iterative):** Use `write_to_file` or `apply_diff`/`insert_content`. Generate TypeScript code. Write unit/component tests.
-      4.  **Commit Changes:** After coding and local tests pass:
+      4.  **Commit Changes to `main`:** After coding and local tests pass:
           a.  Identify all changed/created files within `frontend/` relevant to this task.
           b.  Use `execute_command` to `git add <specific_files>`.
-          c.  Formulate commit message per standards.
+          c.  Formulate commit message per standards (e.g., `feat({context.feature_id}): ... - {context.task_id}`).
           d.  Use `execute_command` to `git commit -m "message"`.
           e.  Use `execute_command` to `git log -1 --pretty=format:"%H"` to get commit hash.
-          f.  (Optional, per FL) Use `execute_command` to `git push origin {context.feature_branch}`.
+          f.  Use `execute_command` to `git push origin main` (as instructed by Feature Lead for work on `main`).
       5.  **Report Completion:** Use `attempt_completion` with summary, test status, and actual commit hash.
 
-      Example Task: `{context.task_id}` = `user_mgmt-task-004`: "Create Registration UI form component". Feature `{context.feature_id}` = `user_mgmt`. Branch: `feature/user_mgmt`.
+      Example Task: `{context.task_id}` = `user_mgmt-task-004`: "Create Registration UI form component". Feature `{context.feature_id}` = `user_mgmt`.
 
-      **Step 1: Read Memory Bank files.**
+      **Step 1: Read Memory Bank files & Update `main` branch.**
       </thinking>
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
       <!-- Wait -->
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
       <!-- Wait -->
+      <execute_command><command>git checkout main</command><cwd>.</cwd></execute_command>
+      <!-- Wait -->
+      <execute_command><command>git pull origin main</command><cwd>.</cwd></execute_command>
+      <!-- Wait for confirmation -->
       <thinking>
       **[Frontend Task - Cont. {context.feature_id}/{context.task_id}]**
       My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_PLANNING_IMPL]`.
-      Requirements & UI specs analyzed. Task: Create `frontend/src/components/Auth/RegistrationForm.vue` (with `<script lang="ts">`).
+      Requirements & UI specs analyzed. `main` branch is up-to-date. Task: Create `frontend/src/components/Auth/RegistrationForm.vue` (with `<script lang="ts">`).
 
       **Step 2 & 3: Implement Code & Write Tests (Iterative Process).**
-      I will now perform a sequence of file operations to implement the component and its tests.
-      Each `write_to_file` or `apply_diff` implies a successful confirmation before the next.
       (Assume I am creating/modifying `frontend/src/components/Auth/RegistrationForm.vue` and `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts` based on specifications from Memory Bank and adhering to `01-standards-and-practices.txt`.)
 
       *Simulating completion of coding and local testing for `user_mgmt-task-004`.*
-      Let's assume the following files were created/modified:
+      Files created/modified:
       - `frontend/src/components/Auth/RegistrationForm.vue`
       - `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts`
       All local unit tests are passing.
       My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_COMMITTING]`.
 
-      **Step 4: Commit Changes to branch `{context.feature_branch}`.**
-      First, I need to add the specific files I changed.
+      **Step 4: Commit Changes to `main`.**
       </thinking>
       <execute_command>
         <command>git add frontend/src/components/Auth/RegistrationForm.vue frontend/tests/unit/components/Auth/RegistrationForm.spec.ts</command>
-        <cwd>.</cwd> <!-- Assuming commands are run from project root -->
+        <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for confirmation of git add -->
+      <!-- Wait -->
       <thinking>
-      Files added. Now, construct commit message according to `01-standards-and-practices.txt`.
-      Commit message: `feat({context.feature_id}): implement RegistrationForm component - {context.task_id}`
-      (Replacing {context.feature_id} and {context.task_id} with actual values).
+      Files added. Commit message: `feat({context.feature_id}): implement RegistrationForm component - {context.task_id}`
       </thinking>
       <execute_command>
         <command>git commit -m "feat({context.feature_id}): implement RegistrationForm component - {context.task_id}"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for confirmation of git commit. -->
+      <!-- Wait -->
       <thinking>
-      Commit successful. Now, get the commit hash.
+      Commit successful. Get commit hash.
       </thinking>
       <execute_command>
         <command>git log -1 --pretty=format:"%H"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for output, which should be the commit hash. Let's assume the output is `actual_commit_hash_from_git_log`. -->
+      <!-- Wait for output: {actual_commit_hash_from_git_log}. -->
       <thinking>
-      I have the commit hash: `{actual_commit_hash_from_git_log}`.
-      Pushing changes might be instructed by Feature Lead. If so: `git push origin {context.feature_branch}`.
-
+      Commit hash: `{actual_commit_hash_from_git_log}`. Now push to `origin main`.
+      </thinking>
+      <execute_command>
+        <command>git push origin main</command>
+        <cwd>.</cwd>
+      </execute_command>
+      <!-- Wait for confirmation of push -->
+      <thinking>
       **Step 5: Report Completion to Feature Lead.**
       My status becomes `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
@@ -84,11 +89,11 @@ frontend_coding_workflow:
       <result>
       Task '{context.task_id}: Create Registration UI form component' for feature '{context.feature_id}' is complete.
       **Summary of Work:**
-      - Implemented `frontend/src/components/Auth/RegistrationForm.vue` using TypeScript, with fields, validation, and event emission based on specifications.
+      - Implemented `frontend/src/components/Auth/RegistrationForm.vue` using TypeScript.
       - Created unit tests in `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts`.
       **Test Status:** All local unit tests are passing.
       **Code Standards:** Adhered to guidelines in `.roo/rules-code-frontend/01-standards-and-practices.txt`.
-      **Branch:** All work performed and committed on branch `{context.feature_branch}`.
+      **Branch:** All work performed, committed, and pushed on `main` branch.
       **Commit Hash:** `{actual_commit_hash_from_git_log}`.
       The component is ready for integration or further review by the Feature Lead.
       </result>
