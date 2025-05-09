@@ -143,7 +143,7 @@ api_contract_management_feature_lead:
       <new_task>
         <mode>{context.original_api_impl_assignee_slug}</mode> <!-- e.g., code-backend -->
         <message>
-        # YAML-like structure for API Implementation Correction Task
+        # EXAMPLE: YAML-like structure for API Implementation Correction Task
         task_id: "{var_correction_task_id}"
         task_name: "API Correction: Add 'average_rating' to Get Product Details API"
         feature_id: "{context.feature_id}"

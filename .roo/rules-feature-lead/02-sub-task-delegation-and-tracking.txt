@@ -59,7 +59,7 @@ sub_task_delegation_and_tracking:
       <new_task>
         <mode>{var_assignee_slug}</mode>
         <message>
-        # YAML-like structure for Sub-Task Assignment
+        # EXAMPLE: YAML-like structure for Sub-Task Assignment
         task_id: "{context.feature_id}-api-001" # Actual value of {var_task_id_to_delegate}
         task_name: "Design product creation API endpoint" # Actual value of {var_task_name}
         feature_id: "{context.feature_id}"

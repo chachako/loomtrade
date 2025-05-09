@@ -44,7 +44,7 @@ code_review_coordination_feature_lead:
           <new_task>
             <mode>code-reviewer</mode>
             <message>
-            # YAML-like structure for Code Review Assignment
+            # EXAMPLE: YAML-like structure for Code Review Assignment
             task_id_for_reviewer: "{context.feature_id}-review-{context.completed_coder_task_id}" # Unique ID for this review task
             feature_id: "{context.feature_id}"
             feature_name: "{context.feature_name}"
@@ -144,7 +144,7 @@ code_review_coordination_feature_lead:
       <new_task>
         <mode>{context.original_assignee_mode_slug_for_reviewed_task}</mode>
         <message>
-        # YAML-like structure for Code Review Rework Task
+        # EXAMPLE: YAML-like structure for Code Review Rework Task
         task_id: "{var_rework_task_id}"
         task_name: "Rework for Task: {context.reviewed_task_id} - {context.name_of_reviewed_task}"
         feature_id: "{context.feature_id}"

@@ -72,7 +72,7 @@ feature_delegation_protocol:
       <new_task>
         <mode>feature-lead</mode>
         <message>
-        # YAML-like structure for Feature Lead task assignment
+        # EXAMPLE: YAML-like structure for Feature Lead task assignment
         task_id: "FL-Task-user_authentication-01" # Unique task ID for this FL assignment
         requesting_mode_id: "Project-Manager"
         feature_id: "user_authentication"
