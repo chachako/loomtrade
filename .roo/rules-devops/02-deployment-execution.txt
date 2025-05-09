@@ -1,0 +1,114 @@
+devops_deployment_execution:
+  execute_deployment_to_environment:
+    trigger: "When DevOps-Mode's status is `READY_FOR_EXECUTION` for task {context.task_id} AND {context.operation_type} is 'deploy_to_staging' or 'deploy_to_production' or similar environment-specific deployment."
+    priority: 860 # Specific operation trigger
+    action: |
+      <thinking>
+      **[Execute Deployment to Environment - DevOps]**
+      My status is `[DEVOPS ({context.task_id}): EXECUTING_DEPLOYMENT_{context.target_environment.upper()}]`.
+      Task: Deploy Git reference `{context.git_reference}` to environment `{context.target_environment}` for repository `{context.project_repository_path}`.
+      Deployment script (if specified): `{context.deployment_script_path}`.
+      Deployment parameters (if specified): `{context.deployment_parameters}`.
+
+      The process will be:
+      1.  **Pre-Deployment Checks (Mental or Scripted):**
+          *   Verify target environment (`{context.target_environment}`) is known and accessible (conceptually).
+          *   Confirm the deployment script path (`{context.deployment_script_path}`) is valid. If no specific script is provided, I will look for a standard script based on environment and project conventions (e.g., `scripts/deploy-{context.target_environment}.sh` as potentially defined in `global/shared_system_patterns.md`).
+          *   Ensure the Git reference `{context.git_reference}` (branch/tag/commit) exists and is stable/approved for this environment (this approval usually comes from the requesting mode).
+          *   If deploying to 'production', an extra confirmation step or check for explicit approval might be needed if not already clear from the task. (Assume approval is granted for this flow).
+      2.  **Construct Deployment Command:** Formulate the command to execute the deployment script, passing `{context.git_reference}` and any `{context.deployment_parameters}` as arguments to the script.
+      3.  **Execute Deployment Command:** Use `execute_command`. This might be a long-running command.
+      4.  **Monitor Deployment (if possible/instructed):** If the script provides progress or the CI/CD system (if used) has a way to monitor, I would conceptually do so. For `execute_command`, I will rely on its final output.
+      5.  **Post-Deployment Verification (Basic):** If possible, perform a very basic health check (e.g., ping a URL, check a service status via another command) if such a check is defined as part of the deployment or easily executable.
+      6.  Report success or failure to the requesting mode via `attempt_completion`.
+      </thinking>
+
+      "Preparing to deploy reference `{context.git_reference}` to environment `{context.target_environment}`."
+
+      <thinking>
+      **Step 1: Pre-Deployment Checks.**
+      Target environment: `{context.target_environment}`.
+      Git reference: `{context.git_reference}`.
+      Deployment script path: I will use `{context.deployment_script_path}` if provided. If not, I'll assume a standard script like `scripts/deploy-{context.target_environment}.sh`. Let's assume `{context.deployment_script_path_resolved}` is the final script path.
+      All checks passed. If this were 'production', I would double-check for explicit final approval in the request.
+      </thinking>
+
+      <thinking>
+      **Step 2 & 3: Construct and Execute Deployment Command.**
+      The command will be something like: `{context.deployment_script_path_resolved} {context.git_reference} {context.deployment_parameters_string}`.
+      The `deployment_parameters_string` would be a formatted string of any parameters passed.
+      </thinking>
+      <execute_command>
+        <command>{context.deployment_script_path_resolved} {context.git_reference} {context.deployment_parameters_string_if_any}</command>
+        <cwd>{context.project_repository_path}</cwd> <!-- Or specific directory if scripts are elsewhere -->
+      </execute_command>
+      <!-- Wait for deployment command to complete. This could take time. The output should indicate success/failure. -->
+
+      <thinking>
+      **Step 4 & 5: Monitor (Conceptual) and Basic Post-Deployment Verification (Conceptual).**
+      The `execute_command` has completed. I will analyze its output.
+      If the script performs its own health checks and reports success, that's good.
+      If I were instructed and able to perform an additional simple health check (e.g., `curl -s -o /dev/null -w "%{http_code}" http://{deployed_app_url_for_env}` and check for 200), I would do it here. For now, assume script output is sufficient.
+      </thinking>
+
+      <thinking>
+      Deployment to `{context.target_environment}` should be complete.
+      I will now prepare the completion report.
+      My status becomes `[DEVOPS ({context.task_id}): REPORTING_RESULT]`.
+      </thinking>
+      <attempt_completion>
+        <result>
+        **DevOps Task Complete: Deployment to {context.target_environment}**
+        **Task ID:** {context.task_id}
+        **Operation:** {context.operation_type}
+        **Details:**
+        - Successfully executed deployment of Git reference `{context.git_reference}` to the `{context.target_environment}` environment.
+        - Deployment script used: `{context.deployment_script_path_resolved}`.
+        - Parameters (if any): `{context.deployment_parameters_string_if_any}`.
+        **Output/Confirmation:** [Summarize key success messages from deployment script output, or state "Deployment script reported success."]
+        **Repository:** `{context.project_repository_path}`
+        The application/service should now be running version `{context.git_reference}` in `{context.target_environment}`.
+        </result>
+      </attempt_completion>
+      My status becomes `[DEVOPS ({context.task_id}): COMPLETED_AWAITING_NEW]`.
+
+  handle_deployment_error:
+    trigger: "When `execute_command` for a deployment script fails during `execute_deployment_to_environment`."
+    priority: 850
+    action: |
+      <thinking>
+      **[Handle Deployment Error - DevOps]**
+      My status is `[DEVOPS ({context.task_id}): DEPLOYMENT_ERROR_{context.target_environment.upper()}]`.
+      The deployment script for operation '{context.operation_type}' to environment '{context.target_environment}' failed.
+      Error message from `execute_command`: `{system.error_message}`.
+      Deployment script output (if available): `{system.command_output}`.
+
+      I need to:
+      1.  Log the error details.
+      2.  Report the failure clearly to `{context.requesting_mode_id}` via `attempt_completion`, including the error message and any relevant script output.
+      3.  Suggest potential next steps (e.g., "Check deployment logs on the server.", "Verify environment configuration.", "Consider a rollback if a previous stable version is known and a rollback script exists.").
+      </thinking>
+      "Deployment to '{context.target_environment}' for task {context.task_id} failed."
+      <attempt_completion>
+        <result>
+        **DevOps Task FAILED: Deployment to {context.target_environment}**
+        **Task ID:** {context.task_id}
+        **Operation:** {context.operation_type}
+        **Details:**
+        Failed to deploy Git reference `{context.git_reference}` to the `{context.target_environment}` environment.
+        **Error from deployment script/execution:** {system.error_message}
+        **Deployment Script Output (last lines if available):**
+        ```
+        {system.command_output_snippet}
+        ```
+        **Recommendation:**
+        1.  Review the full deployment logs for environment '{context.target_environment}' for more details.
+        2.  Check application logs on the target servers.
+        3.  Verify environment-specific configurations and dependencies.
+        4.  If this was an update to a running service, consider rollback procedures if available and critical.
+        Please investigate and advise on next steps or if a re-attempt with modifications is needed.
+        </result>
+      </attempt_completion>
+      My status becomes `[DEVOPS ({context.task_id}): FAILED_AWAITING_NEW]`.
+
+  # Placeholder for other operations like 'trigger_ci_job', 'monitor_ci_job', 'rollback_deployment'

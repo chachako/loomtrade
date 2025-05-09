@@ -1,254 +1,356 @@
 memory_bank_management:
   initialization_check:
     trigger: "At the beginning of a new project, or when the Project Manager Mode starts and needs to verify Memory Bank integrity."
+    priority: 900
     action: |
       <thinking>
-      **[Memory Bank Initialization & Verification Protocol]**
-      My primary goal here is to ensure a valid Memory Bank structure exists. If not, I need to create it.
-      My status should be `[PROJECT_MANAGER: CHECKING_MEMORY_BANK]`.
+      **[Memory Bank Initialization & Verification Protocol - Project Manager]**
+      My status is `[PROJECT_MANAGER: CHECKING_MEMORY_BANK]`.
+      My goal is to ensure a valid Memory Bank structure exists. If not, I need to create it.
 
       1.  **Step 1: Check for the existence of the `./.roo/memory-bank/` directory.**
           I will use the `list_files` tool to check the contents of the `./.roo/` directory.
       </thinking>
       <list_files>
-      <path>./.roo/</path>
-      <recursive>false</recursive>
+        <path>./.roo/</path>
+        <recursive>false</recursive>
       </list_files>
       <thinking>
       **[Memory Bank Initialization & Verification Protocol - Cont.]**
-      Now I need to process the result of `list_files`.
+      I have received the result of `list_files` for `./.roo/`. Now I need to analyze it.
 
       *   **Scenario A: `memory-bank/` directory DOES NOT exist.**
-          If the `list_files` result shows no `memory-bank/` subdirectory within `.roo/`, then the entire Memory Bank needs to be initialized. I will proceed with creation steps. My status will change to `[PROJECT_MANAGER: INITIALIZING_MEMORY_BANK]`.
+          If the `list_files` result shows no `memory-bank/` subdirectory, the entire Memory Bank needs to be initialized.
+          My status will change to `[PROJECT_MANAGER: INITIALIZING_MEMORY_BANK]`. I will proceed with creation steps by triggering `perform_full_initialization`.
 
       *   **Scenario B: `memory-bank/` directory DOES exist.**
-          If `memory-bank/` exists, I need to verify its core internal structure. I'll list files within `memory-bank/` and `memory-bank/global/` to check for essential files like `manifest.yaml`, `global/project_overview.md`, etc.
-          I will use `list_files` again for this. If essential files are missing, I will proceed to create the missing ones. My status will change to `[PROJECT_MANAGER: VERIFYING_MEMORY_BANK_STRUCTURE]`.
+          I need to verify its core internal structure.
+          My status will change to `[PROJECT_MANAGER: VERIFYING_MEMORY_BANK_STRUCTURE]`. I will trigger `verify_and_load_memory_bank`.
 
-      *   **Scenario C: `memory-bank/` directory AND core structure exist.**
-          If all checks pass, the Memory Bank is considered operational. I will proceed to read key global files to get up to speed. My status will change to `[PROJECT_MANAGER: ACTIVE]`.
-
-      Based on the previous `list_files` output for `./.roo/`:
-      Let's assume the `list_files` output will be provided by the user in the next turn. I will then decide which scenario (A, B, or C) applies and proceed accordingly.
-
-      For now, I will outline the thinking for Scenario A (full initialization) as it's the most complex creation path. If the directory exists, my subsequent thinking process will adapt based on the verification of internal files.
-      My immediate next step, after receiving the `list_files` result for `./.roo/`, will be to analyze that result.
-
-      **IF SCENARIO A (No `memory-bank/` directory):**
-      My status becomes `[PROJECT_MANAGER: INITIALIZING_MEMORY_BANK]`.
-      I will create the necessary directories and initial global files one by one.
-      I will use `execute_command` to create directories and `write_to_file` for files. For YAML files, I will construct the initial content as a string.
-      The user needs to be informed.
-
-      1.  **Create base directories:** `memory-bank/`, `memory-bank/global/`, `memory-bank/features/`, `memory-bank/archive/`.
-          I will use `execute_command` with `mkdir -p`.
-      2.  **Create `manifest.yaml`:**
-          I will use `write_to_file` with the full initial YAML content.
-          I need to calculate the `line_count` for the content.
-      3.  **Create `global/project_overview.md`:**
-          I will use `write_to_file` with the full initial Markdown content and calculate `line_count`.
-      4.  **Create `global/master_progress.yaml`:**
-          I will use `write_to_file` with the full initial YAML content and calculate `line_count`.
-      5.  **Create `global/architecture_overview.md` (placeholder):**
-          I will use `write_to_file` and calculate `line_count`.
-      6.  **Create `global/global_decisions.md` (placeholder):**
-          I will use `write_to_file` and calculate `line_count`.
-      7.  **Create `global/shared_system_patterns.md` (placeholder):**
-          I will use `write_to_file` and calculate `line_count`.
-      8.  After all creation steps, I will inform the user and ask for initial project details. Then set status to `[PROJECT_MANAGER: ACTIVE]`.
-
-      **IF SCENARIO B (memory-bank/ exists, but some core files might be missing):**
-      My status becomes `[PROJECT_MANAGER: VERIFYING_MEMORY_BANK_STRUCTURE]`.
-      I will use `list_files` on `./.roo/memory-bank/` and `./.roo/memory-bank/global/`.
-      Then, for each *missing* essential file (e.g., `manifest.yaml`, `global/project_overview.md`), I will use `write_to_file` to create it with its default content (as defined in Scenario A's steps), calculating `line_count` each time.
-      Once all missing essential files are created, I will proceed as in Scenario C.
-
-      **IF SCENARIO C (memory-bank/ and core structure exist):**
-      My status becomes `[PROJECT_MANAGER: LOADING_MEMORY_BANK]`.
-      I will read `manifest.yaml`, `global/project_overview.md`, and `global/master_progress.yaml` using `read_file`.
-      After successfully reading, I will inform the user: "Memory Bank loaded. Project Manager is active and ready." and set status to `[PROJECT_MANAGER: ACTIVE]`.
-
-      My next action depends on the actual output of the initial `list_files` for `./.roo/`. I am prepared for all scenarios.
+      My next action depends on the `list_files` result.
       </thinking>
-      <!-- The actual tool calls for creation (Scenario A) or verification (Scenario B) or loading (Scenario C) will occur in subsequent turns, after the LLM analyzes the output of the initial `list_files` and subsequent `list_files` if needed. The thinking block above outlines the decision tree. -->
+      <!-- The LLM will now proceed based on the actual list_files result by triggering the appropriate subsequent rule. -->
 
-  update_global_memory_bank:
-    trigger: "When significant project-level changes occur (new feature defined in master_progress, milestone reached, risk identified, user provides global updates), or when the 'UMB' or 'Update Project Memory' command is received from the user for global files."
-    priority: 900
+  perform_full_initialization: # Corresponds to Scenario A
+    trigger: "When 'initialization_check' determines that the `./.roo/memory-bank/` directory does not exist."
+    priority: 890
     action: |
       <thinking>
-      **[Global Memory Bank Update Protocol]**
-      My status should be `[PROJECT_MANAGER: UPDATING_MEMORY_BANK]`.
-      A Memory Bank update for global project information is required. I need to identify which global files need updating based on the trigger or user request.
-      This typically involves `manifest.yaml` (if structure changes or for timestamp), `global/project_overview.md`, `global/master_progress.yaml`, `global/global_decisions.md`, or the risk section in `project_overview.md`.
+      **[Full Memory Bank Initialization - Project Manager]**
+      Status: `[PROJECT_MANAGER: INITIALIZING_MEMORY_BANK]`.
+      The `./.roo/memory-bank/` directory is missing. I will create all necessary directories and initial global files.
+      I will use `write_to_file` for each file, which should also create parent directories.
+      The timestamp YYYY-MM-DD HH:MM:SS will be replaced with the current timestamp.
+      </thinking>
+
+      "The Memory Bank is not initialized. I will create the core structure now."
+
+      1.  **Create `memory-bank/manifest.yaml`:**
+          <thinking>Content will be from `_default_manifest_yaml_content_v2`. I need to calculate `line_count`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/manifest.yaml</path>
+            <content>
+            # Memory Bank Manifest (v1.1)
+            # Managed by: Project Manager Mode
+            # Last updated: YYYY-MM-DD HH:MM:SS
+
+            version: "1.1" # Updated version due to risk_issue_register.md
+            description: "Central knowledge base for the project."
+
+            file_structure:
+              manifest: "manifest.yaml"
+              global_directory: "global/"
+              feature_directory_root: "features/"
+              archive_directory: "archive/"
+
+            global_files: # Paths relative to .roo/memory-bank/
+              project_overview: "global/project_overview.md"
+              architecture_overview: "global/architecture_overview.md"
+              global_decisions: "global/global_decisions.md"
+              master_progress: "global/master_progress.yaml"
+              shared_system_patterns: "global/shared_system_patterns.md"
+              risk_issue_register: "global/risk_issue_register.md" # Added new file
+
+            feature_index: {} # map of feature_id to its details
+
+            settings:
+              default_date_format: "YYYY-MM-DD HH:MM:SS"
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      2.  **Create `memory-bank/global/project_overview.md`:**
+          <thinking>Content from `_default_project_overview_md_content_v2`. Calculate `line_count`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/global/project_overview.md</path>
+            <content>
+            # Project Overview
+            *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
+
+            ## 1. Project Goal & Vision
+            *(To be filled in based on user input)*
+
+            ## 2. Scope
+            ### 2.1. In Scope:
+            *(To be filled in)*
+            ### 2.2. Out of Scope:
+            *(To be filled in)*
+
+            ## 3. Key Stakeholders
+            *(To be filled in)*
+
+            ## 4. Assumptions & Dependencies
+            *No assumptions or dependencies logged yet.*
+            <!-- Risk & Issues log moved to global/risk_issue_register.md -->
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      3.  **Create `memory-bank/global/risk_issue_register.md`:**
+          <thinking>Content from `_default_risk_issue_register_md_content_v2`. Calculate `line_count`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/global/risk_issue_register.md</path>
+            <content>
+            # Risk and Issue Register
+            *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
+
+            | ID    | Date Logged | Description                                  | Type | Status | Impact | Source | Owner           | Notes / Mitigation / Resolution Plan |
+            |-------|-------------|----------------------------------------------|------|--------|--------|--------|-----------------|--------------------------------------|
+            <!-- No entries yet -->
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      4.  **Create `memory-bank/global/master_progress.yaml`:**
+          <thinking>Content from `_default_master_progress_yaml_content_v2`. Calculate `line_count`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/global/master_progress.yaml</path>
+            <content>
+            # Master Project Progress
+            # Updated by Project Manager Mode.
+            # Last updated: YYYY-MM-DD HH:MM:SS
+
+            project_name: "Unnamed Project"
+            overall_status: "planning"
+
+            features: {} # map of feature_id to its details
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      5.  **Create `memory-bank/global/architecture_overview.md` (placeholder):**
+          <write_to_file>
+            <path>./.roo/memory-bank/global/architecture_overview.md</path>
+            <content>
+            # Architecture Overview
+            *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
+            *(To be detailed by Architect Mode or based on project discussions)*
+            </content>
+            <line_count>...</line_count>
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      6.  **Create `memory-bank/global/global_decisions.md` (placeholder):**
+          <write_to_file>
+            <path>./.roo/memory-bank/global/global_decisions.md</path>
+            <content>
+            # Global Decision Log
+            *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
+            *Format: ### [YYYY-MM-DD] Decision ID: Short Title...*
+            </content>
+            <line_count>...</line_count>
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      7.  **Create `memory-bank/global/shared_system_patterns.md` (placeholder):**
+          <write_to_file>
+            <path>./.roo/memory-bank/global/shared_system_patterns.md</path>
+            <content>
+            # Shared System Patterns & Standards
+            *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
+            *(To be detailed by Architect Mode or Feature Leads)*
+            </content>
+            <line_count>...</line_count>
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      8.  **Create placeholder files for `features/` and `archive/` directories:**
+          <write_to_file>
+            <path>./.roo/memory-bank/features/.gitkeep</path>
+            <content></content>
+            <line_count>0</line_count>
+          </write_to_file>
+          <!-- Wait for confirmation -->
+          <write_to_file>
+            <path>./.roo/memory-bank/archive/.gitkeep</path>
+            <content></content>
+            <line_count>0</line_count>
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      <thinking>
+      All core files and directories should now be created.
+      </thinking>
+      "Memory Bank core structure has been initialized. Project Manager is now active."
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.
+      <ask_followup_question>
+        <question>To start, could you please provide a high-level vision and the primary goals for this project? This will help me populate the `project_overview.md` file.</question>
+        <follow_up>
+          <suggest>Provide project vision and goals now.</suggest>
+          <suggest>Skip for now, I have other instructions.</suggest>
+        </follow_up>
+      </ask_followup_question>
+
+  verify_and_load_memory_bank: # Corresponds to Scenario B
+    trigger: "When 'initialization_check' determines that `./.roo/memory-bank/` directory exists."
+    priority: 880
+    action: |
+      <thinking>
+      **[Verify & Load Memory Bank - Project Manager]**
+      Status: `[PROJECT_MANAGER: VERIFYING_MEMORY_BANK_STRUCTURE]`.
+      The `./.roo/memory-bank/` directory exists. I need to check for essential global files and create any missing ones.
+      Essential global files: `manifest.yaml`, `global/project_overview.md`, `global/master_progress.yaml`, `global/risk_issue_register.md`.
+      I will use `list_files` for `./.roo/memory-bank/` and `./.roo/memory-bank/global/`.
+      </thinking>
+      <list_files>
+        <path>./.roo/memory-bank/</path>
+        <recursive>false</recursive>
+      </list_files>
+      <!-- Wait for result -->
+      <list_files>
+        <path>./.roo/memory-bank/global/</path>
+        <recursive>false</recursive>
+      </list_files>
+      <!-- Wait for result -->
+      <thinking>
+      I have the file listings. I will now check for missing essential global files.
+      If `manifest.yaml` is missing from `./.roo/memory-bank/`, I will create it using `_default_manifest_yaml_content_v2`.
+      If `project_overview.md` is missing from `./.roo/memory-bank/global/`, I will create it using `_default_project_overview_md_content_v2`.
+      If `risk_issue_register.md` is missing from `./.roo/memory-bank/global/`, I will create it using `_default_risk_issue_register_md_content_v2`.
+      If `master_progress.yaml` is missing from `./.roo/memory-bank/global/`, I will create it using `_default_master_progress_yaml_content_v2`.
+      (LLM will perform these `write_to_file` operations one by one if files are missing, waiting for confirmation after each).
+
+      After ensuring all essential files are present:
+      Status: `[PROJECT_MANAGER: LOADING_MEMORY_BANK]`.
+      I will now read the key global files.
+      </thinking>
+      1.  Read `memory-bank/manifest.yaml`.
+          <read_file><path>./.roo/memory-bank/manifest.yaml</path></read_file>
+          <!-- Wait for result -->
+      2.  Read `memory-bank/global/project_overview.md`.
+          <read_file><path>./.roo/memory-bank/global/project_overview.md</path></read_file>
+          <!-- Wait for result -->
+      3.  Read `memory-bank/global/master_progress.yaml`.
+          <read_file><path>./.roo/memory-bank/global/master_progress.yaml</path></read_file>
+          <!-- Wait for result -->
+      4.  Read `memory-bank/global/risk_issue_register.md`.
+          <read_file><path>./.roo/memory-bank/global/risk_issue_register.md</path></read_file>
+          <!-- Wait for result -->
+      <thinking>
+      Key global files have been loaded.
+      </thinking>
+      "Memory Bank verified and loaded. Project Manager is active."
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.
+
+  update_global_memory_bank:
+    trigger: "When significant project-level changes occur (new feature defined, milestone reached, global decision made, risk/issue logged/updated), or when 'UMB' for global context is requested."
+    priority: 850
+    action: |
+      <thinking>
+      **[Global Memory Bank Update - Project Manager]**
+      Status: `[PROJECT_MANAGER: UPDATING_MEMORY_BANK]`.
+      An update to global Memory Bank files is needed. This could be `manifest.yaml` (e.g., for `last_updated` or `feature_index`), `global/master_progress.yaml`, `global/global_decisions.md`, `global/risk_issue_register.md`, etc.
 
       **YAML File Update Strategy (e.g., `manifest.yaml`, `global/master_progress.yaml`):**
-      Since I don't have a direct YAML manipulation tool like `apply_yaml_diff`, I must:
-      1.  Use `<read_file>` to get the current content of the YAML file.
-      2.  In my internal `thinking` process:
-          a.  Mentally parse the YAML content (as if using a Python YAML library).
-          b.  Identify the exact changes needed (e.g., adding a new feature to a list, updating a status field).
-          c.  Construct the *entire new* YAML data structure in memory with these changes.
-          d.  Serialize this new data structure back into a valid YAML string.
-      3.  Use `<write_to_file>` to write the *entire new* YAML string back, overwriting the old file. I must also provide the correct `line_count` for the new content.
+      I must:
+      1.  Use `<read_file>` to get the current content.
+      2.  Internally parse the YAML, make changes to the data structure (e.g., add to a map, update a value).
+      3.  Serialize the entire new data structure back to a valid YAML string.
+      4.  Use `<write_to_file>` with the entire new YAML string and correct `line_count`.
 
-      **Markdown File Update Strategy:**
-      *   For log-style appends (e.g., adding a new decision to `global/global_decisions.md`, adding a risk to `project_overview.md`):
-          1. Use `<read_file>` to get current content to ensure I append correctly relative to existing text or find the right section.
-          2. Construct the new lines to be added.
-          3. Use `<insert_content>` with `line: 0` to append to the end of the file, or if I can reliably determine the line number of a specific section header, insert before the next section. Appending to the end is safest if section targeting is complex.
-          Alternatively, if the change is more like an append *within* a list in a specific section, I might need to read, modify the content string in memory, and use `write_to_file`.
-      *   For modifying existing sections in Markdown (e.g., updating the project scope in `global/project_overview.md`):
-          1. Use `<read_file>` to get the current content and exact line numbers.
-          2. Carefully construct a `diff` block for the `<apply_diff>` tool, ensuring the `SEARCH` block exactly matches the existing content including line numbers and whitespace.
-          3. If `apply_diff` is too risky or complex for the change, I will read the file, modify the content string in memory, and use `<write_to_file>` with the entire new content and its `line_count`.
+      **Markdown File Update Strategy (e.g., `global/project_overview.md`, `global/risk_issue_register.md`):**
+      *   For appending new entries/rows or modifying existing ones:
+          Use read-modify-write: `<read_file>`, modify content string (e.g., add table row, update existing row), then `<write_to_file>`.
+      *   For localized changes in large MD files where context is very clear:
+          Consider `<apply_diff>`.
 
-      I will always aim to update the `last_updated_timestamp` in `manifest.yaml` as part of any significant global update. This would be a separate YAML update operation.
-
-      **Example Flow for UMB command:**
-      1.  Acknowledge: `[PROJECT_MANAGER: UPDATING_MEMORY_BANK]` "Acknowledged. I will review recent interactions and update the global project memory."
-      2.  Internally review chat history for unrecorded global decisions, risks, or project scope changes.
-      3.  For each identified update:
-          *   If it's a new decision, I'll prepare to append to `global/global_decisions.md`.
-          *   If it's a scope change, I'll prepare an `apply_diff` or `write_to_file` for `global/project_overview.md`.
-      4.  Perform the file update operations one by one using the strategies above.
-      5.  Finally, update `manifest.yaml`'s `last_updated_timestamp`.
-      6.  Inform user: "Project Memory Bank global information has been synchronized."
-      My status returns to `[PROJECT_MANAGER: ACTIVE]`.
+      I will update the `last_updated` timestamp in `manifest.yaml` as part of any significant global update sequence.
       </thinking>
-      <!-- Specific tool calls will be generated based on the identified changes. -->
+      <!-- Example: Updating manifest.yaml's last_updated field -->
+      <thinking>
+      To update `manifest.yaml`'s `last_updated` timestamp:
+      1. Read `manifest.yaml`.
+      2. Parse YAML. Update the `last_updated` field with the current "YYYY-MM-DD HH:MM:SS".
+      3. Serialize back to YAML string.
+      4. Write the new content to `manifest.yaml`.
+      </thinking>
+      <!-- Actual tool calls for read/write would be generated here. -->
+      "Global Memory Bank section [specific file, e.g., manifest.yaml] has been updated."
+      My status returns to `[PROJECT_MANAGER: ACTIVE]`.
 
-  status_prefix: "Begin EVERY response with `[PROJECT_MANAGER: ACTIVE]` or other relevant status like `[PROJECT_MANAGER: CHECKING_MEMORY_BANK]`, `[PROJECT_MANAGER: INITIALIZING_MEMORY_BANK]`, `[PROJECT_MANAGER: VERIFYING_MEMORY_BANK_STRUCTURE]`, `[PROJECT_MANAGER: LOADING_MEMORY_BANK]` or `[PROJECT_MANAGER: UPDATING_MEMORY_BANK]`."
+  status_prefix_pm:
+    rule: "Begin EVERY response with `[PROJECT_MANAGER: <STATUS>]`, where <STATUS> is one of: CHECKING_MEMORY_BANK, INITIALIZING_MEMORY_BANK, VERIFYING_MEMORY_BANK_STRUCTURE, LOADING_MEMORY_BANK, UPDATING_MEMORY_BANK, ACTIVE."
 
-# Content for initial files (to be used in write_to_file operations during initialization)
-# These are not rules themselves, but data the LLM will use when constructing write_to_file content.
-# The LLM will need to replace YYYY-MM-DD HH:MM:SS with the actual timestamp.
+# Default content strings (LLM to replace YYYY-MM-DD HH:MM:SS and calculate line_count)
+# Using _v2 suffix to denote updated versions.
 
-default_manifest_yaml_content: |
-  # Memory Bank Manifest (v1.0)
-  # This file serves as the directory and configuration hub for the project's Memory Bank.
-  # It should be updated by the Project Manager Mode when major structural changes occur.
+_default_manifest_yaml_content_v2: |
+  # Memory Bank Manifest (v1.1)
+  # Managed by: Project Manager Mode
+  # Last updated: YYYY-MM-DD HH:MM:SS
 
-  version: "1.0"
+  version: "1.1"
   description: "Central knowledge base for the project."
-  last_updated_by: "Project Manager Mode"
-  last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # To be replaced with actual timestamp
 
   file_structure:
-    global_files:
-      - path: "global/project_overview.md"
-        description: "High-level project goals, scope, stakeholders, risks, and issues."
-      - path: "global/architecture_overview.md"
-        description: "Overall system architecture, key technologies, and design principles."
-      - path: "global/global_decisions.md"
-        description: "Log of major project-level technical and strategic decisions."
-      - path: "global/master_progress.yaml"
-        description: "Tracks the status of major features/epics."
-      - path: "global/shared_system_patterns.md"
-        description: "Reusable design patterns, coding standards, and tool configurations."
-    feature_directory_template: "features/{feature_id}/" # Example: features/auth_module/
+    manifest: "manifest.yaml"
+    global_directory: "global/"
+    feature_directory_root: "features/"
     archive_directory: "archive/"
+
+  global_files: # Paths relative to .roo/memory-bank/
+    project_overview: "global/project_overview.md"
+    architecture_overview: "global/architecture_overview.md"
+    global_decisions: "global/global_decisions.md"
+    master_progress: "global/master_progress.yaml"
+    shared_system_patterns: "global/shared_system_patterns.md"
+    risk_issue_register: "global/risk_issue_register.md" # Added
+
+  feature_index: {} # map of feature_id to its details
 
   settings:
     default_date_format: "YYYY-MM-DD HH:MM:SS"
-    default_timezone: "UTC" # Example
 
-default_project_overview_md_content: |
+_default_project_overview_md_content_v2: |
   # Project Overview
-
   *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
 
   ## 1. Project Goal & Vision
   *(To be filled in based on user input)*
 
   ## 2. Scope
-  ### 2.1. In Scope
+  ### 2.1. In Scope:
   *(To be filled in)*
-  ### 2.2. Out of Scope
+  ### 2.2. Out of Scope:
   *(To be filled in)*
 
   ## 3. Key Stakeholders
   *(To be filled in)*
 
-  ## 4. High-Level Risks & Issues Log
-  *(Format: - [YYYY-MM-DD] [Risk/Issue ID] Description - Status: Open/Mitigating/Resolved - Owner: Mode/User - Impact: High/Medium/Low)*
-  *No risks or issues logged yet.*
-
-  ## 5. Assumptions & Dependencies
+  ## 4. Assumptions & Dependencies
   *No assumptions or dependencies logged yet.*
+  <!-- Note: High-Level Risks & Issues Log has been moved to global/risk_issue_register.md -->
 
-default_master_progress_yaml_content: |
+_default_risk_issue_register_md_content_v2: |
+  # Risk and Issue Register
+  *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
+
+  | ID    | Date Logged | Description                                  | Type | Status | Impact | Source | Owner           | Notes / Mitigation / Resolution Plan |
+  |-------|-------------|----------------------------------------------|------|--------|--------|--------|-----------------|--------------------------------------|
+  <!-- No entries yet. New entries will be added above this line or by replacing this line if it's the only content. -->
+
+_default_master_progress_yaml_content_v2: |
   # Master Project Progress
-  # Tracks the status of major features or epics.
-  # Updated by Project Manager Mode based on Feature Lead reports.
+  # Updated by Project Manager Mode.
+  # Last updated: YYYY-MM-DD HH:MM:SS
 
-  project_name: "Unnamed Project" # To be updated
-  overall_status: "planning" # ( planning | active | on-hold | completed | archived )
-  last_updated_by: "Project Manager Mode"
-  last_updated_timestamp: "YYYY-MM-DD HH:MM:SS" # To be replaced
+  project_name: "Unnamed Project"
+  overall_status: "planning"
 
-  features: []
-  # Example feature structure:
-  # - id: "feature_id_example"
-  #   name: "Example Feature Name"
-  #   status: "backlog" # ( backlog | defined | in-progress | planning | testing | completed | archived )
-  #   lead_mode_instance: "Feature-Lead-XYZ" # Instance name of the responsible Feature Lead
-  #   target_completion_date: "YYYY-MM-DD"
-  #   progress_file_link: "features/feature_id_example/progress.yaml" # Relative to .roo/memory-bank/
-  #   last_status_update: "YYYY-MM-DD HH:MM:SS - Initial definition."
-
-default_architecture_overview_md_content: |
-  # Architecture Overview
-
-  *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
-
-  *(To be detailed by Architect Mode or based on project discussions)*
-
-  ## 1. System Context Diagram
-  *(Text description or link to diagram if external)*
-
-  ## 2. Key Technology Stack
-  *   Language(s):
-  *   Framework(s):
-  *   Database(s):
-  *   Cloud Provider(s):
-  *   Other Key Libraries/Tools:
-
-  ## 3. Architectural Principles
-  *   (e.g., Microservices, Monolith, Event-Driven)
-
-  ## 4. Major Components & Interactions
-  *(High-level breakdown)*
-
-default_global_decisions_md_content: |
-  # Global Decision Log
-
-  *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
-
-  *This log records significant project-level technical and strategic decisions.*
-  *Format: ### [YYYY-MM-DD] Decision ID: Short Title*
-  *   **Decision:** Detailed description of the decision made.*
-  *   **Rationale:** Reasons behind the decision.*
-  *   **Alternatives Considered:** Briefly mention other options evaluated.*
-  *   **Implications:** Impact of this decision.*
-  *   **Status:** Decided/Implemented/Revisited*
-  ---
-
-default_shared_system_patterns_md_content: |
-  # Shared System Patterns & Standards
-
-  *Generated by Project Manager Mode on YYYY-MM-DD HH:MM:SS*
-
-  *This document outlines reusable design patterns, coding standards, API conventions, and tool configurations applicable across the project.*
-
-  ## 1. Coding Standards
-  *   (e.g., Language-specific style guides, naming conventions)
-
-  ## 2. API Design Conventions
-  *   (e.g., RESTful principles, authentication methods, error handling)
-
-  ## 3. Reusable Architectural Patterns
-  *   (e.g., CQRS, Event Sourcing - if applicable)
-
-  ## 4. Common Utility Libraries/Functions
-  *   (List or link to key shared utilities)
+  features: {} # map of feature_id to its details

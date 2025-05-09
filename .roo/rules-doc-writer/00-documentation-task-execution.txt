@@ -1,86 +1,100 @@
-documentation_workflow:
+documentation_workflow_doc_writer:
   execute_assigned_documentation_task:
-    trigger: "When a new documentation task (create or update) is assigned by Project Manager or Feature Lead, specifying the target document path (usually a .md file), scope, audience, and source information references."
+    trigger: "When Doc-Writer mode is activated with a new documentation task (create or update) by Project-Manager or Feature-Lead."
     priority: 900 # Core operational rule
     action: |
       <thinking>
-      **[Documentation Task Execution Protocol - Target: {document_path}]**
-      I have received a documentation task for the file: `{document_path}`.
-      My status should be `[DOC-WRITER ({document_path}): WRITING]`.
+      **[Documentation Task Execution Protocol - Doc Writer]**
+      I have received a new documentation task.
+      The assignment message should provide:
+      - `task_id`: Unique ID for this task.
+      - `requesting_mode_id`: Who assigned this.
+      - `document_type`: E.g., README.md, API_Doc_FeatureX, User_Guide.
+      - `target_file_path`: The path for the document to be created/updated.
+      - `purpose_and_scope`: What the document should achieve and cover.
+      - `target_audience`: Who the document is for.
+      - `feature_id_context` (optional): Relevant feature ID.
+      - `document_title_or_topic`: Summary for status messages.
+      - `source_material_paths`: List of Memory Bank paths or other URIs for source information.
+      - `desired_tone_and_style` (optional): E.g., "user-friendly", "technical_detailed", "human-like".
 
-      My process will be:
-      1.  **Understand Task & Audience:**
-          *   Parse the request message: What document needs work (`{document_path}`)? Is it creation or update? What specific sections? Who is the audience? What is the desired tone? What are the source information references (Memory Bank paths, etc.)?
-      2.  **Gather Source Information:**
-          *   Identify the necessary Memory Bank files or other sources mentioned in the request.
-          *   Use `<read_file>` to fetch the content of these source files (e.g., `features/{feature_id}/context.md`, `global/architecture_overview.md`).
-          *   If updating an existing document, use `<read_file>` to get the current content of `{document_path}`.
-      3.  **Draft or Revise Content:**
-          *   Synthesize information from the sources.
-          *   Write the new content or revise the existing text, focusing on clarity, accuracy, logical flow, and a natural, human-like style appropriate for the audience. Use Markdown effectively.
-      4.  **Update Target Document File:**
-          *   Construct the complete, final content for `{document_path}` in my thought process.
-          *   Calculate the total line count of the final content.
-          *   Use `<write_to_file>` with the full content and line count to create or overwrite the file. If the change is very small and targeted, and I know the exact lines, `<apply_diff>` could be an alternative, but `write_to_file` is often safer for prose documents. My permissions might restrict me to only `.md` files.
-      5.  **Report Completion:**
-          *   Use `attempt_completion` to report back to the requester. The `result` should state which document was updated/created and summarize the key changes or additions.
+      My status: `[DOC-WRITER ({context.task_id} - {context.document_title_or_topic}): LOADING_CONTEXT]`.
 
-      **Example Scenario:** Feature Lead assigns task to update README.md for feature `user_mgmt`.
-      Feature Lead's Request: "Doc Writer, please update the main `README.md` file. Add a section describing the new 'User Management' feature (ID: `user_mgmt`). Explain its purpose (registration, login) based on `features/user_mgmt/context.md`. Keep the tone user-friendly. Also, add a brief mention of it in the 'Features' list near the top."
-      Target document: `README.md`.
+      My process:
+      1.  **Understand Task & Audience:** Parse all provided context variables.
+      2.  **Gather Source Information:** Use `<read_file>` for each path in `source_material_paths`. If updating `{context.target_file_path}`, read its current content.
+      3.  **Draft or Revise Content:** Synthesize info. Write/revise in Markdown, focusing on clarity, accuracy, flow, and the `{context.desired_tone_and_style}` (defaulting to clear, professional, human-like).
+      4.  **Update Target Document:** Use `<write_to_file>` with the complete final content for `{context.target_file_path}`.
+      5.  **Report Completion:** Use `attempt_completion`.
+      </thinking>
 
-      **Step 1: Understand Task.** Done. Update `README.md`, add section about `user_mgmt`, update Features list. Source: `features/user_mgmt/context.md`. Audience: Users/Developers. Tone: User-friendly.
+      <!-- Example: Task to update README.md for feature `user_mgmt`.
+           context.task_id: "doc-readme-update-01"
+           context.document_title_or_topic: "README.md user_mgmt section"
+           context.target_file_path: "README.md"
+           context.purpose_and_scope: "Add a section describing 'User Management' (ID: user_mgmt), its purpose (registration, login). Update 'Features' list."
+           context.source_material_paths: ["./.roo/memory-bank/features/user_mgmt/context.md"]
+           context.desired_tone_and_style: "user-friendly"
+      -->
 
-      **Step 2a: Read source `context.md`.**
+      <thinking>
+      Parsed assignment for task '{context.task_id}'.
+      **Step 1 & 2: Gather Source Information.**
+      I will read the source file(s) and the target document if it exists (for updates).
       </thinking>
       <read_file>
-      <path>./.roo/memory-bank/features/user_mgmt/context.md</path>
+        <path>{context.source_material_paths[0]}</path> <!-- Assuming first source is primary context -->
       </read_file>
-      <thinking>
-      **[Documentation Task Execution - Cont. README.md]**
-      **Step 2b: Read target `README.md`.**
-      </thinking>
+      <!-- Wait for content -->
       <read_file>
-      <path>README.md</path>
+        <path>{context.target_file_path}</path> <!-- Read target file for update context -->
       </read_file>
+      <!-- Wait for content (or error if it's a new file) -->
       <thinking>
-      **[Documentation Task Execution - Cont. README.md]**
-      I have (or will receive) the content for `context.md` and the current `README.md`.
+      My status: `[DOC-WRITER ({context.task_id}): DRAFTING_CONTENT]`.
+      I have content from `{context.source_material_paths[0]}` (e.g., `features/user_mgmt/context.md`) and the current `{context.target_file_path}` (e.g., `README.md`).
 
-      **Step 3: Draft Revised Content.**
-      I will extract the purpose and key functionalities (registration, login) from `context.md`.
-      I will find the 'Features' list in `README.md` and add a new bullet point for 'User Management'.
-      I will find an appropriate place (e.g., after the main feature list or in a dedicated 'Module Details' section) and draft a new section like:
-
+      **Step 3: Draft or Revise Content.**
+      I will extract information about 'User Management' (registration, login) from its `context.md`.
+      I will find the 'Features' list in the current `README.md` content and prepare to add 'User Management'.
+      I will draft a new section for 'User Management' with a user-friendly tone.
+      Example draft for the new section:
       ```markdown
       ## User Management (`user_mgmt`)
 
-      This core module handles everything related to user accounts. It allows new users to easily register for an account using their email and password, and enables registered users to securely log in and access the platform. (Future updates may include profile management and password recovery).
+      Our User Management module makes it easy to handle user accounts. New users can quickly sign up using their email and password, while registered users can securely log in to access all platform features. We're committed to making this process smooth and intuitive!
       ```
-      I will integrate this new section and the updated list item into the existing `README.md` content in my thought process, ensuring flow and formatting are correct.
+      I will now mentally integrate this new section and the updated list item into the existing `README.md` content, ensuring correct Markdown formatting and a natural flow.
+      </thinking>
 
-      **Step 4: Update Target Document File (`README.md`).**
-      I have the complete new content for `README.md` constructed in my thought process. I will calculate its total line count.
+      <thinking>
+      **Step 4: Update Target Document File (`{context.target_file_path}`).**
+      I have the complete new content for `{context.target_file_path}` constructed in my thought process.
+      I will calculate its total line count.
+      My status: `[DOC-WRITER ({context.task_id}): WRITING_FILE]`.
       </thinking>
       <write_to_file>
-      <path>README.md</path>
+      <path>{context.target_file_path}</path>
       <content>
-      (The entire, updated content of README.md, including the original parts, the modified Features list, and the new User Management section)
+      <!-- The entire, updated content of the target document,
+           incorporating new sections and modifications as per the task.
+           LLM will generate this based on its drafting process. -->
       </content>
-      <line_count>XX</line_count> <!-- LLM calculates actual line count -->
+      <line_count>...</line_count> <!-- LLM calculates actual line count -->
       </write_to_file>
+      <!-- Wait for confirmation of write_to_file -->
       <thinking>
-      **[Documentation Task Execution - Cont. README.md]**
-      After `write_to_file` is confirmed successful.
+      File `{context.target_file_path}` should be updated.
 
       **Step 5: Report Completion.**
-      My status becomes `[DOC-WRITER (README.md): COMPLETED]`.
+      My status becomes `[DOC-WRITER ({context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
       <attempt_completion>
       <result>
-      The `README.md` file has been updated as requested.
-      - Added 'User Management' to the main Features list.
-      - Included a new section describing the User Management (`user_mgmt`) feature, explaining its purpose (registration and login) based on the provided context.
-      The tone was kept user-friendly.
+      Documentation task '{context.task_id}: Update {context.document_title_or_topic}' is complete.
+      The document at `{context.target_file_path}` has been created/updated as per your request.
+      Key changes include: [Briefly summarize key changes, e.g., "Added User Management section to README.md and updated features list."].
+      The content was written with a '{context.desired_tone_and_style}' tone, focusing on clarity for the '{context.target_audience}'.
       </result>
       </attempt_completion>
+      My status becomes `[DOC-WRITER ({context.task_id}): IDLE_AWAITING_NEW]`.

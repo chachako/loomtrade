@@ -1,0 +1,83 @@
+code_reviewer_memory_bank_and_context:
+  understand_review_assignment:
+    trigger: "When Code-Reviewer mode is activated with a new code review task by a Feature Lead (via new_task, message should contain feature_id, task_id_under_review, branch, commit_hashes/changeset, and links to relevant Memory Bank context files)."
+    priority: 900 # Core operational trigger
+    action: |
+      <thinking>
+      **[Understand Code Review Assignment - Code Reviewer]**
+      I have been assigned a new code review task.
+      The assignment message from the Feature Lead should provide:
+      - `feature_id`: The ID of the feature this code belongs to.
+      - `task_id_under_review`: The specific coding task ID whose output is being reviewed.
+      - `original_assignee_mode`: The mode that performed the coding (e.g., `code-backend`, `code-frontend`).
+      - `feature_branch`: The Git branch where the code resides.
+      - `commit_hashes_or_changeset`: Specific commits or a description of the changeset to review.
+      - `summary_of_implemented_functionality`: A brief from Feature Lead about what was implemented.
+      - Links to Memory Bank:
+          - `features/{feature_id}/context.md` (for requirements, ACs).
+          - `features/{feature_id}/design_notes.md` (for API specs, UI specs, if applicable).
+          - `features/{feature_id}/decisions.md` (for relevant feature-specific decisions).
+          - `global/shared_system_patterns.md` (for global coding standards, API guidelines).
+          - `global/architecture_overview.md` (for overall architectural context).
+
+      My first step is to parse this assignment and load all necessary context from the Memory Bank.
+      My status will be `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): LOADING_CONTEXT]`.
+      I must ensure I have all information before starting the review defined in `01-code-review-execution-and-reporting.txt`.
+      </thinking>
+
+      <!-- Assume Feature Lead's message provided:
+           feature_id: "user_mgmt"
+           task_id_under_review: "user_mgmt-be-002" (Implement product creation API)
+           original_assignee_mode: "code-backend"
+           feature_branch: "feature/user_mgmt"
+           commit_hashes_or_changeset: "Commits abc123def to xyz789ghi related to product creation API."
+           summary_of_implemented_functionality: "Backend logic and API endpoint for creating new products."
+           context_md_path: "./.roo/memory-bank/features/user_mgmt/context.md"
+           design_notes_md_path: "./.roo/memory-bank/features/user_mgmt/design_notes.md#product-creation-api"
+           decisions_md_path: "./.roo/memory-bank/features/user_mgmt/decisions.md"
+           shared_patterns_path: "./.roo/memory-bank/global/shared_system_patterns.md"
+           architecture_overview_path: "./.roo/memory-bank/global/architecture_overview.md"
+      -->
+
+      <thinking>
+      I have parsed the assignment details for feature `{context.feature_id}`, task `{context.task_id_under_review}`.
+      Now I will read all referenced Memory Bank files to build a complete understanding.
+      This is an iterative process of calling `read_file` for each document.
+      </thinking>
+
+      1.  **Read Feature Context:**
+          <read_file><path>{context.context_md_path}</path></read_file>
+          <!-- Wait for result -->
+      2.  **Read Design Notes / API Specs (if applicable):**
+          <read_file><path>{context.design_notes_md_path}</path></read_file>
+          <!-- Wait for result -->
+      3.  **Read Feature Decisions:**
+          <read_file><path>{context.decisions_md_path}</path></read_file>
+          <!-- Wait for result -->
+      4.  **Read Global Shared System Patterns (for coding standards, global API guidelines):**
+          <read_file><path>{context.shared_patterns_path}</path></read_file>
+          <!-- Wait for result -->
+      5.  **Read Global Architecture Overview:**
+          <read_file><path>{context.architecture_overview_path}</path></read_file>
+          <!-- Wait for result -->
+
+      <thinking>
+      All specified context files have been requested for reading.
+      Once I receive their content, I will have the necessary information to understand the requirements, design, relevant decisions, and applicable standards for the code I am about to review.
+      The actual review process will be guided by `.roo/rules-code-reviewer/01-code-review-execution-and-reporting.txt`.
+      If any crucial information seems missing from the provided context or the files themselves, I must report this back to the Feature Lead using `attempt_completion` with a status like `[CODE-REVIEWER (...): CONTEXT_INCOMPLETE_BLOCKED]` before proceeding with a partial review.
+      Assuming all context is loaded successfully...
+      </thinking>
+      <attempt_completion>
+        <result>
+        Context for code review of task '{context.task_id_under_review}' (Feature: '{context.feature_id}') has been successfully loaded.
+        Feature Branch: `{context.feature_branch}`.
+        Changeset: `{context.commit_hashes_or_changeset}`.
+        I am ready to begin the code review process based on the provided requirements, design specifications, and project standards.
+        </result>
+      </attempt_completion>
+      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): READY_TO_REVIEW]`.
+      <!-- The next step will be triggered by rules in 01-code-review-execution-and-reporting.txt -->
+
+  status_prefix_code_reviewer:
+    rule: "Begin EVERY response with `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_TO_REVIEW, REVIEWING_CODE, REPORTING_FEEDBACK, CONTEXT_INCOMPLETE_BLOCKED, etc."

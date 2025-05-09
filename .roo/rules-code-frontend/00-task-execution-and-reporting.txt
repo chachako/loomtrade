@@ -1,156 +1,95 @@
 frontend_coding_workflow:
   execute_assigned_frontend_task:
-    trigger: "When a new frontend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, and Memory Bank references)."
+    trigger: "When a new frontend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch)."
     priority: 900 # Core operational rule
     action: |
       <thinking>
-      **[Frontend Coding Task Execution Protocol - Feature: {feature_id}, Task: {task_id}]**
-      I have received a new frontend coding task for feature `{feature_id}`, task ID `{task_id}`.
-      My status should be `[CODE-FRONTEND ({feature_id}/{task_id}): ACTIVE]`.
+      **[Frontend Coding Task Execution Protocol - Feature: {context.feature_id}, Task: {context.task_id}]**
+      I have received task: '{context.task_name}' for feature '{context.feature_name}' (ID: {context.feature_id}, Task ID: {context.task_id}).
+      Branch: `{context.feature_branch}`. Frontend source dir: `frontend/`. All code TypeScript.
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_UNDERSTANDING_REQS]`.
 
-      My process will be:
-      1.  **Understand Task Requirements:**
-          *   Carefully parse the task message from Feature Lead.
-          *   Identify paths to `context.md`, `design_notes.md` (or specific sections) for this feature from the message.
-          *   Use `<read_file>` to fetch content from these Memory Bank files.
-          *   If anything is unclear or seems contradictory after reviewing, I will note this and inform the Feature Lead in my response, possibly using `ask_followup_question` if I can formulate specific options. For now, assume requirements are clear enough to proceed.
-      2.  **Plan Implementation:**
-          *   Break down the task into smaller coding steps (e.g., create HTML structure, style with CSS, implement JS logic, write tests).
-          *   Identify which files need to be created or modified.
-      3.  **Implement Code & Write Tests:**
-          *   Use `write_to_file` to create new files.
-          *   Use `apply_diff`, `insert_content`, or `search_and_replace` for modifying existing files. I must be careful with `apply_diff` to ensure the `SEARCH` block is exact. `write_to_file` (overwriting) is an option if changes are extensive.
-          *   Write unit/component tests for the implemented logic/components.
-      4.  **Prepare for Commit (Mental Step):**
-          *   Identify all changed/created files.
-          *   Formulate a clear commit message adhering to project standards (e.g., "feat(ui): implement user registration form - {feature_id}/{task_id}").
-          *   (Actual `git commit` is assumed to be handled by the environment after I provide the code and commit message, or I would use an `execute_command` if I had direct git access and was instructed to commit). For now, I will list the commit hashes in my completion report.
-      5.  **Report Completion to Feature Lead:**
-          *   Use `attempt_completion`. The `result` must summarize work done, test status, and provide commit hashes.
+      Process:
+      1.  **Understand Requirements:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `.roo/rules-code-frontend/01-standards-and-practices.txt`. If unclear, report 'blocked_needs_clarification'. (Assume clear).
+      2.  **Plan Implementation:** Mental breakdown. Identify files in `frontend/` (e.g., `frontend/src/components/`) to create/modify.
+      3.  **Implement Code & Tests (Iterative):** Use `write_to_file` or `apply_diff`/`insert_content`. Generate TypeScript code. Write unit/component tests.
+      4.  **Commit Changes:** After coding and local tests pass:
+          a.  Identify all changed/created files within `frontend/` relevant to this task.
+          b.  Use `execute_command` to `git add <specific_files>`.
+          c.  Formulate commit message per standards.
+          d.  Use `execute_command` to `git commit -m "message"`.
+          e.  Use `execute_command` to `git log -1 --pretty=format:"%H"` to get commit hash.
+          f.  (Optional, per FL) Use `execute_command` to `git push origin {context.feature_branch}`.
+      5.  **Report Completion:** Use `attempt_completion` with summary, test status, and actual commit hash.
 
-      Let's assume the task is `user_mgmt-task-004`: "Create Registration UI form component" for feature `user_mgmt`.
-      The Feature Lead's message specified working on branch `feature/user_mgmt` and referenced:
-      - `./.roo/memory-bank/features/user_mgmt/context.md#us-user_mgmt-001` (for ACs)
-      - `./.roo/memory-bank/features/user_mgmt/design_notes.md#registration-form-specs` (for UI layout)
+      Example Task: `{context.task_id}` = `user_mgmt-task-004`: "Create Registration UI form component". Feature `{context.feature_id}` = `user_mgmt`. Branch: `feature/user_mgmt`.
 
-      **Step 1a: Read `context.md` for Acceptance Criteria.**
+      **Step 1: Read Memory Bank files.**
       </thinking>
-      <read_file>
-      <path>./.roo/memory-bank/features/user_mgmt/context.md</path>
-      <!-- Optionally add start_line/end_line if I can determine them for US-user_mgmt-001 -->
-      </read_file>
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
+      <!-- Wait -->
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
+      <!-- Wait -->
       <thinking>
-      **[Frontend Coding Task Execution - Cont. {feature_id}/{task_id}]**
-      **Step 1b: Read `design_notes.md` for UI Specifications.**
+      **[Frontend Task - Cont. {context.feature_id}/{context.task_id}]**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_PLANNING_IMPL]`.
+      Requirements & UI specs analyzed. Task: Create `frontend/src/components/Auth/RegistrationForm.vue` (with `<script lang="ts">`).
+
+      **Step 2 & 3: Implement Code & Write Tests (Iterative Process).**
+      I will now perform a sequence of file operations to implement the component and its tests.
+      Each `write_to_file` or `apply_diff` implies a successful confirmation before the next.
+      (Assume I am creating/modifying `frontend/src/components/Auth/RegistrationForm.vue` and `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts` based on specifications from Memory Bank and adhering to `01-standards-and-practices.txt`.)
+
+      *Simulating completion of coding and local testing for `user_mgmt-task-004`.*
+      Let's assume the following files were created/modified:
+      - `frontend/src/components/Auth/RegistrationForm.vue`
+      - `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts`
+      All local unit tests are passing.
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_COMMITTING]`.
+
+      **Step 4: Commit Changes to branch `{context.feature_branch}`.**
+      First, I need to add the specific files I changed.
       </thinking>
-      <read_file>
-      <path>./.roo/memory-bank/features/user_mgmt/design_notes.md</path>
-      <!-- Optionally add start_line/end_line for registration-form-specs -->
-      </read_file>
+      <execute_command>
+        <command>git add frontend/src/components/Auth/RegistrationForm.vue frontend/tests/unit/components/Auth/RegistrationForm.spec.ts</command>
+        <cwd>.</cwd> <!-- Assuming commands are run from project root -->
+      </execute_command>
+      <!-- Wait for confirmation of git add -->
       <thinking>
-      **[Frontend Coding Task Execution - Cont. {feature_id}/{task_id}]**
-      I have (or will receive) the content for `context.md` and `design_notes.md`.
-      I've analyzed the requirements: create a Vue component `RegistrationForm.vue` with email, password, confirm password fields, basic client-side validation messages, and a submit button. It should emit an event on submit.
-
-      **Step 2 & 3: Implement Code & Write Tests.**
-      This will involve multiple file operations. I will outline them, but in reality, each `write_to_file` or `apply_diff` would be a separate tool call in a sequence.
-
-      *   **Create `src/components/Auth/RegistrationForm.vue`:**
-          (Using `write_to_file`)
-      *   **Add styles, possibly in the Vue file or a separate CSS/SCSS file:**
-          (Using `insert_content` or `apply_diff` if modifying an existing stylesheet)
-      *   **Create unit tests, e.g., `tests/unit/RegistrationForm.spec.js`:**
-          (Using `write_to_file`)
-
-      Example: Creating `RegistrationForm.vue` (This would be one tool call)
+      Files added. Now, construct commit message according to `01-standards-and-practices.txt`.
+      Commit message: `feat({context.feature_id}): implement RegistrationForm component - {context.task_id}`
+      (Replacing {context.feature_id} and {context.task_id} with actual values).
       </thinking>
-      <!--
+      <execute_command>
+        <command>git commit -m "feat({context.feature_id}): implement RegistrationForm component - {context.task_id}"</command>
+        <cwd>.</cwd>
+      </execute_command>
+      <!-- Wait for confirmation of git commit. -->
       <thinking>
-      Creating the Vue component file: `src/components/Auth/RegistrationForm.vue`.
-      Content will include template, script (with props, data, methods), and styles.
+      Commit successful. Now, get the commit hash.
       </thinking>
-      <write_to_file>
-      <path>src/components/Auth/RegistrationForm.vue</path>
-      <content>
-      <template>
-        <form @submit.prevent="handleSubmit">
-          <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" v-model="email" required />
-            <span v-if="errors.email" class="error">{{ errors.email }}</span>
-          </div>
-          <div>
-            <label for="password">Password:</label>
-            <input type="password" id="password" v-model="password" required />
-            <span v-if="errors.password" class="error">{{ errors.password }}</span>
-          </div>
-          <div>
-            <label for="confirmPassword">Confirm Password:</label>
-            <input type="password" id="confirmPassword" v-model="confirmPassword" required />
-            <span v-if="errors.confirmPassword" class="error">{{ errors.confirmPassword }}</span>
-          </div>
-          <button type="submit">Register</button>
-        </form>
-      </template>
-
-      <script>
-      export default {
-        name: 'RegistrationForm',
-        data() {
-          return {
-            email: '',
-            password: '',
-            confirmPassword: '',
-            errors: {}
-          };
-        },
-        methods: {
-          validate() {
-            this.errors = {};
-            if (!this.email) this.errors.email = 'Email is required.';
-            // Add more validation for email format, password complexity, password match
-            if (this.password !== this.confirmPassword) {
-              this.errors.confirmPassword = 'Passwords do not match.';
-            }
-            return Object.keys(this.errors).length === 0;
-          },
-          handleSubmit() {
-            if (this.validate()) {
-              this.$emit('submit', { email: this.email, password: this.password });
-            }
-          }
-        }
-      };
-      </script>
-
-      <style scoped>
-      .error { color: red; font-size: 0.9em; }
-      /* Add more styles */
-      </style>
-      </content>
-      <line_count>XX</line_count> <!-- Actual line count -->
-      </write_to_file>
-      -->
+      <execute_command>
+        <command>git log -1 --pretty=format:"%H"</command>
+        <cwd>.</cwd>
+      </execute_command>
+      <!-- Wait for output, which should be the commit hash. Let's assume the output is `actual_commit_hash_from_git_log`. -->
       <thinking>
-      **[Frontend Coding Task Execution - Cont. {feature_id}/{task_id}]**
-      Assume all coding and unit testing for `RegistrationForm.vue` are complete after several file operations.
-      I have created/modified:
-      - `src/components/Auth/RegistrationForm.vue`
-      - `tests/unit/RegistrationForm.spec.js`
-      And let's say the (simulated) commit hashes are `[a1b2c3d, e4f5g6h]`.
-
-      **Step 4: Prepare for Commit (Mental Step).**
-      Commit message: "feat(ui): Implement RegistrationForm component - user_mgmt/user_mgmt-task-004"
+      I have the commit hash: `{actual_commit_hash_from_git_log}`.
+      Pushing changes might be instructed by Feature Lead. If so: `git push origin {context.feature_branch}`.
 
       **Step 5: Report Completion to Feature Lead.**
-      My status becomes `[CODE-FRONTEND ({feature_id}/{task_id}): COMPLETED]`.
+      My status becomes `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
       <attempt_completion>
       <result>
-      Task 'user_mgmt-task-004: Create Registration UI form component' for feature 'user_mgmt' is complete.
-      - Implemented `RegistrationForm.vue` with email, password, and confirm password fields, including client-side validation logic and submit event.
-      - Created unit tests in `tests/unit/RegistrationForm.spec.js`. All unit tests are passing.
-      - Relevant commit hashes: `[a1b2c3d, e4f5g6h]`.
+      Task '{context.task_id}: Create Registration UI form component' for feature '{context.feature_id}' is complete.
+      **Summary of Work:**
+      - Implemented `frontend/src/components/Auth/RegistrationForm.vue` using TypeScript, with fields, validation, and event emission based on specifications.
+      - Created unit tests in `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts`.
+      **Test Status:** All local unit tests are passing.
+      **Code Standards:** Adhered to guidelines in `.roo/rules-code-frontend/01-standards-and-practices.txt`.
+      **Branch:** All work performed and committed on branch `{context.feature_branch}`.
+      **Commit Hash:** `{actual_commit_hash_from_git_log}`.
       The component is ready for integration or further review by the Feature Lead.
       </result>
       </attempt_completion>

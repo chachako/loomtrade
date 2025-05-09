@@ -1,0 +1,239 @@
+memory_bank_feature_lead:
+  # Feature-Lead is always activated with a specific feature_id context from Project-Manager.
+  # It does not initialize the global Memory Bank, but assumes it exists.
+  # Its primary responsibility is to initialize and manage the Memory Bank for its assigned feature.
+
+  feature_context_initialization:
+    trigger: "When Feature-Lead is activated with a new feature assignment (via new_task from Project-Manager) and the specific feature directory (e.g., features/<feature_id>/) does not yet exist or is empty."
+    priority: 900
+    action: |
+      <thinking>
+      **[Feature Memory Bank Initialization - Feature Lead]**
+      My status is `[FEATURE_LEAD: INITIALIZING_FEATURE_CONTEXT]`. Feature ID: `{context.feature_id}`.
+      I've been assigned a new feature: '{context.feature_name}' (ID: {context.feature_id}).
+      Project-Manager has instructed me to initialize the Memory Bank for this feature under `./.roo/memory-bank/features/{context.feature_id}/`.
+      I need to create the standard set of files for a feature: `context.md`, `active_log.md`, `decisions.md`, and `progress.yaml`.
+      The initial content for `context.md` should incorporate any high-level requirements provided by Project-Manager in the activation message.
+      The timestamp YYYY-MM-DD HH:MM:SS will be replaced with the current timestamp.
+      </thinking>
+
+      "Initializing Memory Bank for feature '{context.feature_name}' (ID: {context.feature_id})."
+
+      1.  **Create `features/{context.feature_id}/context.md`:**
+          <thinking>
+          This file will store detailed requirements, user stories, acceptance criteria for feature {context.feature_id}.
+          I will include any initial requirements from the Project-Manager's message.
+          Content will be based on `_feature_context_md_initial_content`.
+          </thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/features/{context.feature_id}/context.md</path>
+            <content>
+            # Feature Context: {context.feature_name} (ID: {context.feature_id})
+            *Initialized by Feature-Lead on YYYY-MM-DD HH:MM:SS*
+
+            ## 1. Overview & Goal
+            {context.initial_requirements_or_overview_from_pm}
+            *(Detailed goal to be refined by Feature-Lead)*
+
+            ## 2. Detailed Requirements / User Stories
+            *(To be populated by Feature-Lead based on PM input and further analysis)*
+            *   As a [user type], I want [goal] so that [reason]. (Example Story)
+
+            ## 3. Acceptance Criteria
+            *(To be defined for each requirement/story)*
+            *   Given [context] When [action] Then [outcome]. (Example Criteria)
+
+            ## 4. Scope
+            ### 4.1. In Scope:
+            *(To be detailed)*
+            ### 4.2. Out of Scope:
+            *(To be detailed)*
+
+            ## 5. Technical Notes / Assumptions
+            *(Initial thoughts, to be expanded)*
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      2.  **Create `features/{context.feature_id}/active_log.md`:**
+          <thinking>This file will track ongoing development log, open questions, discussions, and blockers for feature {context.feature_id}. Initial content from `_feature_active_log_md_initial_content`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+            <content>
+            # Active Log: {context.feature_name} (ID: {context.feature_id})
+            *Initialized by Feature-Lead on YYYY-MM-DD HH:MM:SS*
+            *Entries are prepended, newest first. Format: [YYYY-MM-DD HH:MM:SS] - Entry details*
+            ---
+            [YYYY-MM-DD HH:MM:SS] - Feature context initialized by Feature-Lead. Awaiting detailed planning.
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      3.  **Create `features/{context.feature_id}/decisions.md`:**
+          <thinking>This file records feature-specific technical decisions for {context.feature_id}. Initial content from `_feature_decisions_md_initial_content`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/features/{context.feature_id}/decisions.md</path>
+            <content>
+            # Decision Log: {context.feature_name} (ID: {context.feature_id})
+            *Initialized by Feature-Lead on YYYY-MM-DD HH:MM:SS*
+            *Entries are prepended, newest first. Format: DECISION-{feature_id}-XXX: [YYYY-MM-DD HH:MM:SS] - Title*
+            ---
+            <!-- No feature-specific decisions logged yet. -->
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      4.  **Create `features/{context.feature_id}/progress.yaml`:**
+          <thinking>This file will contain the detailed task breakdown and progress for feature {context.feature_id}. Initial content from `_feature_progress_yaml_initial_content`.</thinking>
+          <write_to_file>
+            <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+            <content>
+            # Feature Progress: {context.feature_name}
+            # Feature ID: {context.feature_id}
+            # Managed by: Feature-Lead for {context.feature_id}
+            # Last updated: YYYY-MM-DD HH:MM:SS
+
+            status: "planning" # ( planning | design | development | testing | completed | blocked | archived )
+            summary: "Initial planning phase for the feature."
+            target_completion_date_feature_level: "YYYY-MM-DD" # To be set by Feature-Lead
+
+            # tasks will store a map of task_id to its details
+            # Example:
+            # {feature_id}-task-001:
+            #   name: "Design User Registration API"
+            #   status: "backlog" # ( backlog | in-progress | review | blocked | completed )
+            #   assignee_mode_slug: "code-backend"
+            #   description_link: "context.md#user-registration-api-spec"
+            #   estimated_effort: "2d"
+            #   actual_effort: ""
+            #   related_commits: []
+            #   dependencies: [] # Other task IDs within this feature
+            tasks: {}
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
+          </write_to_file>
+          <!-- Wait for confirmation -->
+      <thinking>
+      Feature-specific Memory Bank for {context.feature_id} has been initialized.
+      I also need to update the `master_progress.yaml` and `manifest.yaml` (via Project-Manager, or if Feature-Lead has direct rules for its own feature's high-level status update, though PM usually handles global files).
+      For now, my primary task of initializing my local feature context is done. I will report this partial completion.
+      Project-Manager should have already marked this feature as "defined" or "delegated_to_feature_lead" in global trackers. My next step will be detailed planning, which will update my `progress.yaml`.
+      </thinking>
+      "Memory Bank for feature '{context.feature_name}' (ID: {context.feature_id}) has been initialized. Ready for detailed planning."
+      My status becomes `[FEATURE_LEAD: ACTIVE_PLANNING]`. Feature ID: `{context.feature_id}`.
+      <!-- The Feature-Lead will then proceed with rules from '01-feature-planning-and-task-breakdown.txt' -->
+
+  accessing_context:
+    trigger: "At the start of any task for an existing feature, or when Feature-Lead needs to refresh its context for feature {context.feature_id}."
+    priority: 890
+    action: |
+      <thinking>
+      **[Accessing Feature & Global Context - Feature Lead]**
+      My status is `[FEATURE_LEAD: LOADING_CONTEXT]`. Feature ID: `{context.feature_id}`.
+      I need to load my feature-specific context and relevant global context.
+      This assumes the feature directory `./.roo/memory-bank/features/{context.feature_id}/` and its core files already exist.
+      If they don't, the `feature_context_initialization` rule should have been triggered first.
+      </thinking>
+      1.  **Read feature-specific files for {context.feature_id}:**
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/decisions.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
+          <!-- Wait for result -->
+      2.  **Read relevant global files (as needed for the current task):**
+          <thinking>I should always be aware of the overall project and architecture.</thinking>
+          <read_file><path>./.roo/memory-bank/global/project_overview.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/global/architecture_overview.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/manifest.yaml</path></read_file> <!-- To understand overall MB structure -->
+          <!-- Wait for result -->
+      <thinking>
+      Context for feature {context.feature_id} and relevant global information loaded.
+      </thinking>
+      "Context for feature '{context.feature_name}' (ID: {context.feature_id}) loaded. Feature-Lead is active."
+      My status becomes `[FEATURE_LEAD: ACTIVE]`. Feature ID: `{context.feature_id}`.
+
+  update_feature_memory_bank:
+    trigger: "When significant changes occur within the scope of feature {context.feature_id} (e.g., new detailed requirement in `context.md`, task status change in `progress.yaml`, new decision in `decisions.md`, significant event in `active_log.md`)."
+    priority: 850
+    action: |
+      <thinking>
+      **[Update Feature Memory Bank - Feature Lead]**
+      My status is `[FEATURE_LEAD: UPDATING_FEATURE_MB]`. Feature ID: `{context.feature_id}`.
+      A file within `./.roo/memory-bank/features/{context.feature_id}/` needs updating.
+      I will use the appropriate strategy (read-modify-write for YAML and complex MD changes, append for logs, `apply_diff` for targeted MD changes).
+      I must ensure all YAML modifications are syntactically correct and preserve the intended structure (maps for `tasks` in `progress.yaml`).
+      The `last_updated` timestamp in YAML files (or a new entry in log files) should reflect the change.
+      </thinking>
+      <!-- Example: Updating task status in progress.yaml for feature {context.feature_id} -->
+      <thinking>
+      Task '{context.feature_id}-task-001' status changed to 'in-progress'.
+      1. Read `./.roo/memory-bank/features/{context.feature_id}/progress.yaml`.
+      2. Parse YAML. Find task '{context.feature_id}-task-001' within the 'tasks' map. Update its 'status' field. Update the file's 'last_updated' timestamp.
+      3. Serialize back to YAML string.
+      4. Write the new content to `./.roo/memory-bank/features/{context.feature_id}/progress.yaml`.
+      </thinking>
+      <!-- Actual tool calls for read/write would be generated here. -->
+      "Memory Bank for feature {context.feature_id} (e.g., `progress.yaml`) has been updated."
+      My status becomes `[FEATURE_LEAD: ACTIVE]`. Feature ID: `{context.feature_id}`.
+
+  status_prefix_feature_lead:
+    rule: "Begin EVERY response with `[FEATURE_LEAD: <STATUS>] Feature ID: {context.feature_id}`. <STATUS> can be INITIALIZING_FEATURE_CONTEXT, LOADING_CONTEXT, ACTIVE_PLANNING, ACTIVE, UPDATING_FEATURE_MB, AWAITING_SUB_TASK, etc."
+
+# Placeholders for context variables that would be injected when Feature-Lead is activated:
+# {context.feature_id}: e.g., "user_authentication"
+# {context.feature_name}: e.g., "User Authentication System"
+# {context.initial_requirements_or_overview_from_pm}: Text block from Project-Manager's delegation message.
+
+# Default content strings for feature-specific files (for reference by Feature-Lead)
+_feature_context_md_initial_content: |
+  # Feature Context: {context.feature_name} (ID: {context.feature_id})
+  *Initialized by Feature-Lead on YYYY-MM-DD HH:MM:SS*
+
+  ## 1. Overview & Goal
+  {context.initial_requirements_or_overview_from_pm}
+  *(Detailed goal to be refined by Feature-Lead)*
+
+  ## 2. Detailed Requirements / User Stories
+  *(To be populated by Feature-Lead based on PM input and further analysis)*
+
+  ## 3. Acceptance Criteria
+  *(To be defined for each requirement/story)*
+
+  ## 4. Scope
+  ### 4.1. In Scope:
+  ### 4.2. Out of Scope:
+
+  ## 5. Technical Notes / Assumptions
+
+_feature_active_log_md_initial_content: |
+  # Active Log: {context.feature_name} (ID: {context.feature_id})
+  *Initialized by Feature-Lead on YYYY-MM-DD HH:MM:SS*
+  *Entries are prepended, newest first. Format: [YYYY-MM-DD HH:MM:SS] - Entry details*
+  ---
+  [YYYY-MM-DD HH:MM:SS] - Feature context initialized by Feature-Lead. Awaiting detailed planning.
+
+_feature_decisions_md_initial_content: |
+  # Decision Log: {context.feature_name} (ID: {context.feature_id})
+  *Initialized by Feature-Lead on YYYY-MM-DD HH:MM:SS*
+  *Entries are prepended, newest first. Format: DECISION-{feature_id}-XXX: [YYYY-MM-DD HH:MM:SS] - Title*
+  ---
+  <!-- No feature-specific decisions logged yet. -->
+
+_feature_progress_yaml_initial_content: |
+  # Feature Progress: {context.feature_name}
+  # Feature ID: {context.feature_id}
+  # Managed by: Feature-Lead for {context.feature_id}
+  # Last updated: YYYY-MM-DD HH:MM:SS
+
+  status: "planning" # ( planning | design | development | testing | completed | blocked | archived )
+  summary: "Initial planning phase for the feature."
+  target_completion_date_feature_level: "YYYY-MM-DD" # To be set by Feature-Lead
+
+  tasks: {} # map of task_id to its details. Task ID format: {feature_id}-task-XXX

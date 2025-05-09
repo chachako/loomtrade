@@ -2,77 +2,85 @@
 # This rule defines the mandatory protocol ALL modes must follow when committing
 # changes to a version control repository (Git). It ensures consistency,
 # verification of changes, and adherence to commit message standards.
+# This protocol is considered a sub-routine that a mode executes when it needs to commit.
+# Upon successful completion of this protocol, the mode should have the commit hash.
 
 version_control_procedures:
   standard_commit_protocol:
-    trigger: "When a mode (typically Code-Frontend, Code-Backend, Doc-Writer, or potentially others modifying version-controlled files) has completed a logical unit of work involving file modifications within its assigned task and feature branch, and determines it is appropriate to commit these changes."
-    priority: 800
+    trigger: "When a mode (e.g., Code-Frontend, Code-Backend, Doc-Writer, or others modifying version-controlled files) has completed a logical unit of work involving file modifications and determines it is appropriate to commit these changes."
+    priority: 800 # High priority when a commit is decided.
     action: |
       <thinking>
-      **[Standard Commit Protocol Triggered]**
-      I have completed a unit of work involving file changes and need to commit them to the feature branch.
-      **I MUST follow this precise protocol:**
-      1.  **Identify Changed Files:** Recall or determine the exact list of files I have created or modified during this unit of work.
-      2.  **Stage Changes:** Use `git add` to stage *only* the specific files identified in Step 1. Avoid broad `git add .` if possible.
-      3.  **Review Staged Changes:** Use `git diff --staged` to carefully review the exact changes that are about to be committed.
-      4.  **Verify Changes:** Confirm that the staged diff accurately reflects ONLY the intended modifications for this unit of work and contains no unexpected changes or debugging artifacts. **If the diff is not correct, I MUST unstage changes (`git reset HEAD <file>...`), fix the files, and restart this protocol from Step 1.**
-      5.  **Construct Commit Message:** Create a commit message adhering strictly to the project standard:
-          *   Format: Conventional Commits (`type(scope): description`).
-          *   Case: **All lowercase**.
-          *   **Type:** Choose the most appropriate type (e.g., `feat`, `fix`, `build`, `chore`, `ci`, `docs`, `perf`, `refactor`, `revert`, `style`, `test`).
-          *   **Scope (Optional but Recommended):** Indicate the part of the codebase affected (e.g., `auth`, `ui`, `api`, `memory-bank`, `docs`, specific component name). Keep scope concise.
-          *   **Description:**
-              *   **MUST be concise and summarize the change (WHAT was done).** Aim for clarity and brevity for the entire subject line (`type(scope): description`), ideally ~50-70 characters.
-              *   **MUST use imperative, present tense** (e.g., "add feature", "fix bug").
-              *   **MUST AVOID repeating information already conveyed by the `type` or `scope`.** If `scope` is `memory-bank`, describe the specific action (e.g., `initialize global structure`), not just "update memory bank".
-              *   **Focus on a single logical change per commit (Atomic Commits).** If multiple distinct changes were made, consider splitting them into separate commits, each following this protocol.
-          *   **Task ID:** **Must** include the relevant task ID (e.g., `({feature_id}/{task_id})` or `(task-id)`) at the end of the description or in the footer. Parentheses are recommended.
-          *   **Example Improved Messages:**
-              - `feat(auth): implement registration validation logic (user_mgmt-task-006)`
-              - `fix(api): correct pagination calculation for user list (user_mgmt-task-010)`
-              - `docs(readme): add setup instructions for backend service (project-docs-task-001)`
-              - `chore(deps): update react and react-dom to v18.3 (common-task-123)`
-              - `refactor(ui): extract user avatar component (user_profile-task-005)`
-          *   **Commit Body (Optional):** If more explanation (WHY the change was made, context, breaking changes) is needed, add a blank line after the subject line and write a detailed body.
-      6.  **Execute Commit:** Use `git commit -m "..."` with the constructed message (potentially multi-line if a body is included).
-      7.  Confirm commit success (based on tool execution result) before proceeding.
+      **[Standard Commit Protocol Activated - Initiating Commit Sequence]**
+      I have been activated to perform a commit. I expect the following context to be available from the mode that activated me or from my current operational context:
+      - `{context.current_working_branch}`: The Git branch I am currently working on.
+      - `{context.changed_files_for_commit}`: A list of specific file paths (relative to `context.git_command_cwd`) to be committed.
+      - `{context.commit_message_type}`: The Conventional Commit type (e.g., "feat", "fix").
+      - `{context.commit_message_scope}` (optional): The scope for the Conventional Commit.
+      - `{context.commit_message_description}`: A concise description of the changes.
+      - `{context.associated_task_id_for_commit}` (optional but highly recommended): The task ID(s) related to this commit.
+      - `{context.git_command_cwd}`: The current working directory for Git commands.
 
-      Let's assume I am `Code-Backend` working on task `user_mgmt-task-006` and I have modified `src/services/validation.js` and created `tests/validation.test.js`.
+      My process:
+      1.  **Stage Changes:** Use `git add` with the provided `{context.changed_files_for_commit}`.
+      2.  **Review Staged Changes (for activating mode's verification):** Use `git diff --staged`. The activating mode is responsible for verifying this diff.
+      3.  **Construct Full Commit Message:** Combine type, scope, description, and task ID into a Conventional Commits formatted message, all lowercase.
+      4.  **Execute Commit:** Use `git commit -m "Full Message"`.
+      5.  **Retrieve Commit Hash:** Use `git log -1 --pretty=format:"%H"`.
+      6.  **Protocol Completion:** The commit hash is now available for the activating mode.
       </thinking>
 
       <thinking>
-      **Step 1 & 2: Identify and Stage Changed Files.**
-      Files: `src/services/validation.js`, `tests/validation.test.js`
+      **Step 1: Stage Changed Files.**
+      Using file list: `{context.changed_files_for_commit}`.
+      The file paths in this list must be space-separated if multiple for the command line.
+      The activating mode should ensure this formatting if passing a pre-formatted string, or I will join the list with spaces.
+      Let's assume `{context.changed_files_for_commit_string}` is the space-separated string of files.
       </thinking>
       <execute_command>
-      <command>git add src/services/validation.js tests/validation.test.js</command>
+      <command>git add {context.changed_files_for_commit_string}</command>
+      <cwd>{context.git_command_cwd}</cwd>
       </execute_command>
+      <!-- Wait for confirmation -->
       <thinking>
-      **Step 3: Review Staged Changes.**
-      Requesting staged diff.
+      **Step 2: Review Staged Changes (Output for Verification by Activating Mode).**
       </thinking>
       <execute_command>
       <command>git diff --staged</command>
+      <cwd>{context.git_command_cwd}</cwd>
       </execute_command>
+      <!-- Wait for diff output. Activating mode handles verification of this output. -->
       <thinking>
-      **Step 4: Verify Changes.**
-      [Internal Check: Analyze `git diff --staged` output. Assume it's correct.]
-
-      **Step 5: Construct Commit Message.**
-      Type: `feat`
-      Scope: `auth`
-      Description: `implement registration validation logic`
-      Task ID: `user_mgmt-task-006`
-      Final Message: `feat(auth): implement registration validation logic (user_mgmt-task-006)`
+      **Step 3: Construct Full Commit Message.**
+      I will use the provided context variables:
+      `type: {context.commit_message_type}`
+      `scope: {context.commit_message_scope}` (if provided)
+      `description: {context.commit_message_description}`
+      `task_id: {context.associated_task_id_for_commit}` (if provided)
+      I will construct the `{constructed_commit_message}` string according to Conventional Commits format, ensuring it's all lowercase and includes the task ID in parentheses at the end of the description if provided.
+      For example: `{context.commit_message_type}({context.commit_message_scope}): {context.commit_message_description} ({context.associated_task_id_for_commit})` or similar variations based on provided context.
       </thinking>
       <thinking>
-      **Step 6: Execute Commit.**
+      **Step 4: Execute Commit.**
+      Committing with message: `{constructed_commit_message}`.
       </thinking>
       <execute_command>
-      <command>git commit -m "feat(auth): implement registration validation logic (user_mgmt-task-006)"</command>
+      <command>git commit -m "{constructed_commit_message}"</command>
+      <cwd>{context.git_command_cwd}</cwd>
       </execute_command>
+      <!-- Wait for confirmation of commit success. -->
       <thinking>
-      **Step 7: Confirm Commit Success.**
-      I will wait for the confirmation that the `git commit` command executed successfully.
-      Once confirmed, the commit process for this unit of work is complete. I can now proceed with the next step of my main task (e.g., working on another part, or preparing the final `attempt_completion` report if this commit concluded the task).
+      Commit successful.
+      **Step 5: Retrieve Commit Hash.**
+      </thinking>
+      <execute_command>
+      <command>git log -1 --pretty=format:"%H"</command>
+      <cwd>{context.git_command_cwd}</cwd>
+      </execute_command>
+      <!-- Wait for output. Assume output is {actual_commit_hash}. -->
+      <thinking>
+      **Step 6: Protocol Completion.**
+      Commit hash `{actual_commit_hash}` obtained.
+      This standard commit protocol is now complete for this unit of work.
+      The activating mode now has this commit hash (`{actual_commit_hash}`) to use in its reporting or further actions.
       </thinking>

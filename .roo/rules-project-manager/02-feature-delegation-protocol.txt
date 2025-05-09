@@ -1,93 +1,160 @@
-feature_management:
-  delegate_feature_to_feature_lead:
-    trigger: "When a feature in `global/master_progress.yaml` is in a 'defined' or 'backlog' state and is prioritized for development (either by user instruction or next in a predefined sequence), or when the user explicitly requests to start/delegate a specific feature."
-    priority: 750
+feature_delegation_protocol:
+  delegation_to_feature_lead:
+    trigger: "After a feature module has been identified (by `01-project-decomposition.txt`), defined in `global/master_progress.yaml` and `manifest.yaml` with status 'defined', and Project-Manager decides it's ready for detailed planning and execution by a Feature-Lead."
+    priority: 800
     action: |
       <thinking>
-      **[Feature Delegation Protocol]**
-      My status should be `[PROJECT_MANAGER: DELEGATING_FEATURE]`.
-      The goal is to delegate a specific feature to the 'feature-lead' mode for detailed planning, development, and eventual delivery.
+      **[Feature Delegation - Project Manager]**
+      My status is `[PROJECT_MANAGER: PREPARING_FEATURE_DELEGATION]`.
+      I have identified a feature (e.g., `{var_feature_id_to_delegate}`, Name: `{var_feature_name_to_delegate}`) from `master_progress.yaml` that is in 'defined' state and needs to be delegated.
+      The conceptual Feature Lead instance name for tracking is `{var_conceptual_fl_instance_name}`.
 
-      My process will be:
-      1.  **Identify and Confirm Feature:** Read `global/master_progress.yaml` to find the feature ID, name, and confirm its status is ready for delegation.
-      2.  **Prepare `new_task` Message:** Construct a comprehensive message for the 'feature-lead' mode (slug: `feature-lead`), including context, responsibilities, Memory Bank references, and the **crucial instruction on final status reporting**.
-      3.  **Execute `new_task` Tool Call.**
-      4.  **Update `global/master_progress.yaml`:** Update the feature's status (e.g., to "planning") and note the delegation.
-      5.  **Update `manifest.yaml` timestamp.**
-      6.  **Inform User of Delegation.**
-
-      Assume I need to delegate feature `user_mgmt`. I've already read `master_progress.yaml` and confirmed details.
-      The target mode slug is `feature-lead`.
+      My process:
+      1.  **Update Global Trackers First:**
+          a.  Update `global/master_progress.yaml`: Set status of `{var_feature_id_to_delegate}` to 'delegated_to_feature_lead', add `lead_mode_instance: {var_conceptual_fl_instance_name}`.
+          b.  Update `manifest.yaml`: Update `feature_index` for `{var_feature_id_to_delegate}` with status and `lead_mode_instance`. Update `last_updated` timestamp.
+          (These updates involve read-modify-write sequences for YAML files).
+      2.  **Formulate `new_task` Message for Feature-Lead:**
+          This message MUST be structured to provide all context Feature-Lead needs for its `feature_context_initialization` rule.
+          I will extract/formulate:
+          - `task_id_for_fl`: A new unique task ID for this overall feature management task assigned to Feature-Lead (e.g., "FL-Task-{var_feature_id_to_delegate}").
+          - `feature_id`: This is `{var_feature_id_to_delegate}`.
+          - `feature_name`: This is `{var_feature_name_to_delegate}`.
+          - `initial_requirements_summary`: A concise summary of goals/key requirements for this feature, extracted from user requests or my decomposition notes.
+          - `global_context_paths`: List of paths to relevant global Memory Bank files.
+          - `feature_lead_responsibilities`: A clear list of expectations for the Feature Lead.
+      3.  **Delegate using `new_task` to `feature-lead` slug.**
+      My status after delegation will be `[PROJECT_MANAGER: AWAITING_FL_MILESTONE ({var_feature_id_to_delegate})]`.
       </thinking>
+
+      <!-- Example: Delegating feature 'user_authentication' -->
+      <thinking>
+      Let `{var_feature_id_to_delegate}` = 'user_authentication'.
+      Let `{var_feature_name_to_delegate}` = 'User Authentication System'.
+      Let `{var_conceptual_fl_instance_name}` = 'Feature-Lead-UserAuthentication'.
+      Let `{var_initial_summary}` = "Implement secure user registration (email/password, validation, hashing), login, session management, and basic password recovery. Foundation for user-specific functions. Refer to global project overview for broader context."
+
+      **Step 1a: Update `global/master_progress.yaml`**
+      </thinking>
+      <read_file><path>./.roo/memory-bank/global/master_progress.yaml</path></read_file>
+      <!-- Wait -->
+      <thinking>
+      Updating 'user_authentication' in `master_progress.yaml`: status to 'delegated_to_feature_lead', lead_mode_instance to 'Feature-Lead-UserAuthentication'.
+      </thinking>
+      <write_to_file>
+        <path>./.roo/memory-bank/global/master_progress.yaml</path>
+        <content><!-- YAML content with 'user_authentication' feature status and lead_mode_instance updated --></content>
+        <line_count>...</line_count>
+      </write_to_file>
+      <!-- Wait -->
+
+      <thinking>
+      **Step 1b: Update `manifest.yaml`**
+      </thinking>
+      <read_file><path>./.roo/memory-bank/manifest.yaml</path></read_file>
+      <!-- Wait -->
+      <thinking>
+      Updating 'user_authentication' in `manifest.yaml`'s `feature_index`: path, status, lead_mode_instance. Updating manifest's `last_updated`.
+      </thinking>
+      <write_to_file>
+        <path>./.roo/memory-bank/manifest.yaml</path>
+        <content><!-- YAML content with 'user_authentication' in feature_index updated and manifest last_updated set --></content>
+        <line_count>...</line_count>
+      </write_to_file>
+      <!-- Wait -->
+
+      <thinking>
+      Global trackers updated. Now, prepare and send the `new_task` to `feature-lead` mode.
+      My status after sending `new_task` will be `[PROJECT_MANAGER: AWAITING_FL_MILESTONE (user_authentication)]`.
+      </thinking>
+
+      **Step 2 & 3: Formulate Message and Delegate to `feature-lead`**
       <new_task>
-      <mode>feature-lead</mode>
-      <message>
-      "**New Feature Assignment: User Management (ID: user_mgmt)**
-
-      You are assigned to lead the planning, development, and delivery of the 'User Management' feature (ID: `user_mgmt`). Your role is that of a Feature Lead for this specific context.
-
-      **Your Core Responsibilities as Feature Lead:**
-      1.  Initialize Feature Memory Bank Context...
-      2.  Detailed Feature Planning & Design...
-      3.  Development Oversight...
-      4.  Quality Assurance Coordination...
-      5.  Code Review and Merge...
-      6.  Continuous Reporting & Memory Bank Updates...
-      7.  **Final Completion & Status Reporting (CRITICAL):**
-          *   Your overall task is to manage this feature until it is fully delivered and merged.
-          *   Upon completion of all activities (development, testing, merge), use the `attempt_completion` tool with a comprehensive summary (deliverables, testing status, merge details). Clearly indicate the final status as **'Completed Successfully'** in your result.
-          *   **If you encounter an unrecoverable error** during your process that prevents completion, use `attempt_completion` to report the failure, explaining the reason, and indicate the status as **'Failed'**.
-          *   **If you are explicitly instructed by the user to stop or cancel work on this feature before completion**, you MUST use `attempt_completion` to report this. State that the task was stopped by user instruction and indicate the status as **'Cancelled by User'**. Briefly mention the state of work if possible (e.g., 'Planning was X% complete').
-          *   **It is mandatory to report a final status (Completed Successfully, Failed, or Cancelled by User) via `attempt_completion` to conclude this task assignment.**
-
-      **Initial Memory Bank References:**
-      *   Project Overview: `./.roo/memory-bank/global/project_overview.md`
-      *   Master Progress (your feature entry): `./.roo/memory-bank/global/master_progress.yaml` (search for `id: user_mgmt`)
-      *   Shared Patterns & Standards: `./.roo/memory-bank/global/shared_system_patterns.md`
-      *   Global Architecture Overview: `./.roo/memory-bank/global/architecture_overview.md`
-      *   Manifest (for structure): `./.roo/memory-bank/manifest.yaml`
-
-      Please acknowledge this assignment. Your first step should be to set up or verify the Memory Bank context for `features/user_mgmt/` and then begin detailed planning. Outline your initial plan for this feature.
-      "
-      </message>
+        <mode>feature-lead</mode>
+        <message>
+        # YAML-like structure for Feature Lead task assignment
+        task_id: "FL-Task-user_authentication-01" # Unique task ID for this FL assignment
+        requesting_mode_id: "Project-Manager"
+        feature_id: "user_authentication"
+        feature_name: "User Authentication System"
+        initial_requirements_summary_and_goals: |
+          The primary goal of this feature is to implement a robust user authentication system.
+          This includes secure user registration (e.g., email/password, with appropriate validation and password hashing),
+          user login, session management, and basic password recovery mechanisms.
+          The system should be designed with security best practices in mind and provide a foundation for future
+          user-specific functionalities. Refer to `global/project_overview.md` for overall project context.
+        core_responsibilities:
+          - "Initialize Feature Memory Bank: Create and populate directory `./.roo/memory-bank/features/user_authentication/` with `context.md`, `active_log.md`, `decisions.md`, `progress.yaml`. Use summary above to draft initial `context.md`."
+          - "Detailed Planning: Refine requirements in `context.md`, break down feature into sub-tasks in `progress.yaml`."
+          - "Version Control: Define and manage feature branch (e.g., `feature/user_authentication`) from `develop`."
+          - "Sub-Task Delegation & Coordination: Delegate to `code-frontend`, `code-backend`, `code-reviewer`, `qa-tester`."
+          - "Technical Oversight: Oversee API contracts, code quality, testing efforts."
+          - "Reporting: Report major milestones (planning complete, ready for QA, QA passed, merged) and critical blockers to Project-Manager."
+        global_context_references:
+          project_overview_path: "./.roo/memory-bank/global/project_overview.md"
+          architecture_overview_path: "./.roo/memory-bank/global/architecture_overview.md"
+          shared_system_patterns_path: "./.roo/memory-bank/global/shared_system_patterns.md"
+        initial_directive: "Please begin by initializing the Memory Bank for this feature, then proceed with detailed planning. Report back when planning is complete or if you encounter immediate high-level blockers."
+        </message>
       </new_task>
+      <!-- Project-Manager's task is now frozen for this delegation. -->
+
+  handle_feature_lead_report:
+    trigger: "When Project-Manager receives an `attempt_completion` (a report) from a `Feature-Lead` mode regarding an assigned feature {context.feature_id}."
+    priority: 790
+    action: |
       <thinking>
-      **[Feature Delegation Protocol - Cont.]**
-      After the `new_task` tool call is successfully sent.
-      I need to update `global/master_progress.yaml` status for `user_mgmt` to 'planning'.
+      **[Handling Feature-Lead Report - Project Manager]**
+      My status is `[PROJECT_MANAGER: PROCESSING_FL_REPORT]`. Feature ID from report: `{context.feature_id_from_fl_report}`.
+      I have received a report from the `Feature-Lead`. The `attempt_completion` result should be a structured message or parsable text.
+      It should detail the milestone achieved, current status of feature `{context.feature_id_from_fl_report}`, any blockers, or feature completion.
+
+      I need to:
+      1.  **Parse the report:** Extract `feature_id`, new `status`, summary, next_steps_for_fl, blockers.
+      2.  **Update `global/master_progress.yaml`:** Reflect the new status for `{context.feature_id_from_fl_report}`.
+      3.  **Update `manifest.yaml`:** Update status in `feature_index` and `last_updated`.
+      4.  **Log Critical Info:** If report mentions global decisions or unmitigated risks, log them.
+      5.  **Communicate with User (if necessary):** As per `04-stakeholder-communication.txt`.
+      6.  **Determine Next Project Step.**
       </thinking>
-      <read_file>
-      <path>./.roo/memory-bank/global/master_progress.yaml</path>
-      </read_file>
+
+      <!-- Example: Feature-Lead reports 'planning_complete' for 'user_authentication' -->
       <thinking>
-      Constructing updated YAML content for master_progress.yaml.
+      Received report from Feature-Lead for 'user_authentication'. Parsing result...
+      Assume result contains: `feature_id: "user_authentication"`, `new_status: "planning_complete"`, `summary: "Detailed planning complete..."`, `next_steps_for_fl: "Ready to delegate dev tasks."`, `blockers: "None"`.
+
+      **Action: Update `global/master_progress.yaml` and `manifest.yaml` for 'user_authentication'.**
       </thinking>
-      <write_to_file>
-      <path>./.roo/memory-bank/global/master_progress.yaml</path>
-      <content>
-      (Full updated YAML content with status for user_mgmt as 'planning' and updated timestamp)
-      </content>
-      <line_count>XX</line_count>
-      </write_to_file>
+      <read_file><path>./.roo/memory-bank/global/master_progress.yaml</path></read_file>
+      <!-- Wait -->
+      <thinking>Updating status to 'planning_complete' for 'user_authentication' in `master_progress.yaml`.</thinking>
+      <write_to_file><path>./.roo/memory-bank/global/master_progress.yaml</path><content><!-- YAML with updated 'user_authentication' --></content><line_count>...</line_count></write_to_file>
+      <!-- Wait -->
+      <read_file><path>./.roo/memory-bank/manifest.yaml</path></read_file>
+      <!-- Wait -->
+      <thinking>Updating status for 'user_authentication' in `manifest.yaml` feature_index and manifest's last_updated.</thinking>
+      <write_to_file><path>./.roo/memory-bank/manifest.yaml</path><content><!-- YAML with updated 'user_authentication' and manifest --></content><line_count>...</line_count></write_to_file>
+      <!-- Wait -->
       <thinking>
-      Now, update manifest.yaml timestamp.
-      </thinking>
-      <read_file>
-      <path>./.roo/memory-bank/manifest.yaml</path>
-      </read_file>
-      <thinking>
-      Constructing updated YAML content for manifest.yaml.
-      </thinking>
-      <write_to_file>
-      <path>./.roo/memory-bank/manifest.yaml</path>
-      <content> (Full modified YAML string with new timestamp) </content>
-      <line_count>XX</line_count>
-      </write_to_file>
-      <thinking>
-      Delegation complete. Inform user. My status returns to `[PROJECT_MANAGER: ACTIVE]`.
+      Memory Bank updated. This was an internal milestone.
       </thinking>
       <attempt_completion>
-      <result>
-      The 'User Management' feature (ID: user_mgmt) has been successfully delegated to the 'feature-lead' mode for detailed planning and subsequent development. Its status in `global/master_progress.yaml` has been updated to 'planning'. The Feature Lead has been instructed to report a final status (Completed, Failed, or Cancelled) upon concluding their task.
-      </result>
+        <result>
+        Received and processed 'planning_complete' update for feature 'user_authentication'.
+        Global trackers updated. Awaiting next milestone from Feature-Lead.
+        </result>
       </attempt_completion>
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.
+
+  monitoring_overall_progress:
+    _comment: "Project-Manager monitors overall project progress using global/master_progress.yaml."
+    action: |
+      <thinking>
+      If I need to proactively check the status of a feature (e.g., '{var_feature_id_to_check}') from `master_progress.yaml`:
+      1.  Identify its `lead_mode_instance`.
+      2.  Use `new_task` to `feature-lead` slug, with a message structured for a status request:
+          `task_type: "status_update_request"`
+          `feature_id: "{var_feature_id_to_check}"`
+          `query: "Please provide a detailed status update, including current sub-task progress, any blockers, and ETA for next major milestone."`
+      3.  My status would be `[PROJECT_MANAGER: AWAITING_FL_STATUS_UPDATE ({var_feature_id_to_check})]`.
+      </thinking>

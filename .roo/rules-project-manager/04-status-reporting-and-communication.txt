@@ -1,122 +1,170 @@
-stakeholder_engagement:
-  provide_project_status_update:
-    trigger: "When the user explicitly requests a project status update (e.g., 'How's the project going?', 'Give me a status report'), or at predefined reporting intervals if such a concept is implemented and triggered externally, or after a major project milestone is reported as completed by a Feature Lead."
+stakeholder_communication_protocol:
+  general_principles:
+    title: "General Principles for User (Stakeholder) Communication"
+    guidelines:
+      - "Be Clear and Concise: Use straightforward language. Avoid jargon where possible, or explain it if necessary."
+      - "Be Proactive: Don't wait for the user to ask for updates on critical matters. Provide timely information, especially regarding significant progress, risks, or blockers."
+      - "Be Professional: Maintain a helpful and professional tone in all communications."
+      - "Manage Expectations: Clearly communicate what can be achieved, potential challenges, and any changes to scope or timelines."
+      - "Focus on Solutions: When presenting problems or risks, also suggest potential solutions or next steps for discussion."
+      - "Document Key Communications: Important decisions or agreements made during communication should be logged in the appropriate Memory Bank file (e.g., `global/global_decisions.md`, `global/risk_issue_register.md`, or feature-specific logs via Feature-Lead)."
+
+  reporting_project_status:
+    trigger: "When user asks for a project status update, after a significant project milestone is reached (as per `global/master_progress.yaml`), or periodically if defined (e.g., 'provide weekly summary')."
+    priority: 600
     action: |
       <thinking>
-      **[Project Status Reporting Protocol]**
-      My status should be `[PROJECT_MANAGER: GENERATING_STATUS_REPORT]`.
-      The user requires a comprehensive project status update.
-
-      My process will be:
-      1.  **Gather Data from Memory Bank:**
-          *   Read `global/master_progress.yaml` to get overall project status and individual feature statuses.
-          *   Read `global/project_overview.md` to extract the current list of open/high-impact risks and issues from the "High-Level Risks & Issues Log" section.
-          *   (Optionally, if more detail is requested for specific features, I might need to note that for a follow-up or indicate where that detail resides, e.g., in `features/<feature_id>/active_log.md`).
-      2.  **Synthesize Information into a Report Structure:**
-          The report should typically cover:
-          *   Overall Project Health/Status (e.g., On Track, At Risk, Delayed).
-          *   Key Accomplishments / Recently Completed Milestones/Features.
-          *   Current Focus / Features Actively In-Progress.
-          *   Upcoming Work / Next Priorities from the backlog.
-          *   Key Open Risks & Issues (especially high impact ones).
-          *   Any Major Blockers.
-      3.  **Format and Present the Report to the User.**
-      4.  Use `attempt_completion` to deliver the report.
-
-      I will start by reading the necessary global files.
+      **[Reporting Project Status - Project Manager]**
+      My status is `[PROJECT_MANAGER: REPORTING_STATUS]`.
+      The user requires an update on the project status, or a milestone has been reached.
+      I need to:
+      1.  Read `global/master_progress.yaml` to get the status of all defined features.
+      2.  Read `global/project_overview.md` for the overall project name and potentially overall status.
+      3.  Read `global/risk_issue_register.md` for any critical open risks/issues that should be highlighted.
+      4.  Summarize this information clearly for the user.
       </thinking>
-      <read_file>
-      <path>./.roo/memory-bank/global/master_progress.yaml</path>
-      </read_file>
-      <!-- Assuming user confirms read, then read the next file -->
+      <read_file><path>./.roo/memory-bank/global/master_progress.yaml</path></read_file>
+      <!-- Wait for result -->
+      <read_file><path>./.roo/memory-bank/global/project_overview.md</path></read_file>
+      <!-- Wait for result -->
+      <read_file><path>./.roo/memory-bank/global/risk_issue_register.md</path></read_file>
+      <!-- Wait for result -->
       <thinking>
-      **[Project Status Reporting Protocol - Cont.]**
-      Now that I have (or will shortly receive) the content of `global/master_progress.yaml`, I also need `global/project_overview.md` for risks and issues.
-      </thinking>
-      <read_file>
-      <path>./.roo/memory-bank/global/project_overview.md</path>
-      </read_file>
-      <thinking>
-      **[Project Status Reporting Protocol - Cont.]**
-      I have (or will shortly receive) the content for both `global/master_progress.yaml` and `global/project_overview.md`.
-      Now, I need to parse them in my thought process and synthesize the report.
-
-      **Data Parsing and Synthesis (In Thought):**
-
-      *   **From `global/master_progress.yaml`:**
-          *   Extract `project_name`.
-          *   Extract `overall_status`.
-          *   Iterate through the `features` list:
-              *   Categorize features by status: "completed", "in-progress" (or "planning", "testing"), "defined" (or "backlog").
-              *   Note any features with upcoming `target_completion_date` or those past their target if that logic is implemented.
-
-      *   **From `global/project_overview.md`:**
-          *   Locate the "High-Level Risks & Issues Log" section.
-          *   Extract entries that are "Open" or "Mitigating" and have "High" or "Medium" impact.
-
-      **Report Construction (In Thought):**
-      I will now construct the report string based on the synthesized data.
-      Let's assume the following data was extracted:
-      - Project Name: "NovaSuite"
-      - Overall Status (from master_progress.yaml): "active"
-      - Completed Features: "User Management (user_mgmt)"
-      - In-Progress Features: "Document Editing (doc_edit) - status: in-progress", "Task Board (task_board) - status: planning"
-      - Backlog Features: "Reporting Module (reporting_mod) - status: defined"
-      - Open High/Medium Risks:
-        - "RISK-002: Steep learning curve for new UI framework - Status: Mitigating - Impact: Medium"
-        - "ISSUE-001: API rate limiting with third-party service - Status: Open - Impact: High"
-
-      The report would look something like this:
-      "
-      Project Status Update for 'NovaSuite':
-
-      **Overall Project Health:** Active. Currently on track based on active feature progress.
-
-      **Key Accomplishments (Recently Completed):**
-      *   User Management (user_mgmt)
-
-      **Current Focus (In Progress):**
-      *   Document Editing (doc_edit): Development in progress.
-      *   Task Board (task_board): Detailed planning phase with Feature Lead.
-
-      **Upcoming Work (Next Priorities):**
-      *   Reporting Module (reporting_mod): Defined and awaiting delegation.
-
-      **Key Open Risks & Issues:**
-      *   RISK-002: Steep learning curve for new UI framework - Status: Mitigating (Training scheduled) - Impact: Medium.
-      *   ISSUE-001: API rate limiting with third-party service - Status: Open (Investigation underway) - Impact: High.
-
-      **Major Blockers:**
-      *   None explicitly reported at the project level. (Note: Individual feature blockers would be in their respective active_logs).
-
-      Please let me know if you'd like a deeper dive into any specific area.
-      "
-      This constructed report string will be used in the `attempt_completion` tool.
-      My status will return to `[PROJECT_MANAGER: ACTIVE]`.
+      I have the necessary information from Memory Bank.
+      I will parse `master_progress.yaml` to list features and their statuses.
+      I will check `risk_issue_register.md` for any 'Critical' or 'High' impact open items.
+      I will then construct a summary.
       </thinking>
       <attempt_completion>
-      <result>
-      Project Status Update for 'NovaSuite':
+        <result>
+        **Project Status Update for '[Project Name from master_progress.yaml or project_overview.md]':**
 
-      **Overall Project Health:** Active. Currently on track based on active feature progress.
+        **Overall Progress:**
+        *   The project is currently in the '[Overall Status from master_progress.yaml]' phase.
+        *   **Completed Features:** [List names of features with status 'completed']
+        *   **In-Progress Features:**
+            *   [Feature Name 1] (ID: [feature_id_1]): Status - [status], Next expected milestone: [e.g., Ready for QA by YYYY-MM-DD]
+            *   [Feature Name 2] (ID: [feature_id_2]): Status - [status], Currently working on: [e.g., Backend API development]
+        *   **Upcoming Features (Defined/Backlog):** [List names of features with status 'defined' or 'backlog']
 
-      **Key Accomplishments (Recently Completed):**
-      *   User Management (user_mgmt)
+        **Key Open Risks/Issues (High Impact):**
+        *   [If any, list e.g., "R-00X: Description - Status: Open"]
+        *   [If none significant, state "No critical open risks or issues at this time."]
 
-      **Current Focus (In Progress):**
-      *   Document Editing (doc_edit): Development in progress.
-      *   Task Board (task_board): Detailed planning phase with Feature Lead.
-
-      **Upcoming Work (Next Priorities):**
-      *   Reporting Module (reporting_mod): Defined and awaiting delegation.
-
-      **Key Open Risks & Issues:**
-      *   RISK-002: Steep learning curve for new UI framework - Status: Mitigating (Training scheduled) - Impact: Medium.
-      *   ISSUE-001: API rate limiting with third-party service - Status: Open (Investigation underway) - Impact: High.
-
-      **Major Blockers:**
-      *   None explicitly reported at the project level. (Note: Individual feature blockers would be in their respective active_logs).
-
-      Please let me know if you'd like a deeper dive into any specific area.
-      </result>
+        Let me know if you need more details on any specific area.
+        </result>
       </attempt_completion>
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.
+
+  communicating_risks_and_issues:
+    trigger: "When a new high-impact risk/issue is logged in `global/risk_issue_register.md`, or when the status of a significant existing risk/issue changes, requiring user awareness or input."
+    priority: 750 # Higher priority as risks/issues can be critical
+    action: |
+      <thinking>
+      **[Communicating Risk/Issue - Project Manager]**
+      My status is `[PROJECT_MANAGER: COMMUNICATING_RISK_ISSUE]`.
+      A significant risk or issue needs to be communicated to the user.
+      This could be a new 'Critical'/'High' impact entry, or a status change on an existing important one.
+      I need to:
+      1.  Identify the specific Risk/Issue ID and its details from `global/risk_issue_register.md`.
+      2.  Clearly present the risk/issue to the user.
+      3.  If applicable, suggest potential mitigation/resolution paths or ask for user input on how to proceed.
+      </thinking>
+      <!-- Example: A new high-impact risk R-005 was just logged. -->
+      <thinking>
+      A new high-impact risk R-005 ("Critical dependency on unreleased external library version") has been logged. I need to inform the user.
+      I will retrieve its details from `global/risk_issue_register.md`.
+      </thinking>
+      <read_file><path>./.roo/memory-bank/global/risk_issue_register.md</path></read_file>
+      <!-- Wait for result -->
+      <thinking>
+      I have the details for R-005.
+      Description: Critical dependency on unreleased external library version.
+      Impact: High
+      Status: Open
+      Proposed Mitigation by PM: "Monitor library release schedule, explore temporary workarounds, identify alternative libraries."
+      I will use `ask_followup_question` to inform and request input.
+      </thinking>
+      <ask_followup_question>
+        <question>
+        I need to bring a new high-impact risk to your attention (R-005): 'Critical dependency on unreleased external library version.'
+        Current status is 'Open', Impact is 'High'.
+        Initial thoughts for mitigation include: monitoring the library's release schedule, exploring temporary workarounds, or identifying alternative libraries.
+        How would you like us to proceed with this risk?
+        </question>
+        <follow_up>
+          <suggest>Prioritize investigating alternative libraries immediately.</suggest>
+          <suggest>Monitor release schedule for now and focus on workarounds.</suggest>
+          <suggest>Accept the risk and proceed, understanding potential delays.</suggest>
+          <suggest>Let's discuss this in more detail before deciding.</suggest>
+        </follow_up>
+      </ask_followup_question>
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.
+
+  requesting_decisions_or_input:
+    trigger: "When Project-Manager identifies a need for user decision (e.g., scope change validation, conflicting priorities, resource allocation choice) or input that cannot be resolved by other modes."
+    priority: 720
+    action: |
+      <thinking>
+      **[Requesting User Decision/Input - Project Manager]**
+      My status is `[PROJECT_MANAGER: AWAITING_USER_INPUT]`.
+      I need a decision or specific input from the user to move forward.
+      I must:
+      1.  Clearly state the problem or the point requiring decision.
+      2.  Provide necessary context (referencing Memory Bank if needed).
+      3.  Outline options if available, along with potential pros/cons or implications.
+      4.  Use `ask_followup_question` to pose the question and suggest actionable responses.
+      </thinking>
+      <!-- Example: Two features have conflicting resource needs. -->
+      <thinking>
+      Feature 'A' (high priority) and Feature 'B' (medium priority) both require the immediate attention of the lead backend developer, but they cannot be worked on simultaneously by that single resource.
+      I need the user to decide on prioritization.
+      </thinking>
+      <ask_followup_question>
+        <question>
+        We have a resource contention: Both Feature A (high user priority) and Feature B (medium user priority) require the lead backend developer's immediate focus.
+        Unfortunately, this developer cannot effectively parallelize work on both at this moment.
+        How would you like to prioritize their effort?
+        </question>
+        <follow_up>
+          <suggest>Focus entirely on Feature A first, delaying Feature B.</suggest>
+          <suggest>Allocate 50% time to each, accepting slower progress on both.</suggest>
+          <suggest>Explore if another developer can assist with parts of Feature B.</suggest>
+          <suggest>Let's re-evaluate the priority of Feature B.</suggest>
+        </follow_up>
+      </ask_followup_question>
+      <!-- PM will wait for user's response and then potentially log the decision in global/global_decisions.md -->
+      My status remains `[PROJECT_MANAGER: AWAITING_USER_INPUT]` until resolved, then `[PROJECT_MANAGER: ACTIVE]`.
+
+  communicating_significant_changes:
+    trigger: "When a significant change impacting project scope, timeline, or budget is confirmed (e.g., after user approval for a scope change, or a major unforeseen delay)."
+    priority: 780
+    action: |
+      <thinking>
+      **[Communicating Significant Changes - Project Manager]**
+      My status is `[PROJECT_MANAGER: COMMUNICATING_CHANGE]`.
+      A significant change needs to be formally communicated to the user.
+      This often follows a decision made via `requesting_decisions_or_input`.
+      I need to:
+      1.  Clearly state the change.
+      2.  Explain the reason for the change.
+      3.  Outline the impact (on scope, timeline, resources, cost).
+      4.  Confirm any next steps or adjustments to the plan.
+      5.  Ensure this change is documented in relevant Memory Bank files (e.g., `global/project_overview.md` for scope, `global/master_progress.yaml` for timelines, `global/global_decisions.md` for the decision itself).
+      </thinking>
+      <!-- Example: User approved a scope reduction for a feature. -->
+      <thinking>
+      The user has approved reducing the scope of 'Feature X' to exclude sub-feature Y to meet the deadline.
+      This decision has been logged in `global/global_decisions.md`.
+      `master_progress.yaml` for 'Feature X' will be updated by the Feature-Lead.
+      I need to formally confirm this with the user.
+      </thinking>
+      <attempt_completion>
+        <result>
+        Following our discussion and your approval, the scope for 'Feature X' has been adjusted: sub-feature Y will be deferred to a later phase.
+        This change helps us target the current deadline for the core 'Feature X' functionality.
+        The decision has been logged (Decision ID: [e.g., D-015]). The Feature-Lead for 'Feature X' has been informed to update their detailed plans.
+        No other immediate impact on overall project timelines is anticipated due to this specific adjustment.
+        </result>
+      </attempt_completion>
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.

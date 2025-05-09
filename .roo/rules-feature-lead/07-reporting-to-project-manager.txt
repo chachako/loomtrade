@@ -1,0 +1,141 @@
+reporting_to_project_manager_feature_lead:
+  report_feature_milestone_or_significant_update:
+    trigger: "When a major milestone for feature {context.feature_id} is reached (e.g., planning complete, development complete before QA, QA passed, critical blocker identified/resolved), or when Project-Manager explicitly requests a status report for the feature."
+    priority: 750
+    action: |
+      <thinking>
+      **[Report Feature Milestone/Update to Project Manager - Feature Lead]**
+      My status is `[FEATURE_LEAD: PREPARING_PM_REPORT]`. Feature ID: `{context.feature_id}`.
+      A significant update or milestone for feature '{context.feature_name}' needs to be reported to Project-Manager.
+      This is typically done by using `attempt_completion` on the task that Project-Manager assigned to me for managing this feature.
+      The `result` parameter of `attempt_completion` must be comprehensive.
+
+      I need to:
+      1.  Gather relevant information from my feature-specific Memory Bank:
+          *   Current overall status of the feature from `features/{context.feature_id}/progress.yaml` (e.g., 'planning_complete', 'in_development', 'ready_for_qa', 'qa_passed', 'blocked').
+          *   Summary of recent significant activities from `features/{context.feature_id}/active_log.md`.
+          *   Any critical open issues or recently made key decisions from `active_log.md` or `decisions.md`.
+          *   Link to the detailed feature progress: `features/{context.feature_id}/progress.yaml`.
+      2.  Construct a clear and concise report string for the `result` parameter.
+      3.  Use `attempt_completion`.
+      </thinking>
+
+      <!-- Example: Detailed planning for feature {context.feature_id} is complete. -->
+      <thinking>
+      I have completed the detailed planning for feature '{context.feature_name}' (ID: {context.feature_id}).
+      - `context.md` is refined.
+      - `progress.yaml` is populated with sub-tasks, and feature status is 'planning_complete'.
+      I need to report this milestone to Project-Manager.
+      </thinking>
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
+      <!-- Wait for content -->
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
+      <!-- Wait for content -->
+      <thinking>
+      I have the necessary info. The `progress.yaml` shows status 'planning_complete' and summary 'Detailed tasks defined.'
+      The `active_log.md` confirms planning activities.
+      </thinking>
+      <attempt_completion>
+        <result>
+        **Feature Update: {context.feature_name} (ID: {context.feature_id})**
+        **Status:** Planning Complete.
+        **Summary:** Detailed planning for the feature is complete. All sub-tasks have been identified and logged in `./.roo/memory-bank/features/{context.feature_id}/progress.yaml`. Requirements and acceptance criteria are refined in `context.md`.
+        **Next Steps (for Feature-Lead):** Ready to begin delegation of development sub-tasks.
+        **Blockers:** None at this moment.
+        </result>
+      </attempt_completion>
+      <!-- After this, Feature-Lead's task (assigned by PM) might be considered complete for this phase,
+           or PM might give further instructions. If PM's task was "Plan feature X", this completes it.
+           If PM's task was "Oversee feature X to completion", then this is just a progress update,
+           and Feature-Lead remains active on that broader task.
+           The status of Feature-Lead after attempt_completion depends on the nature of the original task from PM.
+           It might go back to a general `[FEATURE_LEAD: ACTIVE]` or a more specific one if the PM responds with new instructions.
+      -->
+
+  report_critical_blocker_or_escalation:
+    trigger: "When a critical blocker for feature {context.feature_id} is identified that Feature-Lead cannot resolve independently and requires Project-Manager's intervention or awareness (e.g., cross-team dependency issue, major unexpected technical challenge, resource conflict)."
+    priority: 900 # Critical issues need prompt reporting
+    action: |
+      <thinking>
+      **[Report Critical Blocker/Escalation to Project Manager - Feature Lead]**
+      My status is `[FEATURE_LEAD: ESCALATING_ISSUE_TO_PM]`. Feature ID: `{context.feature_id}`.
+      A critical blocker has arisen for feature '{context.feature_name}' that requires PM's attention.
+      The blocker details should be logged in `features/{context.feature_id}/active_log.md` and possibly `progress.yaml` (task status 'blocked').
+
+      I need to:
+      1.  Clearly articulate the blocker: what it is, its impact on the feature and potentially project.
+      2.  Explain steps already taken or considered by me.
+      3.  Specify what kind of help or decision is needed from Project-Manager.
+      4.  Use `attempt_completion` with a result clearly indicating an ESCALATION or BLOCKER.
+      </thinking>
+
+      <!-- Example: A required external service for feature {context.feature_id} is indefinitely unavailable. -->
+      <thinking>
+      A critical blocker: The primary external weather API for feature '{context.feature_name}' is down with no ETA for restoration. All backend tasks depending on it are blocked.
+      This has been logged in `active_log.md` and relevant tasks in `progress.yaml` are marked 'blocked'.
+      </thinking>
+      <attempt_completion>
+        <result>
+        **CRITICAL BLOCKER / ESCALATION for Feature: {context.feature_name} (ID: {context.feature_id})**
+        **Blocker:** The primary external weather API service is indefinitely unavailable.
+        **Impact:** All backend development for data ingestion and processing is halted. Feature delivery will be significantly delayed if not resolved.
+        **Current Status:** Relevant sub-tasks in `progress.yaml` marked as 'blocked'. Logged in `active_log.md`.
+        **Analysis/Attempts:** Alternative free APIs have much lower data quality or severe rate limits.
+        **Action Required from Project Manager:**
+        1.  Decision on whether to wait for the primary API.
+        2.  Approval to investigate/procure a paid alternative API.
+        3.  Or, discussion on de-scoping or fundamentally changing this feature's dependency.
+        Please advise on how to proceed.
+        </result>
+      </attempt_completion>
+      <!-- Feature-Lead now awaits instructions from Project-Manager. -->
+
+  report_feature_completion:
+    trigger: "When feature {context.feature_id} has been fully developed, tested, QA approved, merged into the main development branch, and is considered complete by Feature-Lead."
+    priority: 880 # High priority for final reporting
+    action: |
+      <thinking>
+      **[Report Feature Completion to Project Manager - Feature Lead]**
+      My status is `[FEATURE_LEAD: REPORTING_FEATURE_COMPLETION]`. Feature ID: `{context.feature_id}`.
+      Feature '{context.feature_name}' (ID: {context.feature_id}) is now fully complete and integrated.
+      This follows successful merge (rule `04-...txt`) and QA approval (rule `06-...txt`).
+      The `status` in `features/{context.feature_id}/progress.yaml` should reflect 'completed'.
+      `features/{context.feature_id}/active_log.md` should have entries for merge and QA pass.
+
+      I need to provide a final summary report to Project-Manager using `attempt_completion`.
+      The report should include:
+      - Confirmation of completion.
+      - Link to final state in Memory Bank (e.g., `features/{context.feature_id}/`).
+      - Summary of key achievements or any notable points from the development lifecycle.
+      - Confirmation that all documentation (if any within FL scope) is updated.
+      </thinking>
+
+      <thinking>
+      All conditions for completing feature '{context.feature_name}' are met.
+      I will gather final details from `progress.yaml` and `active_log.md`.
+      </thinking>
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
+      <!-- Wait for content -->
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
+      <!-- Wait for content -->
+      <attempt_completion>
+        <result>
+        **FEATURE COMPLETE: {context.feature_name} (ID: {context.feature_id})**
+
+        **Summary:**
+        The feature '{context.feature_name}' has been successfully developed, tested, QA approved, and merged into the `develop` branch.
+        All planned sub-tasks as per `features/{context.feature_id}/progress.yaml` are marked 'completed'.
+        Key activities including API design, implementation, code reviews, QA cycles, and final merge have been logged in `features/{context.feature_id}/active_log.md`.
+        The feature is now considered fully integrated and complete according to its defined scope in `features/{context.feature_id}/context.md`.
+
+        **Key Outcomes/Notes:**
+        *   [Mention any significant positive outcomes, e.g., "Performance targets met for API X."]
+        *   [Mention any minor, deferred, or known issues if agreed with PM, e.g., "Minor UI tweak Y deferred to post-release backlog as per decision D-XYZ."]
+
+        This feature is now ready to be marked as 'completed' in the global project tracker (`master_progress.yaml`) by Project-Manager.
+        All relevant feature-specific Memory Bank files under `features/{context.feature_id}/` are up-to-date.
+        </result>
+      </attempt_completion>
+      <!-- Feature-Lead's overarching task from Project-Manager for this feature is now complete. -->
+      <!-- Feature-Lead will become idle or await new assignments from Project-Manager. -->
+      My status becomes `[FEATURE_LEAD: IDLE]` or `[FEATURE_LEAD: AWAITING_NEW_ASSIGNMENT]`. Feature ID: `{context.feature_id}`.

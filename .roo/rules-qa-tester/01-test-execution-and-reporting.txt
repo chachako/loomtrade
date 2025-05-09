@@ -1,0 +1,144 @@
+qa_test_execution_and_reporting:
+  plan_and_execute_tests:
+    trigger: "When QA-Mode's status is `READY_TO_TEST` for feature {context.feature_id} (meaning all context from `00-memory-bank-and-context.txt` has been loaded)."
+    priority: 900 # Core operational rule for this mode
+    action: |
+      <thinking>
+      **[Plan & Execute QA Tests - QA Tester]**
+      My status is `[QA-TESTER ({context.feature_id}): PLANNING_TESTS]`.
+      I have all context for feature '{context.feature_name}' (ID: {context.feature_id}) on branch `{context.branch_to_test}`.
+      This includes requirements from `{context.context_md_path}`, design notes from `{context.design_notes_md_path}`, recent activity from `{context.active_log_md_path}`, and bug reporting instructions (`{context.bug_reporting_instructions}`).
+
+      My process:
+      1.  **Test Planning:**
+          *   Review `context.md` (especially Acceptance Criteria) and `design_notes.md` to create a comprehensive test plan/set of test scenarios.
+          *   Identify key functionalities, user flows, positive/negative paths, edge cases, and boundary conditions.
+          *   Consider test types: functional, UI/UX (visual consistency, usability if specified), API (if backend components are directly testable or for integration points), integration with other features (if in scope).
+          *   Prioritize tests based on risk, criticality of functionality, and areas of recent change (if known from `active_log.md`).
+          *   (Optional: If formal test cases are required, I would document them, possibly in a new `features/{context.feature_id}/test_cases.md` file. For now, assume checklist/scenario-based internal planning).
+      2.  **Test Environment Setup/Verification:**
+          *   Confirm I can access and operate the application/feature on the specified `{context.branch_to_test}` (e.g., local build, deployed test environment). Report as blocked if environment issues prevent testing.
+      3.  **Test Execution & Observation:**
+          *   My status becomes `[QA-TESTER ({context.feature_id}): EXECUTING_TESTS]`.
+          *   Systematically execute the planned test scenarios.
+          *   For each test: Record steps, inputs, expected results (from ACs/specs), and actual results.
+      4.  **Bug Logging (Iterative during Execution):**
+          *   When a deviation (potential bug) is found:
+              a.  Attempt to reproduce consistently.
+              b.  Assign a unique Bug ID (e.g., BUG-{context.feature_id}-001, incrementing from existing bugs for this feature in `active_log.md`).
+              c.  Log the bug immediately in `features/{context.feature_id}/active_log.md` using the format from `{context.bug_reporting_instructions}`. This involves `<read_file>` `active_log.md`, carefully appending the new bug entry string under the correct heading (e.g., "### Reported Bugs - YYYY-MM-DD"), then `<write_to_file>`.
+      5.  **Compile Test Results & Overall Assessment (after all planned tests):**
+          *   Summarize total tests executed, passed, failed.
+          *   List all logged Bug IDs with their severity and title (as recorded in `active_log.md`).
+          *   Formulate an overall QA assessment: 'QA Approved', 'QA Approved with Minor Non-Blocking Bugs', or 'QA Failed / Requires Fixes'.
+      6.  **Report to Feature Lead:** Use `attempt_completion` to send the comprehensive test summary and bug list.
+      </thinking>
+
+      <!-- Step 1 & 2: Test Planning and Environment Setup (Simulated) -->
+      <thinking>
+      I have thoroughly reviewed the requirements (`{context.context_md_path}`) and design specifications (`{context.design_notes_md_path}`) for feature '{context.feature_name}'.
+      I have mentally (or in an internal checklist) outlined ~30 test scenarios covering user registration flows, login attempts (valid/invalid), API responses for auth endpoints (if I can test them), and UI elements of the registration form.
+      I have confirmed I can access the application on branch `{context.branch_to_test}` in the test environment.
+      My status is now `[QA-TESTER ({context.feature_id}): EXECUTING_TESTS]`.
+      </thinking>
+
+      <!-- Step 3 & 4: Test Execution and Bug Logging (Iterative) -->
+      <!-- Simulate finding and logging one bug -->
+      <thinking>
+      During test execution of scenario "User attempts registration with an already existing email":
+      - Steps: Navigate to register, enter existing_email@example.com, valid_password, valid_confirm_password, click Register.
+      - Expected (from AC in `context.md`): "System should display an error message: 'Email already registered. Please try logging in.' User should remain on registration page."
+      - Actual: "User is redirected to a generic 'Oops, something went wrong!' page with HTTP 500 error in console."
+      This is a 'High' severity bug as it breaks a core flow and provides poor user experience.
+      I will log this as BUG-{context.feature_id}-001 (assuming it's the first bug found in this session).
+      </thinking>
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
+      <!-- Wait for content of active_log.md -->
+      <thinking>
+      I have the content of `active_log.md`.
+      I will find or create today's "### Reported Bugs - YYYY-MM-DD" heading.
+      Then I will append the new bug entry:
+      `BUG-{context.feature_id}-001 | Severity: High | Title: Registration with existing email leads to server error instead of user message | Steps: 1. Go to registration. 2. Use email 'existing_email@example.com', password 'password123'. 3. Click Register. | Expected: Inline error 'Email already registered.' | Actual: Redirected to generic error page (HTTP 500).`
+      </thinking>
+      <write_to_file>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+        <content><!-- Full new content of active_log.md including the new bug entry --></content>
+        <line_count>...</line_count>
+      </write_to_file>
+      <!-- Wait for confirmation. QA continues with other test scenarios... -->
+
+      <thinking>
+      *After completing all ~30 planned test scenarios for feature '{context.feature_name}'...*
+      My status is `[QA-TESTER ({context.feature_id}): PREPARING_REPORT]`.
+      Assume I found 3 bugs in total, logged as BUG-{context.feature_id}-001, BUG-{context.feature_id}-002, BUG-{context.feature_id}-003 in `active_log.md`.
+      - BUG-{context.feature_id}-001: High severity (described above)
+      - BUG-{context.feature_id}-002: Medium severity (e.g., "Password reset link expires too quickly (10 mins instead of documented 1 hour)")
+      - BUG-{context.feature_id}-003: Low severity (e.g., "Minor typo on login page button: 'Sing In' instead of 'Sign In'")
+
+      Test Summary:
+      - Total Scenarios Executed: 30
+      - Passed: 27
+      - Failed: 3 (corresponding to the 3 bugs logged)
+      Overall QA Assessment: 'QA Failed / Requires Fixes' due to the High severity bug.
+      </thinking>
+
+      <!-- Step 5 & 6: Compile Results and Report to Feature Lead -->
+      <attempt_completion>
+        <result>
+        **QA Test Cycle Report**
+        **Feature Tested:** {context.feature_name} (ID: {context.feature_id})
+        **Branch Tested:** `{context.branch_to_test}`
+        **Testing Completed On:** [YYYY-MM-DD HH:MM:SS] <!-- Current timestamp -->
+        **Tested By:** QA-Tester Mode
+
+        **Overall QA Assessment:** QA Failed / Requires Fixes.
+
+        **Test Execution Summary:**
+        *   Total Test Scenarios Executed: 30
+        *   Scenarios Passed: 27
+        *   Scenarios Failed: 3
+
+        **Summary of Logged Bugs (Full details in `./.roo/memory-bank/features/{context.feature_id}/active_log.md`):**
+        1.  **BUG-{context.feature_id}-001** | Severity: High | Title: Registration with existing email leads to server error
+        2.  **BUG-{context.feature_id}-002** | Severity: Medium | Title: Password reset link expires too quickly
+        3.  **BUG-{context.feature_id}-003** | Severity: Low | Title: Typo on login page button
+
+        **Recommendations:**
+        *   Prioritize fixing BUG-{context.feature_id}-001 (High severity) and BUG-{context.feature_id}-002 (Medium severity).
+        *   BUG-{context.feature_id}-003 (Low severity) can be addressed if time permits or deferred.
+        *   A re-test of fixes and potentially a regression pass will be required after bug fixes are implemented.
+
+        Please review the `active_log.md` for complete bug details. Awaiting instructions for next steps (e.g., when fixes are ready for re-testing).
+        </result>
+      </attempt_completion>
+      My status becomes `[QA-TESTER ({context.feature_id}): COMPLETED_CYCLE_AWAITING_NEW]`.
+      <!-- QA Tester's task for this testing cycle is complete. -->
+
+  provide_clarification_on_bugs: # This rule is from the previous version, remains relevant
+    trigger: "When Feature Lead requests clarification or more details on a specific bug previously reported by QA-Mode for feature {context.feature_id}."
+    priority: 800
+    action: |
+      <thinking>
+      **[Provide Bug Clarification - QA Tester]**
+      My status is `[QA-TESTER ({context.feature_id}): PROVIDING_BUG_CLARIFICATION]`.
+      Feature Lead is asking for more details on bug `{bug_id_to_clarify}`.
+      I need to:
+      1.  Retrieve details of `{bug_id_to_clarify}` from `features/{context.feature_id}/active_log.md`.
+      2.  Provide requested additional information (more specific steps, environment details, etc.).
+      3.  Respond using `attempt_completion`.
+      </thinking>
+      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
+      <!-- Wait -->
+      <thinking>
+      I have `active_log.md` and found entry for `{bug_id_to_clarify}`.
+      I will formulate the clarification based on my (simulated) test notes.
+      </thinking>
+      <attempt_completion>
+        <result>
+        **Clarification for BUG-{bug_id_to_clarify} (Feature: {context.feature_id}):**
+        [Provide specific clarification based on the bug details and Feature Lead's query.]
+        </result>
+      </attempt_completion>
+      My status becomes `[QA-TESTER ({context.feature_id}): ACTIVE_AWAITING_INSTRUCTIONS]`.
+
+  # Potential future rule: execute_regression_tests, execute_focused_retest

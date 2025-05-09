@@ -1,0 +1,108 @@
+devops_release_git_operations:
+  execute_create_release_tag:
+    trigger: "When DevOps-Mode's status is `READY_FOR_EXECUTION` for task {context.task_id} AND {context.operation_type} is 'create_release_tag'."
+    priority: 850 # Specific operation trigger
+    action: |
+      <thinking>
+      **[Execute Create Release Tag - DevOps]**
+      My status is `[DEVOPS ({context.task_id}): EXECUTING_GIT_OP_TAG]` for operation '{context.operation_type}'.
+      Task: Create release tag `{context.version_tag_name}` on reference `{context.git_reference}` in repository `{context.project_repository_path}`.
+
+      The process will be:
+      1.  Ensure local repository (at `{context.project_repository_path}`) is clean and on the correct base reference (`{context.git_reference}`). This might involve `git checkout {context.git_reference}` and `git pull origin {context.git_reference}` to ensure it's up-to-date.
+      2.  Create an annotated tag using `git tag -a {context.version_tag_name} -m "Release {context.version_tag_name}"`. (An annotated tag is preferred for releases). The commit to tag will be the HEAD of `{context.git_reference}` after updating.
+      3.  Push the tag to the remote repository using `git push origin {context.version_tag_name}`.
+      4.  Optionally, if a release branch is part of the strategy (e.g., `release/{context.version_tag_name}`), create and push it from the tagged commit. (Assume not for this basic flow, but could be an extension).
+      5.  Report success or failure to the requesting mode via `attempt_completion`.
+      </thinking>
+
+      "Preparing to create release tag `{context.version_tag_name}` on `{context.git_reference}`."
+
+      1.  **Checkout and Update Reference Branch:**
+          <thinking>Ensuring I am on the correct, up-to-date reference point for tagging.</thinking>
+          <execute_command>
+            <command>git checkout {context.git_reference}</command>
+            <cwd>{context.project_repository_path}</cwd>
+          </execute_command>
+          <!-- Wait for confirmation -->
+          <execute_command>
+            <command>git pull origin {context.git_reference}</command>
+            <cwd>{context.project_repository_path}</cwd>
+          </execute_command>
+          <!-- Wait for confirmation -->
+
+      2.  **Create Annotated Tag:**
+          <thinking>Creating annotated tag `{context.version_tag_name}` with a standard release message.</thinking>
+          <execute_command>
+            <command>git tag -a {context.version_tag_name} -m "Release {context.version_tag_name}"</command>
+            <cwd>{context.project_repository_path}</cwd>
+          </execute_command>
+          <!-- Wait for confirmation. Git tag command is usually silent on success. -->
+
+      3.  **Push Tag to Remote:**
+          <thinking>Pushing the newly created tag `{context.version_tag_name}` to origin.</thinking>
+          <execute_command>
+            <command>git push origin {context.version_tag_name}</command>
+            <cwd>{context.project_repository_path}</cwd>
+          </execute_command>
+          <!-- Wait for confirmation. Output should indicate successful push of tag. -->
+
+      <thinking>
+      Release tag creation and push should be complete.
+      I will now prepare the completion report.
+      My status becomes `[DEVOPS ({context.task_id}): REPORTING_RESULT]`.
+      </thinking>
+      <attempt_completion>
+        <result>
+        **DevOps Task Complete: Create Release Tag**
+        **Task ID:** {context.task_id}
+        **Operation:** {context.operation_type}
+        **Details:**
+        - Successfully created annotated tag `{context.version_tag_name}` on the latest commit of reference `{context.git_reference}`.
+        - Tag `{context.version_tag_name}` has been pushed to the remote repository (origin).
+        **Repository:** `{context.project_repository_path}`
+        </result>
+      </attempt_completion>
+      My status becomes `[DEVOPS ({context.task_id}): COMPLETED_AWAITING_NEW]`.
+
+  # Placeholder for other Git release operations if needed in the future,
+  # e.g., execute_create_release_branch, execute_merge_to_main_for_release.
+  # These would follow a similar pattern:
+  # - Trigger based on operation_type.
+  # - Sequence of git commands using <execute_command>.
+  # - Reporting result via <attempt_completion>.
+
+  handle_git_operation_error:
+    trigger: "When any `execute_command` for a Git operation in this file fails (e.g., tag already exists, push rejected, branch not found)."
+    priority: 840 # Higher than success path to catch errors
+    action: |
+      <thinking>
+      **[Handle Git Operation Error - DevOps]**
+      My status is `[DEVOPS ({context.task_id}): GIT_OP_ERROR]`.
+      A Git command failed during operation '{context.operation_type}'.
+      The error message from `execute_command` should be: `{system.error_message}`.
+      I need to:
+      1.  Log the error details.
+      2.  Report the failure clearly to the `{context.requesting_mode_id}` via `attempt_completion`, including the error message.
+      3.  Suggest potential reasons or next steps if obvious (e.g., "Tag already exists, please choose a different version.").
+      </thinking>
+      "A Git operation failed during '{context.operation_type}' for task {context.task_id}."
+      <attempt_completion>
+        <result>
+        **DevOps Task FAILED: {context.operation_type}**
+        **Task ID:** {context.task_id}
+        **Details:**
+        Failed to complete the Git operation for '{context.operation_type}'.
+        **Error encountered:** {system.error_message} <!-- This variable would hold the actual error from execute_command -->
+        **Reference:** `{context.git_reference}`
+        **Tag/Version (if applicable):** `{context.version_tag_name}`
+
+        **Recommendation:**
+        Please review the error message. Common issues include:
+        - For tagging: Tag name might already exist.
+        - For pushing: Permissions issues, or remote repository state conflicts.
+        - Branch/reference not found or not up-to-date.
+        Please verify parameters or repository state and re-assign the task if needed.
+        </result>
+      </attempt_completion>
+      My status becomes `[DEVOPS ({context.task_id}): FAILED_AWAITING_NEW]`.

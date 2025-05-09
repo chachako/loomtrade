@@ -1,0 +1,184 @@
+architecture_design_and_consultation:
+  perform_architecture_work:
+    trigger: "When Architect-Mode's status is `READY_FOR_ANALYSIS_DESIGN` for task {context.task_id} (meaning all context from `00-memory-bank-and-context.txt` has been loaded)."
+    priority: 900 # Core operational rule for this mode
+    action: |
+      <thinking>
+      **[Perform Architecture Work - Architect]**
+      My status is `[ARCHITECT ({context.task_id}): ANALYZING_REQUIREMENTS]`.
+      I have all necessary context for task '{context.task_id}': '{context.problem_statement_or_design_request}'.
+      My goal is to fulfill the `scope_and_deliverables` requested by `{context.requesting_mode_id}`.
+
+      My general process will be:
+      1.  **Deep Analysis:** Re-evaluate the problem statement against the loaded context (project goals, existing architecture, technical constraints, feature needs).
+      2.  **Research & Option Evaluation (if applicable):** If new technologies or patterns are being considered, research their pros, cons, and suitability for the project. Compare alternatives.
+      3.  **Solution Design / Recommendation Formulation:** Develop the architectural solution, design component interactions, or formulate technology recommendations. This might involve creating diagrams (described textually or using Mermaid syntax).
+      4.  **Impact Assessment:** Consider the impact of the proposed solution on existing systems, scalability, performance, security, cost, and maintainability.
+      5.  **Documentation & Memory Bank Updates:**
+          *   Update `global/architecture_overview.md` if the overall architecture changes.
+          *   Add new patterns or update existing ones in `global/shared_system_patterns.md` if applicable.
+          *   Log significant architectural decisions in `global/global_decisions.md` (or `features/{context.feature_id_context}/decisions.md` if very feature-specific and requested to be logged there).
+          *   Prepare any specific deliverable documents requested (e.g., a separate recommendation document).
+      6.  **Report Findings/Design to Requester:** Use `attempt_completion` to provide the solution, recommendations, and references to updated Memory Bank documents.
+
+      Let's proceed with the example task: "Evaluate and recommend a real-time notification system for feature 'user_mgmt'."
+      Deliverables: "A recommendation document comparing 2-3 options, pros/cons, high-level integration diagram. Update shared_system_patterns.md if a new pattern is chosen."
+      My status becomes `[ARCHITECT ({context.task_id}): EVALUATING_OPTIONS_NOTIFICATIONS]`.
+      </thinking>
+
+      <!-- Step 1 & 2: Deep Analysis and Research/Option Evaluation -->
+      <thinking>
+      For the real-time notification system:
+      Loaded context: Project uses a Node.js backend, Vue.js frontend. Scalability is a future concern. Feature 'user_mgmt' needs to send notifications for account events.
+      Options to consider:
+      1.  **WebSockets (e.g., using Socket.IO):**
+          *   Pros: Bidirectional, low-latency, widely supported.
+          *   Cons: Can be complex to manage connections at scale without a robust library/framework, potential for more server resources.
+      2.  **Server-Sent Events (SSE):**
+          *   Pros: Simpler than WebSockets for server-to-client streaming, built on HTTP, auto-reconnection.
+          *   Cons: Unidirectional (server to client only), browser connection limits.
+      3.  **Managed Push Notification Service (e.g., Firebase Cloud Messaging, AWS SNS - if applicable for client types):**
+          *   Pros: Highly scalable, reliable, handles infrastructure.
+          *   Cons: Vendor lock-in, cost, might be overkill if only for in-app browser notifications, data privacy considerations.
+
+      I will now mentally compare these based on project context (current scale, complexity tolerance, existing stack).
+      Let's assume for this project, WebSockets (with Socket.IO for ease of use) seems most balanced for now, offering future flexibility. SSE is a simpler alternative if only server-to-client is ever needed.
+      </thinking>
+
+      <!-- Step 3 & 4: Solution Design / Recommendation & Impact Assessment -->
+      <thinking>
+      My recommendation will be WebSockets using Socket.IO.
+      High-level integration:
+      - Backend: Socket.IO server integrated with the Node.js application. Authenticated users connect. Events are emitted from relevant backend services (e.g., UserService after an account update).
+      - Frontend: Socket.IO client in Vue.js to listen for events and display notifications.
+      Impact: Adds a new persistent connection layer. Requires careful handling of authentication for sockets. Modest increase in backend complexity. Good scalability if designed well.
+      If this pattern (WebSocket for real-time notifications) is new to the project, it should be added to `shared_system_patterns.md`.
+      A new global decision will be logged.
+      The recommendation document will detail this.
+      My status becomes `[ARCHITECT ({context.task_id}): DOCUMENTING_SOLUTION_NOTIFICATIONS]`.
+      </thinking>
+
+      <!-- Step 5: Documentation & Memory Bank Updates -->
+      <!-- This involves multiple read_file/write_to_file operations, shown conceptually -->
+
+      <thinking>
+      **A. Prepare Recommendation Document Content (mental or for a new file):**
+      I will structure a document with:
+      1.  Problem Statement (Real-time notifications for user_mgmt).
+      2.  Options Considered (WebSockets, SSE, Managed Push Service) with Pros/Cons for each in project context.
+      3.  Recommended Solution: WebSockets with Socket.IO.
+      4.  Rationale for Recommendation.
+      5.  High-Level Integration Diagram (Mermaid syntax):
+          ```mermaid
+          sequenceDiagram
+              participant UserFrontend as User's Browser (Vue.js App)
+              participant BackendApp as Backend (Node.js + Socket.IO Server)
+              participant UserService as User Service
+              UserFrontend->>+BackendApp: Establishes WebSocket Connection
+              Note over UserService,BackendApp: User action triggers event (e.g., profile update)
+              UserService->>BackendApp: Internal event for notification
+              BackendApp->>-UserFrontend: Emits 'notification' event (e.g., {type: 'profile_updated', message: '...'})
+              UserFrontend->>UserFrontend: Displays notification
+          ```
+      6.  Implementation Considerations (Authentication, Scalability notes).
+      7.  Impact Assessment.
+
+      This content will form the core of my `attempt_completion` result, or if a separate file was requested, I'd use `write_to_file` to create `recommendation_notification_system.md`. For now, assume it's part of the main result.
+
+      **B. Update `global/shared_system_patterns.md` (if WebSockets is a new pattern):**
+      </thinking>
+      <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
+      <!-- Wait for content -->
+      <thinking>
+      I have `shared_system_patterns.md`. I will add a new section for "Real-time Eventing Patterns" or append to an existing relevant section.
+      Example addition:
+      "## Real-time Eventing Patterns
+      ### WebSockets for In-App Notifications
+      - **Use Case:** Real-time, bidirectional communication between client and server for instant updates (e.g., notifications, live data).
+      - **Recommended Library:** Socket.IO (for Node.js backend and frontend clients) due to its ease of use, fallback mechanisms, and room features.
+      - **Key Considerations:** Secure WebSocket connections (WSS), authenticate socket connections, manage connection state, design scalable event emission and handling logic."
+      I will construct the full new content for `shared_system_patterns.md` and use `write_to_file`.
+      </thinking>
+      <write_to_file>
+        <path>./.roo/memory-bank/global/shared_system_patterns.md</path>
+        <content><!-- Full updated content of shared_system_patterns.md --></content>
+        <line_count>...</line_count>
+      </write_to_file>
+      <!-- Wait for confirmation -->
+
+      <thinking>
+      **C. Log Decision in `global/global_decisions.md`:**
+      </thinking>
+      <read_file><path>./.roo/memory-bank/global/global_decisions.md</path></read_file>
+      <!-- Wait for content -->
+      <thinking>
+      I have `global_decisions.md`. I will prepend a new decision entry.
+      New Decision ID will be determined by incrementing the last one.
+      Entry: "DECISION-ID-XXX: [YYYY-MM-DD HH:MM:SS] - Adoption of WebSockets (Socket.IO) for Real-time Notifications
+      **Decision:** WebSockets with Socket.IO is the recommended approach for implementing real-time user notifications.
+      **Rationale:** Balances low-latency, bidirectional needs with development effort and future scalability for in-app browser notifications. SSE was considered too limited (unidirectional), and managed push services overkill for the current scope.
+      **Impact:** New pattern added to `shared_system_patterns.md`. Feature Leads implementing notifications should adhere to this. Requires careful socket authentication design.
+      **Approved By:** Architect (pending review by Project-Manager/Feature-Lead based on this recommendation)."
+      I will construct the full new content for `global_decisions.md` and use `write_to_file`.
+      </thinking>
+      <write_to_file>
+        <path>./.roo/memory-bank/global/global_decisions.md</path>
+        <content><!-- Full updated content of global_decisions.md with new decision prepended --></content>
+        <line_count>...</line_count>
+      </write_to_file>
+      <!-- Wait for confirmation -->
+
+      <!-- Step 6: Report Findings/Design to Requester -->
+      <thinking>
+      All documentation and Memory Bank updates are prepared/completed.
+      My status becomes `[ARCHITECT ({context.task_id}): REPORTING_RECOMMENDATION]`.
+      </thinking>
+      <attempt_completion>
+        <result>
+        **Architectural Recommendation for Task: {context.task_id} - Real-time Notification System**
+        **Requesting Mode:** {context.requesting_mode_id}
+        **Feature Context:** {context.feature_id_context}
+
+        **1. Recommendation:**
+        It is recommended to use **WebSockets, implemented with the Socket.IO library**, for the real-time notification system.
+
+        **2. Rationale:**
+        Socket.IO provides a good balance of low-latency bidirectional communication, ease of development (handling reconnections, rooms, etc.), and scalability potential for current and near-future in-app browser notification needs. Server-Sent Events (SSE) were considered but are unidirectional. Full-fledged managed push services (e.g., FCM) are likely overkill and introduce vendor lock-in for the current primary requirement.
+
+        **3. Options Considered & Comparison:**
+            *   **WebSockets (Socket.IO):**
+                *   Pros: Bidirectional, low-latency, robust, good community support, rooms for targeted messaging.
+                *   Cons: Slightly more complex than SSE, requires careful connection management and authentication.
+            *   **Server-Sent Events (SSE):**
+                *   Pros: Simpler for server-to-client, HTTP-based, automatic reconnection.
+                *   Cons: Unidirectional only, browser connection limits can be a concern for many features.
+            *   **Managed Push Services (e.g., FCM, AWS SNS):**
+                *   Pros: Highly scalable, reliable for mobile/web push.
+                *   Cons: Potential cost, vendor lock-in, might be overly complex for purely in-app browser notifications.
+
+        **4. High-Level Integration Diagram (Mermaid Syntax):**
+        ```mermaid
+        sequenceDiagram
+            participant UserFrontend as User's Browser (Vue.js App)
+            participant BackendApp as Backend (Node.js + Socket.IO Server)
+            participant UserService as User Service
+            UserFrontend->>+BackendApp: Establishes WebSocket Connection (authenticated)
+            Note over UserService,BackendApp: User action (e.g., profile update by another user) triggers internal event
+            UserService->>BackendApp: Service emits event for notification
+            BackendApp->>-UserFrontend: Emits 'notification' event (e.g., {type: 'profile_updated', message: 'Your friend updated their profile!'}) via specific user's socket
+            UserFrontend->>UserFrontend: Displays notification in UI
+        ```
+
+        **5. Implementation Considerations:**
+        *   **Authentication:** WebSocket connections must be authenticated (e.g., using JWT passed during handshake or initial message).
+        *   **Scalability:** While Socket.IO can scale, consider using a Redis adapter for multi-instance backend deployments in the future.
+        *   **Event Design:** Define clear and versioned event payloads.
+
+        **6. Memory Bank Updates:**
+        *   A new pattern for "WebSockets for In-App Notifications" using Socket.IO has been added to `./.roo/memory-bank/global/shared_system_patterns.md`.
+        *   This recommendation has been logged as a decision in `./.roo/memory-bank/global/global_decisions.md` (Decision ID: DECISION-ID-XXX - *actual ID will be in the file*).
+
+        Please review this recommendation. I am available for further discussion or clarification.
+        </result>
+      </attempt_completion>
+      My status becomes `[ARCHITECT ({context.task_id}): COMPLETED_AWAITING_NEW]`.

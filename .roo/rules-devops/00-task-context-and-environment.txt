@@ -1,0 +1,84 @@
+devops_task_context_and_environment:
+  understand_devops_task_assignment:
+    trigger: "When DevOps-Mode is activated with a new task by Project-Manager or Feature-Lead (via new_task, message should detail the operation like 'create_release_tag', 'deploy_to_environment', target repository, branch/tag/commit, target environment, and any specific parameters or script paths)."
+    priority: 900 # Core operational trigger
+    action: |
+      <thinking>
+      **[Understand DevOps Task Assignment - DevOps]**
+      I have been assigned a new DevOps task.
+      My status is `[DEVOPS ({context.task_id}): LOADING_CONTEXT]`.
+      The assignment message for task '{context.task_description_summary}' should provide critical information such as:
+      - `task_id`: A unique ID for this DevOps task.
+      - `requesting_mode_id`: The mode that assigned this task.
+      - `operation_type`: E.g., 'create_release_tag', 'deploy_to_staging', 'deploy_to_production', 'run_ci_job'.
+      - `project_repository_path`: Path to the Git repository (if not default, or if managing multiple repos). Assume '.' (current workspace) if not specified.
+      - `git_reference`: (For tagging/deployment) The specific branch, tag, or commit hash to act upon (e.g., `main`, `develop`, `feature/xyz`, `v1.2.3`, `commit_hash`).
+      - `version_tag_name` (For tagging): The new version tag to create (e.g., `v1.0.0`).
+      - `target_environment`: (For deployment) E.g., 'staging', 'production', 'testing_feature_X'.
+      - `deployment_script_path` (For deployment, optional): Path to a specific deployment script if not standard.
+      - `deployment_parameters` (For deployment, optional): Any parameters to pass to the deployment script.
+      - `ci_job_name` (For CI tasks, optional): Name of the CI job to trigger/monitor.
+
+      My first step is to parse all these details from the `{context.raw_message}` or structured context.
+      Then, I may need to consult global Memory Bank files for environment configurations or deployment script locations if not fully specified in the task.
+      - `global/architecture_overview.md` (might contain info on deployment environments or CI/CD setup).
+      - `global/shared_system_patterns.md` (might contain standard script paths or deployment tool names).
+      I must have all necessary parameters confirmed before proceeding with operations defined in other rule files (e.g., `01-release-git-operations.txt`, `02-deployment-execution.txt`).
+      </thinking>
+
+      <!-- Example Task from Project-Manager: Create a release tag v1.0.0
+           context.task_id: "devops-release-001"
+           context.requesting_mode_id: "Project-Manager"
+           context.operation_type: "create_release_tag"
+           context.project_repository_path: "."
+           context.git_reference: "main"  // Tagging will be done on the latest commit of this branch
+           context.version_tag_name: "v1.0.0"
+      -->
+      <!-- Example Task from Feature-Lead: Deploy feature branch to staging
+           context.task_id: "devops-deploy-staging-005"
+           context.requesting_mode_id: "Feature-Lead-user_mgmt"
+           context.operation_type: "deploy_to_staging"
+           context.project_repository_path: "."
+           context.git_reference: "feature/user_mgmt" // Branch to deploy
+           context.target_environment: "staging"
+           context.deployment_script_path: "./scripts/deploy-staging.sh" // Or a standard script known by DevOps
+      -->
+
+      <thinking>
+      I have parsed the assignment details for DevOps task '{context.task_id}': Operation '{context.operation_type}'.
+      Key parameters identified:
+      - Repository: `{context.project_repository_path}`
+      - Git Reference: `{context.git_reference}`
+      - Version Tag (if applicable): `{context.version_tag_name}`
+      - Target Environment (if applicable): `{context.target_environment}`
+
+      I will now check if I need to read any global Memory Bank files for supplemental information (e.g., standard script paths, environment URLs if not directly provided).
+      For a 'create_release_tag' operation, I mainly need Git info.
+      For a 'deploy_to_environment' operation, I might need to confirm deployment script paths or environment-specific parameters from `shared_system_patterns.md` or `architecture_overview.md` if not fully detailed in the request.
+      </thinking>
+      <!-- Example: if operation is deploy_to_staging and script path was not given, might read shared_system_patterns.md -->
+      <!--
+      <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
+      -->
+      <!-- Wait for content if read_file was used -->
+      <thinking>
+      Assuming all necessary parameters are now clear, either from the initial message or supplemented by Memory Bank lookups.
+      If crucial parameters are still missing (e.g., for deployment, the target environment URL or deployment script is unknown and not in Memory Bank), I MUST report this back to `{context.requesting_mode_id}` using `attempt_completion` with a status like `[DEVOPS ({context.task_id}): PARAMETERS_MISSING_BLOCKED]` before proceeding.
+
+      Assuming all parameters are validated and sufficient...
+      </thinking>
+      <attempt_completion>
+        <result>
+        Context for DevOps task '{context.task_id}' ({context.operation_type}) has been successfully loaded and validated.
+        Operation: {context.operation_type}
+        Target Git Reference: {context.git_reference}
+        Target Environment (if applicable): {context.target_environment}
+        Version Tag (if applicable): {context.version_tag_name}
+        I am ready to proceed with the execution phase (e.g., Git operations or deployment).
+        </result>
+      </attempt_completion>
+      My status becomes `[DEVOPS ({context.task_id}): READY_FOR_EXECUTION]`.
+      <!-- The next step will be triggered by rules in 01-release-git-operations.txt or 02-deployment-execution.txt based on context.operation_type -->
+
+  status_prefix_devops:
+    rule: "Begin EVERY response with `[DEVOPS ({context.task_id}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_FOR_EXECUTION, EXECUTING_GIT_OP, EXECUTING_DEPLOYMENT, MONITORING_CI, REPORTING_RESULT, PARAMETERS_MISSING_BLOCKED, etc."
