@@ -1,0 +1,25 @@
+# Memory Bank Manifest (v1.1)
+# Managed by: Project Manager Mode
+# Last updated: 2025-05-10 02:11:54
+
+version: "1.1"
+description: "Central knowledge base for the project."
+
+file_structure:
+  manifest: "manifest.yaml"
+  global_directory: "global/"
+  feature_directory_root: "features/"
+  archive_directory: "archive/"
+
+global_files: # Paths relative to .roo/memory-bank/
+  project_overview: "global/project_overview.md"
+  architecture_overview: "global/architecture_overview.md"
+  global_decisions: "global/global_decisions.md"
+  master_progress: "global/master_progress.yaml"
+  shared_system_patterns: "global/shared_system_patterns.md"
+  risk_issue_register: "global/risk_issue_register.md" # Added
+
+feature_index: {} # map of feature_id to its details
+
+settings:
+  default_date_format: "YYYY-MM-DD HH:MM:SS"
