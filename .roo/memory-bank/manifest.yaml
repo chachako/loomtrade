@@ -1,0 +1,80 @@
+# Memory Bank Manifest (v1.1)
+# Managed by: Project Manager Mode
+# Last updated: 2025-05-09 19:02:27
+
+version: "1.1"
+description: "Central knowledge base for the project."
+
+file_structure:
+  manifest: "manifest.yaml"
+  global_directory: "global/"
+  feature_directory_root: "features/"
+  archive_directory: "archive/"
+
+global_files: # Paths relative to .roo/memory-bank/
+  project_overview: "global/project_overview.md"
+  architecture_overview: "global/architecture_overview.md"
+  global_decisions: "global/global_decisions.md"
+  master_progress: "global/master_progress.yaml"
+  shared_system_patterns: "global/shared_system_patterns.md"
+  risk_issue_register: "global/risk_issue_register.md"
+
+feature_index:
+  agent_core_services:
+    name: "Agent Core Services"
+    path: "features/agent_core_services/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AgentCore"
+  market_interface_crypto:
+    name: "Cryptocurrency Market Interface"
+    path: "features/market_interface_crypto/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-MarketCrypto"
+  market_interface_stock:
+    name: "Stock Market Interface"
+    path: "features/market_interface_stock/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-MarketStock"
+  tool_executor_and_indicators:
+    name: "Tool Executor and Indicator Library"
+    path: "features/tool_executor_and_indicators/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-Tools"
+  strategy_management_nlp:
+    name: "Strategy Management and NLP"
+    path: "features/strategy_management_nlp/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-StrategyNLP"
+  frontend_dashboard_core:
+    name: "Frontend Dashboard Core"
+    path: "features/frontend_dashboard_core/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-Frontend"
+  database_services_postgresql:
+    name: "Database Services (PostgreSQL)"
+    path: "features/database_services_postgresql/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-Database"
+  api_gateway_bff:
+    name: "API Gateway/BFF"
+    path: "features/api_gateway_bff/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-APIGateway"
+  websocket_services:
+    name: "WebSocket Real-time Services"
+    path: "features/websocket_services/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-WebSocket"
+  risk_management_mvp:
+    name: "MVP Risk Management"
+    path: "features/risk_management_mvp/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-RiskMgmt"
+  llm_integration_services:
+    name: "LLM Integration Services"
+    path: "features/llm_integration_services/"
+    status: "defined"
+    lead_mode_instance: "Feature-Lead-LLMIntegration"
+
+settings:
+  default_date_format: "YYYY-MM-DD HH:MM:SS"
