@@ -1,0 +1,155 @@
+# Feature Progress: Cryptocurrency Market Interface
+# Feature ID: market_interface_crypto
+# Managed by: Feature-Lead for market_interface_crypto
+# Last updated: 2025-05-09 18:55:41
+
+status: "planning_tasks_defined" # ( planning | planning_tasks_defined | design | development | testing | completed | blocked | archived )
+summary: "Detailed tasks defined for Binance USDⓈ-M Futures integration."
+target_completion_date_feature_level: "YYYY-MM-DD" # To be set by Feature-Lead
+
+tasks:
+  market_interface_crypto-ds-001:
+    name: "Design overall module structure and internal API interfaces"
+    status: "backlog"
+    assignee_mode_slug: "feature-lead" # Or architect if available for review
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "1d"
+    dependencies: []
+  market_interface_crypto-ds-002:
+    name: "Setup Binance Testnet account and API Keys for development"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # Or devops
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "0.5d"
+    dependencies: []
+  market_interface_crypto-ds-003:
+    name: "Research and select Python library for Binance API (e.g., python-binance)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "0.5d"
+    dependencies: []
+
+  market_interface_crypto-md-001:
+    name: "Implement: Get Historical Klines (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-md-001"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-md-002:
+    name: "Implement: Get Current Ticker Info (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-md-002"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-md-003:
+    name: "Implement: Get Order Book (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-md-003"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+
+  market_interface_crypto-oe-001:
+    name: "Implement: Create Market Order (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-oe-001"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-oe-002:
+    name: "Implement: Create Limit Order (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-oe-002"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-oe-003:
+    name: "Implement: Cancel Order (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-oe-003"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-oe-004:
+    name: "Implement: Get Order Details (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-oe-004"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-oe-005:
+    name: "Implement: Create Stop/TakeProfit Orders (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-oe-005"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-003"]
+
+  market_interface_crypto-am-001:
+    name: "Implement: Get Account Balance (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-am-001"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-am-002:
+    name: "Implement: Get Open Positions (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-am-002"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-am-003:
+    name: "Implement: Get Leverage and Margin Mode (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-am-003"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-am-004:
+    name: "Implement: Set Leverage (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-am-004"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+  market_interface_crypto-am-005:
+    name: "Implement: Adjust Position Margin (Binance USDⓈ-M)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-am-005"
+    estimated_effort: "0.5d"
+    dependencies: ["market_interface_crypto-ds-003"]
+
+  market_interface_crypto-er-001:
+    name: "Implement unified error handling for Binance API responses"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-eh-001"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-001"]
+  market_interface_crypto-er-002:
+    name: "Implement rate limiting management for Binance API calls"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-rl-001"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-001"]
+
+  market_interface_crypto-td-001:
+    name: "Write unit tests for core API interaction functions"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # Or qa-tester if they write unit tests
+    description_link: "context.md#41-in-scope-mvp-for-market_interface_crypto"
+    estimated_effort: "2d" # Cumulative
+    dependencies: [] # Depends on all impl tasks
+  market_interface_crypto-td-002:
+    name: "Prepare internal documentation for module's API and usage"
+    status: "backlog"
+    assignee_mode_slug: "doc-writer" # Or feature-lead
+    description_link: "context.md#41-in-scope-mvp-for-market_interface_crypto"
+    estimated_effort: "1d"
+    dependencies: ["market_interface_crypto-ds-001"]
