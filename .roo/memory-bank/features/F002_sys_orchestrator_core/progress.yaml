@@ -1,0 +1,100 @@
+# Feature Progress: 系统编排 Agent 核心 (System Orchestrator Agent Core)
+# Feature ID: F002_sys_orchestrator_core
+# Managed by: Feature-Lead for F002_sys_orchestrator_core
+# Last updated: 2025-05-10 02:40:10
+
+status: "planning" # ( planning | design | development | testing | completed | blocked | archived )
+summary: "详细任务已定义 (Detailed tasks defined)."
+target_completion_date_feature_level: "2025-05-31" # To be set by Feature-Lead
+
+# tasks will store a map of task_id to its details
+tasks:
+  F002_sys_orchestrator_core-def-001:
+    name: "定义 SystemOrchestratorAgent 类的核心结构和接口 (Define core structure and interface for SystemOrchestratorAgent class)"
+    status: "backlog" # ( backlog | in-progress | review | blocked | completed )
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#4.1.-in-scope"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: []
+  F002_sys_orchestrator_core-be-001:
+    name: "实现与可配置 LLM 服务的基本集成模块 (Implement basic integration module with configurable LLM service)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us2"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F002_sys_orchestrator_core-def-001"]
+  F002_sys_orchestrator_core-be-002:
+    name: "实现简单的自然语言指令解析逻辑 (Implement simple natural language instruction parsing logic)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us1"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F002_sys_orchestrator_core-def-001", "F002_sys_orchestrator_core-be-001"]
+  F002_sys_orchestrator_core-be-003:
+    name: "实现通过 ToolExecutor (F004) 调用工具的机制 (Implement mechanism to call tools via ToolExecutor (F004))"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us3"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F002_sys_orchestrator_core-def-001"] # Assuming F004 provides a clear interface
+  F002_sys_orchestrator_core-be-004:
+    name: "实现基本的短期会话上下文管理机制 (Implement basic short-term session context management)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us4"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F002_sys_orchestrator_core-def-001"]
+  F002_sys_orchestrator_core-be-005:
+    name: "实现核心 Agent 交互循环 (Implement core Agent interaction loop)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#4.1.-in-scope"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: [
+        "F002_sys_orchestrator_core-be-001",
+        "F002_sys_orchestrator_core-be-002",
+        "F002_sys_orchestrator_core-be-003",
+        "F002_sys_orchestrator_core-be-004"
+      ]
+  F002_sys_orchestrator_core-be-006:
+    name: "实现处理来自 LLM 和工具执行器的成功响应和基本错误 (Implement handling of success responses and basic errors from LLM and ToolExecutor)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#4.1.-in-scope"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F002_sys_orchestrator_core-be-005"]
+  F002_sys_orchestrator_core-qa-001:
+    name: "为 SystemOrchestratorAgent 核心功能编写测试计划 (Write test plan for SystemOrchestratorAgent core functionalities)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3.-acceptance-criteria"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F002_sys_orchestrator_core-def-001"]
+  F002_sys_orchestrator_core-qa-002:
+    name: "执行 SystemOrchestratorAgent 核心功能的单元和集成测试 (Execute unit and integration tests for SystemOrchestratorAgent core)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3.-acceptance-criteria"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: [
+        "F002_sys_orchestrator_core-be-006", # Depends on all backend tasks being done
+        "F002_sys_orchestrator_core-qa-001"  # Depends on test plan
+      ]

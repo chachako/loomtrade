@@ -1,8 +1,85 @@
 # Master Project Progress
 # Updated by Project Manager Mode.
-# Last updated: YYYY-MM-DD HH:MM:SS
+# Last updated: 2025-05-10 13:06:16
 
-project_name: "Unnamed Project"
-overall_status: "planning"
+project_name: "vibetrade"
+overall_status: "planning_decomposed"
 
-features: {} # map of feature_id to its details
+features:
+  F001_frontend_core:
+    name: "用户界面核心 (Frontend Core & UI)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-FrontendCore"
+    progress_file_link: "features/F001_frontend_core/progress.yaml"
+    last_status_update: "2025-05-10 02:27:54"
+    description: "实现核心的前端应用框架 (Next.js, React 19, TypeScript)，包括基础布局、导航、BFF 设置、WebSocket 客户端集成，以及使用 Magic UI 构建核心的仪表盘组件。"
+  F002_sys_orchestrator_core:
+    name: "系统编排 Agent 核心 (System Orchestrator Agent Core)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-SysOrchestrator"
+    progress_file_link: "features/F002_sys_orchestrator_core/progress.yaml"
+    last_status_update: "2025-05-10 02:41:39"
+    description: "实现 SystemOrchestratorAgent 的核心逻辑，包括其 LLM 交互循环、对简单用户自然语言指令的解析能力，以及通过 ToolExecutor 调用基础工具的能力。"
+  F003_agent_management:
+    name: "Agent 管理与生命周期 (Agent Management & Lifecycle)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AgentManagement"
+    progress_file_link: "features/F003_agent_management/progress.yaml"
+    last_status_update: "2025-05-10 05:56:06"
+    description: "实现 AgentManager 模块，支持动态创建、配置、启动、停止和监控专用的分析师和交易员 Agent 实例。包括 Agent 权限管理的基础框架。"
+  F004_tool_executor_base:
+    name: "核心工具执行器与基础工具集 (Tool Executor & Base Toolset)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-ToolExecutor"
+    progress_file_link: "features/F004_tool_executor_base/progress.yaml"
+    last_status_update: "2025-05-10 06:07:59"
+    description: "实现 ToolExecutor 模块，能够解析 XML 工具调用请求并执行。实现 MVP 所需的基础工具集，特别是市场数据获取和技术指标计算。"
+  F005_binance_connector:
+    name: "币安合约市场接口 (Binance Futures Connector)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-BinanceConnector"
+    progress_file_link: "features/F005_binance_connector/progress.yaml"
+    last_status_update: "2025-05-10 11:50:34"
+    description: "实现 ExchangeConnector 模块，专门对接币安合约 API，支持核心交易功能。"
+  F006_analyst_agent_ltecs:
+    name: "分析师 Agent 框架与 LTECS 策略 MVP (Analyst Agent Framework & LTECS Strategy MVP)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AnalystLTECS"
+    progress_file_link: "features/F006_analyst_agent_ltecs/progress.yaml"
+    last_status_update: "2025-05-10 12:17:38"
+    description: "实现分析师 Agent 的基础框架和第一个核心策略 LTECS 的 MVP 版本。"
+  F007_trader_agent_experience:
+    name: "交易员 Agent 框架与经验决策 MVP (Trader Agent Framework & Experience-Based Decision MVP)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-TraderExperience"
+    progress_file_link: "features/F007_trader_agent_experience/progress.yaml"
+    last_status_update: "2025-05-10 12:26:35"
+    description: "实现交易员 Agent 的基础框架及其基于历史经验的决策 MVP 逻辑。"
+  F008_agent_memory_mgt:
+    name: "Agent 记忆库管理 (Agent Memory Management)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AgentMemory"
+    progress_file_link: "features/F008_agent_memory_mgt/progress.yaml"
+    last_status_update: "2025-05-10 12:37:08"
+    description: "实现 MemoryBankManager 模块，支持 Agent 在后端缓存目录中读写其记忆文件。"
+  F009_realtime_notification_mvp:
+    name: "实时通信与通知服务 MVP (Real-time Communication & Notification MVP)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-RealtimeNotify"
+    progress_file_link: "features/F009_realtime_notification_mvp/progress.yaml"
+    last_status_update: "2025-05-10 12:46:04"
+    description: "实现 WebSocketServer 和 NotificationService 的 MVP 版本。"
+  F010_task_scheduler_mvp:
+    name: "后台任务调度 MVP (Background Task Scheduler MVP)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-TaskScheduler"
+    progress_file_link: "features/F010_task_scheduler_mvp/progress.yaml"
+    last_status_update: "2025-05-10 12:54:45"
+    description: "实现 TaskScheduler 模块的 MVP 版本，支持周期性任务。"
+  F011_api_config_service:
+    name: "API 与配置服务 (API & Configuration Service)"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-ApiConfig"
+    progress_file_link: "features/F011_api_config_service/progress.yaml"
+    last_status_update: "2025-05-10 13:06:16"
+    description: "完善 APIServer 的核心路由和实现 ConfigService 用于安全管理敏感配置。"

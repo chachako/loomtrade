@@ -1,6 +1,6 @@
 # Memory Bank Manifest (v1.1)
 # Managed by: Project Manager Mode
-# Last updated: 2025-05-10 02:11:54
+# Last updated: 2025-05-10 13:07:07
 
 version: "1.1"
 description: "Central knowledge base for the project."
@@ -17,9 +17,64 @@ global_files: # Paths relative to .roo/memory-bank/
   global_decisions: "global/global_decisions.md"
   master_progress: "global/master_progress.yaml"
   shared_system_patterns: "global/shared_system_patterns.md"
-  risk_issue_register: "global/risk_issue_register.md" # Added
+  risk_issue_register: "global/risk_issue_register.md"
 
-feature_index: {} # map of feature_id to its details
+feature_index: # map of feature_id to its details
+  F001_frontend_core:
+    name: "用户界面核心 (Frontend Core & UI)"
+    path: "features/F001_frontend_core/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-FrontendCore"
+  F002_sys_orchestrator_core:
+    name: "系统编排 Agent 核心 (System Orchestrator Agent Core)"
+    path: "features/F002_sys_orchestrator_core/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-SysOrchestrator"
+  F003_agent_management:
+    name: "Agent 管理与生命周期 (Agent Management & Lifecycle)"
+    path: "features/F003_agent_management/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AgentManagement"
+  F004_tool_executor_base:
+    name: "核心工具执行器与基础工具集 (Tool Executor & Base Toolset)"
+    path: "features/F004_tool_executor_base/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-ToolExecutor"
+  F005_binance_connector:
+    name: "币安合约市场接口 (Binance Futures Connector)"
+    path: "features/F005_binance_connector/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-BinanceConnector"
+  F006_analyst_agent_ltecs:
+    name: "分析师 Agent 框架与 LTECS 策略 MVP (Analyst Agent Framework & LTECS Strategy MVP)"
+    path: "features/F006_analyst_agent_ltecs/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AnalystLTECS"
+  F007_trader_agent_experience:
+    name: "交易员 Agent 框架与经验决策 MVP (Trader Agent Framework & Experience-Based Decision MVP)"
+    path: "features/F007_trader_agent_experience/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-TraderExperience"
+  F008_agent_memory_mgt:
+    name: "Agent 记忆库管理 (Agent Memory Management)"
+    path: "features/F008_agent_memory_mgt/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-AgentMemory"
+  F009_realtime_notification_mvp:
+    name: "实时通信与通知服务 MVP (Real-time Communication & Notification MVP)"
+    path: "features/F009_realtime_notification_mvp/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-RealtimeNotify"
+  F010_task_scheduler_mvp:
+    name: "后台任务调度 MVP (Background Task Scheduler MVP)"
+    path: "features/F010_task_scheduler_mvp/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-TaskScheduler"
+  F011_api_config_service:
+    name: "API 与配置服务 (API & Configuration Service)"
+    path: "features/F011_api_config_service/"
+    status: "planning_complete"
+    lead_mode_instance: "Feature-Lead-ApiConfig"
 
 settings:
   default_date_format: "YYYY-MM-DD HH:MM:SS"

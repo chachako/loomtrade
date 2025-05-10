@@ -1,0 +1,166 @@
+# Feature Progress: 交易员 Agent 框架与经验决策 MVP (Trader Agent Framework & Experience-Based Decision MVP)
+# Feature ID: F007_trader_agent_experience
+# Managed by: Feature-Lead for F007_trader_agent_experience
+# Last updated: 2025-05-10 12:25:21
+
+status: "planning_complete" # ( planning | planning_complete | design | development | testing | completed | blocked | archived )
+summary: "Detailed tasks defined. Ready for delegation. Initial design_notes.md created."
+target_completion_date_feature_level: "YYYY-MM-DD" # To be set by Feature-Lead
+
+tasks:
+  F007_trader_agent_experience-doc-001:
+    name: "Create initial design_notes.md for Trader Agent"
+    status: "completed" # Updated status
+    assignee_mode_slug: "feature-lead"
+    description_link: "N/A - Initial file creation"
+    estimated_effort: "1h"
+    actual_effort: "0.1h" # Updated actual effort
+    related_commits: []
+    dependencies: []
+
+  F007_trader_agent_experience-design-001:
+    name: "Design: Trader Agent Core Framework and State Management"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # or architect
+    description_link: "context.md#2.1.-交易员-agent-框架"
+    estimated_effort: "4h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-doc-001"]
+    deliverables:
+      - "Detailed state machine diagram in design_notes.md"
+      - "Definition of internal risk parameters and their management logic in design_notes.md"
+
+  F007_trader_agent_experience-design-002:
+    name: "Design: Standardized Trading Signal Input Interface (from F006)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # with F006 Feature Lead
+    description_link: "context.md#us-ta-001"
+    estimated_effort: "3h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-doc-001"]
+    deliverables:
+      - "JSON schema for incoming trading signals in design_notes.md"
+      - "Sequence diagram for signal reception and initial processing in design_notes.md"
+
+  F007_trader_agent_experience-design-003:
+    name: "Design: Interface with System Orchestrator Agent (F002)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # with F002 Feature Lead
+    description_link: "context.md#us-ta-008"
+    estimated_effort: "2h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-doc-001"]
+    deliverables:
+      - "API contract for communication with F002 (commands, status reports) in design_notes.md"
+
+  F007_trader_agent_experience-design-004:
+    name: "Design: Trade Execution Logic via ToolExecutor (F004) & Binance Connector (F005)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # with F004, F005 Feature Leads
+    description_link: "context.md#us-ta-003"
+    estimated_effort: "4h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-doc-001"]
+    deliverables:
+      - "Flowchart for trade decision to order placement in design_notes.md"
+      - "Specification of tool calls to F004/F005 for various order types in design_notes.md"
+
+  F007_trader_agent_experience-design-005:
+    name: "Design: Experience Record Structure and Storage/Retrieval (with F008)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # with F008 Feature Lead
+    description_link: "context.md#us-ta-006"
+    estimated_effort: "3h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-doc-001"]
+    deliverables:
+      - "YAML/JSON schema for experience records in design_notes.md"
+      - "API definition for storing and querying experiences via F008 in design_notes.md"
+
+  F007_trader_agent_experience-design-006:
+    name: "Design: MVP Experience-Based Decision Logic (Similarity & Adjustment)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#us-ta-007"
+    estimated_effort: "4h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-doc-001", "F007_trader_agent_experience-design-005"]
+    deliverables:
+      - "Algorithm for historical trade similarity matching in design_notes.md"
+      - "Detailed logic for adjusting trade parameters based on success rates in design_notes.md (US-TA-009, US-TA-010)"
+
+  F007_trader_agent_experience-dev-001:
+    name: "Implement: Trader Agent Core Framework (State, Signal Parsing, Orchestrator Comms)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "design_notes.md#Trader-Agent-Core-Framework" # Link to specific design section
+    estimated_effort: "8h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-design-001", "F007_trader_agent_experience-design-002", "F007_trader_agent_experience-design-003"]
+
+  F007_trader_agent_experience-dev-002:
+    name: "Implement: Trade Execution Module (Order Placement, Querying via F004/F005)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "design_notes.md#Trade-Execution-Logic"
+    estimated_effort: "10h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-design-004", "F007_trader_agent_experience-dev-001"]
+
+  F007_trader_agent_experience-dev-003:
+    name: "Implement: Experience Recording Module (Interaction with F008)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "design_notes.md#Experience-Record-Structure"
+    estimated_effort: "6h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-design-005", "F007_trader_agent_experience-dev-001"]
+
+  F007_trader_agent_experience-dev-004:
+    name: "Implement: MVP Experience-Based Decision Logic (Similarity Query, Parameter Adjustment)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "design_notes.md#MVP-Experience-Based-Decision-Logic"
+    estimated_effort: "12h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-design-006", "F007_trader_agent_experience-dev-003"]
+
+  F007_trader_agent_experience-qa-001:
+    name: "QA: Trader Agent Framework Basic Functionality (Signal, State, Comms, Basic Orders)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3.1.-交易员-agent-框架"
+    estimated_effort: "8h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-dev-001", "F007_trader_agent_experience-dev-002"]
+
+  F007_trader_agent_experience-qa-002:
+    name: "QA: Trader Agent Experience-Based Decision MVP (Experience Recording, Similarity, Adjustment)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3.2.-基于历史经验的决策-mvp"
+    estimated_effort: "10h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-dev-003", "F007_trader_agent_experience-dev-004", "F007_trader_agent_experience-qa-001"]
+
+  F007_trader_agent_experience-integration-001:
+    name: "Integration Testing: Full Trader Agent flow with F006, F002, F004, F005, F008"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester" # or feature-lead coordinating
+    description_link: "context.md#1.-overview--goal"
+    estimated_effort: "12h"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F007_trader_agent_experience-qa-002"]

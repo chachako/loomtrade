@@ -22,19 +22,19 @@
 
 ## 5. Detailed Design Documents
 
-The comprehensive design for this system is detailed in the following documents located in the `/.roo/design_documents/` directory:
+The comprehensive design for this system is detailed in the following documents located in the `/.roo/blueprints/` directory:
 
-*   **System Architecture:** [`00_system_architecture.md`](../../.roo/design_documents/00_system_architecture.md)
+*   **System Architecture:** [`00_system_architecture.md`](../../.roo/blueprints/00_system_architecture.md)
 *   **Agent Design:**
-    *   Overview and System Orchestrator Agent: [`01a_agent_overview_and_soa.md`](../../.roo/design_documents/01a_agent_overview_and_soa.md)
-    *   Analyst Agents: [`01b_analyst_agent.md`](../../.roo/design_documents/01b_analyst_agent.md)
-    *   Trader Agents: [`01c_trader_agent.md`](../../.roo/design_documents/01c_trader_agent.md)
-    *   Communication & Permissions: [`01d_agent_communication_and_permissions.md`](../../.roo/design_documents/01d_agent_communication_and_permissions.md)
-*   **Core Trading Strategies:** [`02_core_strategies.md`](../../.roo/design_documents/02_core_strategies.md)
+    *   Overview and System Orchestrator Agent: [`01a_agent_overview_and_soa.md`](../../.roo/blueprints/01a_agent_overview_and_soa.md)
+    *   Analyst Agents: [`01b_analyst_agent.md`](../../.roo/blueprints/01b_analyst_agent.md)
+    *   Trader Agents: [`01c_trader_agent.md`](../../.roo/blueprints/01c_trader_agent.md)
+    *   Communication & Permissions: [`01d_agent_communication_and_permissions.md`](../../.roo/blueprints/01d_agent_communication_and_permissions.md)
+*   **Core Trading Strategies:** [`02_core_strategies.md`](../../.roo/blueprints/02_core_strategies.md)
 *   **Toolset and System Prompt Design:**
-    *   Toolset Overview & Market Data Tools: [`03a_toolset_overview_and_market_data.md`](../../.roo/design_documents/03a_toolset_overview_and_market_data.md)
-    *   Indicator & Order Tools: [`03b_toolset_indicators_and_orders.md`](../../.roo/design_documents/03b_toolset_indicators_and_orders.md)
-    *   Memory & Orchestration Tools: [`03c_toolset_memory_and_orchestration.md`](../../.roo/design_documents/03c_toolset_memory_and_orchestration.md)
-    *   User Interaction & System Prompt: [`03d_toolset_user_interaction_and_system_prompt.md`](../../.roo/design_documents/03d_toolset_user_interaction_and_system_prompt.md)
+    *   Toolset Overview & Market Data Tools: [`03a_toolset_overview_and_market_data.md`](../../.roo/blueprints/03a_toolset_overview_and_market_data.md)
+    *   Indicator & Order Tools: [`03b_toolset_indicators_and_orders.md`](../../.roo/blueprints/03b_toolset_indicators_and_orders.md)
+    *   Memory & Orchestration Tools: [`03c_toolset_memory_and_orchestration.md`](../../.roo/blueprints/03c_toolset_memory_and_orchestration.md)
+    *   User Interaction & System Prompt: [`03d_toolset_user_interaction_and_system_prompt.md`](../../.roo/blueprints/03d_toolset_user_interaction_and_system_prompt.md)
 
 <!-- Note: High-Level Risks & Issues Log has been moved to global/risk_issue_register.md -->

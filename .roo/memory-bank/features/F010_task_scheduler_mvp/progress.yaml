@@ -1,0 +1,166 @@
+# Feature Progress: 后台任务调度 MVP (Background Task Scheduler MVP)
+# Feature ID: F010_task_scheduler_mvp
+# Managed by: Feature-Lead for F010_task_scheduler_mvp
+# Last updated: 2025-05-10 12:53:11
+
+status: "planning_complete" # ( planning | planning_complete | design | development | testing | completed | blocked | archived )
+summary: "详细任务已定义。 (Detailed tasks defined.)"
+target_completion_date_feature_level: "YYYY-MM-DD" # To be set by Feature-Lead after effort estimation
+
+tasks:
+  F010_task_scheduler_mvp-design-001:
+    name: "任务调度器核心接口和数据模型设计 (Task Scheduler core interface and data model design)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # Or feature-lead
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: []
+  F010_task_scheduler_mvp-design-002:
+    name: "任务定义格式和注册机制设计 (Task definition format and registration mechanism design)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # Or feature-lead
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-design-001"]
+  F010_task_scheduler_mvp-design-003:
+    name: "日志记录和基础监控策略设计 (Logging and basic monitoring strategy design)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend" # Or feature-lead
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "0.5d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-design-001"]
+
+  F010_task_scheduler_mvp-be-001:
+    name: "实现任务调度核心引擎 (Implement core task scheduling engine)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "3d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-design-001"]
+  F010_task_scheduler_mvp-be-002:
+    name: "实现任务定义加载/注册逻辑 (Implement task definition loading/registration logic)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "2d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-design-002", "F010_task_scheduler_mvp-be-001"]
+  F010_task_scheduler_mvp-be-003:
+    name: "实现任务执行和错误处理逻辑 (Implement task execution and error handling logic)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "2d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-001"]
+  F010_task_scheduler_mvp-be-004:
+    name: "实现日志记录和基础状态报告 (Implement logging and basic status reporting)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-design-003", "F010_task_scheduler_mvp-be-001"]
+  F010_task_scheduler_mvp-be-005:
+    name: "实现示例任务 - FetchExchangePairsTask (Implement example task - FetchExchangePairsTask)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-003"]
+  F010_task_scheduler_mvp-be-006:
+    name: "实现示例任务 - CleanOldLogsTask (Implement example task - CleanOldLogsTask)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-003"]
+  F010_task_scheduler_mvp-be-007:
+    name: "实现示例任务 - AgentHealthCheckTask (Implement example task - AgentHealthCheckTask)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-003"]
+
+  F010_task_scheduler_mvp-qa-001:
+    name: "制定任务调度器 MVP 的测试计划 (Develop test plan for Task Scheduler MVP)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3-acceptance-criteria"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-design-001", "F010_task_scheduler_mvp-design-002", "F010_task_scheduler_mvp-design-003"]
+  F010_task_scheduler_mvp-qa-002:
+    name: "执行任务定义和注册功能的测试 (Execute tests for task definition and registration functionality)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#ac-ts-001"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-002", "F010_task_scheduler_mvp-qa-001"]
+  F010_task_scheduler_mvp-qa-003:
+    name: "执行周期性任务调度准确性测试 (Execute tests for periodic task scheduling accuracy)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#ac-ts-001"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-001", "F010_task_scheduler_mvp-qa-001"]
+  F010_task_scheduler_mvp-qa-004:
+    name: "执行任务执行和错误处理的测试 (Execute tests for task execution and error handling)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#ac-ts-004"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-003", "F010_task_scheduler_mvp-qa-001"]
+  F010_task_scheduler_mvp-qa-005:
+    name: "执行日志记录和监控功能的测试 (Execute tests for logging and monitoring functionality)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#ac-ts-003"
+    estimated_effort: "1d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-004", "F010_task_scheduler_mvp-qa-001"]
+  F010_task_scheduler_mvp-qa-006:
+    name: "执行示例任务的功能测试 (Execute functional tests for example tasks)"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#41-in-scope-mvp"
+    estimated_effort: "1.5d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-005", "F010_task_scheduler_mvp-be-006", "F010_task_scheduler_mvp-be-007", "F010_task_scheduler_mvp-qa-001"]
+
+  F010_task_scheduler_mvp-doc-001:
+    name: "编写任务调度器模块的开发者文档 (Write developer documentation for the Task Scheduler module)"
+    status: "backlog"
+    assignee_mode_slug: "doc-writer" # Or code-backend
+    description_link: "context.md"
+    estimated_effort: "2d" # Placeholder
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F010_task_scheduler_mvp-be-001", "F010_task_scheduler_mvp-be-002", "F010_task_scheduler_mvp-be-003", "F010_task_scheduler_mvp-be-004"]

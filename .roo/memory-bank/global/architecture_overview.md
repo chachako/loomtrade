@@ -4,6 +4,6 @@
 This document provides a high-level conceptual overview of the AI Trading Agent system's architecture.
 
 The primary architectural design, including detailed diagrams, module responsibilities, and technology stack, is maintained in the following dedicated design document:
-*   **Detailed System Architecture:** [`00_system_architecture.md`](../../design_documents/00_system_architecture.md)
+*   **Detailed System Architecture:** [`00_system_architecture.md`](../../blueprints/00_system_architecture.md)
 
 This global overview file may be updated with high-level summaries or key architectural principles as the project evolves. For specifics, always refer to the detailed document linked above.

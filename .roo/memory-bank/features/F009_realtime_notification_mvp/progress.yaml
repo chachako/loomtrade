@@ -1,0 +1,121 @@
+# Feature Progress: 实时通信与通知服务 MVP
+# Feature ID: F009_realtime_notification_mvp
+# Managed by: Feature-Lead for F009_realtime_notification_mvp
+# Last updated: 2025-05-10 12:44:47
+
+status: "planning_complete" # ( planning | planning_complete | design | development | testing | completed | blocked | archived )
+summary: "Detailed tasks defined, ready for development kickoff."
+target_completion_date_feature_level: "2025-06-15" # To be set by Feature-Lead
+
+tasks:
+  F009_realtime_notification_mvp-ws-001:
+    name: "WebSocketServer: Design and Implement Core Connection Management"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "3d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: []
+  F009_realtime_notification_mvp-ws-002:
+    name: "WebSocketServer: Implement Token-based Authentication"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#52-认证与授权-authentication--authorization"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ws-001"]
+  F009_realtime_notification_mvp-ws-003:
+    name: "WebSocketServer: Implement Heartbeat Mechanism"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#54-心跳机制-heartbeat"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ws-001"]
+  F009_realtime_notification_mvp-ws-004:
+    name: "WebSocketServer: Define and Handle Standard Message Formats (JSON)"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#51-websocket-消息格式"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ws-001"]
+
+  F009_realtime_notification_mvp-ns-001:
+    name: "NotificationService: Design Core Service and Event Ingestion Mechanism"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#1-overview--goal" # Also context.md#5.4 (message queue consideration)
+    estimated_effort: "3d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: []
+  F009_realtime_notification_mvp-ns-002:
+    name: "NotificationService: Implement 'new_trade_signal' Event Handling and Formatting"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#53-mvp-通知事件类型详情"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ns-001", "F009_realtime_notification_mvp-ws-004"]
+  F009_realtime_notification_mvp-ns-003:
+    name: "NotificationService: Implement 'order_update' Event Handling and Formatting"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#53-mvp-通知事件类型详情"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ns-001", "F009_realtime_notification_mvp-ws-004"]
+  F009_realtime_notification_mvp-ns-004:
+    name: "NotificationService: Implement 'system_alert' Event Handling and Formatting"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#53-mvp-通知事件类型详情"
+    estimated_effort: "1d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ns-001", "F009_realtime_notification_mvp-ws-004"]
+  F009_realtime_notification_mvp-ns-005:
+    name: "NotificationService: Integrate with WebSocketServer for Message Pushing"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ns-001", "F009_realtime_notification_mvp-ws-001"]
+
+  F009_realtime_notification_mvp-coord-001:
+    name: "Coordination: Liaise with F001_frontend_core FL for WebSocket client integration (auth, message handling)"
+    status: "backlog"
+    assignee_mode_slug: "feature-lead" # This task is for me
+    description_link: "context.md#56-与-f001_frontend_core-协调"
+    estimated_effort: "ongoing"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ws-002", "F009_realtime_notification_mvp-ws-004"]
+
+  F009_realtime_notification_mvp-qa-001:
+    name: "QA: Develop Test Plan for Real-time Notifications MVP"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3-acceptance-criteria"
+    estimated_effort: "2d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-ws-001", "F009_realtime_notification_mvp-ns-001"]
+  F009_realtime_notification_mvp-qa-002:
+    name: "QA: Execute Functional and Integration Tests for Notifications"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#3-acceptance-criteria"
+    estimated_effort: "3d"
+    actual_effort: ""
+    related_commits: []
+    dependencies: ["F009_realtime_notification_mvp-qa-001", "F009_realtime_notification_mvp-ns-005"] # Depends on all dev tasks implicitly

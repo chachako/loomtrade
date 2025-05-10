@@ -1,0 +1,141 @@
+# Feature Progress: 用户界面核心 (Frontend Core & UI)
+# Feature ID: F001_frontend_core
+# Managed by: Feature-Lead for F001_frontend_core
+# Last updated: 2025-05-10 02:26:19
+
+status: "planning" # ( planning | design | development | testing | completed | blocked | archived )
+summary: "Detailed tasks defined. Ready for review and then delegation."
+target_completion_date_feature_level: "2025-07-31" # Tentative
+
+tasks:
+  F001_frontend_core-setup-001:
+    name: "初始化 Next.js (React 19, TypeScript) 项目"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "1d"
+    dependencies: []
+  F001_frontend_core-setup-002:
+    name: "配置 ESLint, Prettier, Husky"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#41-in-scope"
+    estimated_effort: "0.5d"
+    dependencies: ["F001_frontend_core-setup-001"]
+  F001_frontend_core-setup-003:
+    name: "设置 Tailwind CSS"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "0.5d"
+    dependencies: ["F001_frontend_core-setup-001"]
+  F001_frontend_core-setup-004:
+    name: "搭建单元测试框架 (Jest/RTL)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#41-in-scope"
+    estimated_effort: "1d"
+    dependencies: ["F001_frontend_core-setup-001"]
+  F001_frontend_core-setup-005:
+    name: "搭建集成测试框架 (Playwright/Cypress - 仅设置)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#41-in-scope"
+    estimated_effort: "1d"
+    dependencies: ["F001_frontend_core-setup-001"]
+
+  F001_frontend_core-layout-001:
+    name: "实现主应用布局 (页眉, 侧边栏/导航区, 主内容区)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#2-detailed-requirements--user-stories"
+    estimated_effort: "2d"
+    dependencies: ["F001_frontend_core-setup-003"]
+  F001_frontend_core-layout-002:
+    name: "实现基础路由 (例如: /dashboard, /settings)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#41-in-scope"
+    estimated_effort: "1d"
+    dependencies: ["F001_frontend_core-layout-001"]
+
+  F001_frontend_core-state-001:
+    name: "选择并实现状态管理方案 (例如 Zustand)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend" # Decision might need Architect input via PM
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "1.5d" # Includes research/decision time
+    dependencies: ["F001_frontend_core-setup-001"]
+  F001_frontend_core-services-001:
+    name: "设计并实现 WebSocket 客户端集成 (连接, 消息处理桩)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "2d"
+    dependencies: ["F001_frontend_core-setup-001"]
+  F001_frontend_core-services-002:
+    name: "设计与 F011_api_config_service 的集成点"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend" # May consult code-backend
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "1d"
+    dependencies: []
+  F001_frontend_core-services-003:
+    name: "实现与 F011_api_config_service 的集成 (获取配置)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "1.5d"
+    dependencies: ["F001_frontend_core-services-002", "F001_frontend_core-state-001"]
+
+  F001_frontend_core-bff-001:
+    name: "(可选) 设计 BFF 需求和基本结构"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend" # Will involve code-backend
+    description_link: "context.md#41-in-scope"
+    estimated_effort: "1d"
+    dependencies: []
+  F001_frontend_core-bff-002:
+    name: "(可选) 实现 Next.js API 路由作为 BFF 的初始端点"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#5-technical-notes--assumptions"
+    estimated_effort: "1.5d"
+    dependencies: ["F001_frontend_core-bff-001"]
+
+  F001_frontend_core-ui-001:
+    name: "设计核心仪表盘布局和组件 (使用 Magic UI)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#1-overview--goal"
+    estimated_effort: "2d"
+    dependencies: ["F001_frontend_core-layout-001"]
+  F001_frontend_core-ui-002:
+    name: "实现仪表盘的静态 Magic UI 组件 (占位符数据)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#3-acceptance-criteria"
+    estimated_effort: "3d"
+    dependencies: ["F001_frontend_core-ui-001", "F001_frontend_core-setup-003"]
+  F001_frontend_core-ui-003:
+    name: "将仪表盘组件连接到状态管理和 WebSocket (用于占位符/模拟数据更新)"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend"
+    description_link: "context.md#3-acceptance-criteria"
+    estimated_effort: "2d"
+    dependencies: ["F001_frontend_core-ui-002", "F001_frontend_core-state-001", "F001_frontend_core-services-001"]
+
+  F001_frontend_core-qa-001:
+    name: "制定核心前端框架的测试计划"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    description_link: "context.md#41-in-scope"
+    estimated_effort: "1d"
+    dependencies: ["F001_frontend_core-ui-003"] # Depends on most dev tasks being defined/done
+  F001_frontend_core-docs-001:
+    name: "编写核心前端组件和架构的初步文档"
+    status: "backlog"
+    assignee_mode_slug: "code-frontend" # Or doc-writer
+    description_link: "context.md#core-responsibilities"
+    estimated_effort: "2d"
+    dependencies: ["F001_frontend_core-ui-003"]
