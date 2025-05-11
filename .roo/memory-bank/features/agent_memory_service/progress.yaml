@@ -1,0 +1,78 @@
+# Feature Progress: Agent Memory Service
+# Feature ID: agent_memory_service
+# Managed by: Feature-Lead for agent_memory_service
+# Last updated: 2025-05-12 00:25:54
+
+status: "planning_complete" # ( planning | design | development_pending_assignment | in_development | in_review | blocked | bug_fixing | in_qa | qa_passed | completed_on_current_branch | completed | archived )
+summary: "Detailed planning complete. Sub-tasks identified and ready for delegation."
+target_completion_date_feature_level: "" # To be set by Feature-Lead during planning
+
+# tasks will store a map of task_id to its details
+# Task ID format: agent_memory_service-{type}-{NNN}, e.g., agent_memory_service-be-api-001, agent_memory_service-fe-ui-002
+tasks:
+  agent_memory_service-design-api-001:
+    name: "Design AgentMemoryService internal API and methods"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "design_notes.md#1-api-design"
+    estimated_effort: "1d"
+  agent_memory_service-be-impl-core-001:
+    name: "Implement AgentMemoryService core structure, directory management, and path validation"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["agent_memory_service-design-api-001"]
+    estimated_effort: "2d"
+  agent_memory_service-be-impl-read-002:
+    name: "Implement read_file method in AgentMemoryService"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["agent_memory_service-be-impl-core-001"]
+    estimated_effort: "1d"
+  agent_memory_service-be-impl-write-003:
+    name: "Implement write_file (overwrite) method in AgentMemoryService"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["agent_memory_service-be-impl-core-001"]
+    estimated_effort: "1d"
+  agent_memory_service-be-impl-append-004:
+    name: "Implement append_to_file method in AgentMemoryService"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["agent_memory_service-be-impl-core-001"]
+    estimated_effort: "1d"
+  agent_memory_service-be-impl-error-005:
+    name: "Implement comprehensive error handling for all service methods"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies:
+      - "agent_memory_service-be-impl-read-002"
+      - "agent_memory_service-be-impl-write-003"
+      - "agent_memory_service-be-impl-append-004"
+    estimated_effort: "1d"
+  agent_memory_service-be-impl-log-006:
+    name: "Implement basic logging for service operations"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["agent_memory_service-be-impl-error-005"]
+    estimated_effort: "0.5d"
+  agent_memory_service-be-test-unit-007:
+    name: "Write unit tests for AgentMemoryService methods and error conditions"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["agent_memory_service-be-impl-log-006"]
+    estimated_effort: "2d"
+  agent_memory_service-qa-plan-001:
+    name: "Create QA test plan for AgentMemoryService functionality"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    dependencies: ["agent_memory_service-design-api-001"]
+    description_link: "context.md#3-acceptance-criteria"
+    estimated_effort: "1d"
+  agent_memory_service-qa-exec-001:
+    name: "Execute QA tests for AgentMemoryService"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    dependencies:
+      - "agent_memory_service-be-test-unit-007"
+      - "agent_memory_service-qa-plan-001"
+    estimated_effort: "2d"
