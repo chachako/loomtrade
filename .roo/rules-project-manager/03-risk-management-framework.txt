@@ -1,106 +1,125 @@
 risk_issue_management:
-  log_new_entry:
-    trigger: "When a new risk or issue is identified by Project-Manager (from user input, Feature-Lead report, or self-analysis), or when user explicitly requests to log a new risk/issue."
+  log_new_entry: # For both Risks and Issues
+    trigger: "When a new risk or issue is identified by Project-Manager (from user input, Feature-Lead report, self-analysis), or when user explicitly requests to log a new risk/issue."
     priority: 700
     action: |
       <thinking>
       **[Log New Risk/Issue - Project Manager]**
       My status is `[PROJECT_MANAGER: LOGGING_RISK_ISSUE]`.
       A new risk or issue needs to be logged in `global/risk_issue_register.md`.
-      If this file doesn't exist, I will create it with a header.
 
-      I need to:
-      1.  Confirm details: Type (Risk/Issue), Description, perceived Impact (High/Medium/Low), Source/Reporter, Date. If critical info is missing, I'll ask.
-      2.  Generate a unique ID: (e.g., R-001, I-001). I'll read `risk_issue_register.md`, find the highest existing ID for the type, and increment. If no entries, start with 001.
-      3.  Construct the new log entry string using the standard format.
+      Process:
+      1.  Gather/Confirm details: Type (Risk/Issue), Description. Request Impact (Critical/High/Medium/Low) from user if not provided. Source/Reporter defaults to 'User' or 'Project-Manager'. Date is current date. Owner initially 'Project-Manager'.
+      2.  Read `global/risk_issue_register.md` to determine the next available ID (e.g., R-001, I-001). If file doesn't exist, start ID with 001 for the type and prepare to create file with header. If read fails, inform user and abort.
+      3.  Construct the new log entry string (Markdown table row) using the standard format from `_risk_issue_register_md_format`.
       4.  Append this entry to `global/risk_issue_register.md`.
-      5.  Inform the user and potentially discuss next steps (e.g., assignment for mitigation/resolution).
-      6.  Update `manifest.yaml`'s `last_updated_timestamp`.
+          - If file is new, write header then the new entry row.
+          - If file exists, use `insert_content` to add the new row at an appropriate place (e.g., after header if empty, or at the end of the table). If `insert_content` is problematic for table structure, fall back to read-modify-write.
+      5.  If writing to `risk_issue_register.md` fails, inform user and abort.
+      6.  Update `manifest.yaml`'s `last_updated` timestamp using read-modify-write. If this fails, log error but proceed with informing user about risk log.
+      7.  Inform the user of successful logging and the assigned ID. Potentially discuss next steps (e.g., assignment for mitigation/resolution if not PM).
+      My status becomes `[PROJECT_MANAGER: ACTIVE]` after successful completion.
       </thinking>
 
       <!-- Example: User reports "Server might be overloaded during peak traffic." (Potential Risk) -->
       <thinking>
-      The user reported a potential risk: "Server might be overloaded during peak traffic."
-      I need to confirm the impact.
+      User reported a potential risk: "Server might be overloaded during peak traffic."
+      I need to confirm the impact if not provided.
+      Let's assume user input is just the description.
       </thinking>
       <ask_followup_question>
-        <question>I will log "Server might be overloaded during peak traffic" as a potential Risk. What is its estimated impact (High, Medium, or Low)?</question>
-        <follow_up>
-          <suggest>High Impact</suggest>
-          <suggest>Medium Impact</suggest>
-          <suggest>Low Impact</suggest>
-        </follow_up>
+        <question>I will log "Server might be overloaded during peak traffic" as a potential Risk. What is its estimated impact (Critical, High, Medium, or Low)?</question>
+        <follow_up><suggest>Critical Impact</suggest></follow_up>
+        <follow_up><suggest>High Impact</suggest></follow_up>
+        <follow_up><suggest>Medium Impact</suggest></follow_up>
+        <follow_up><suggest>Low Impact</suggest></follow_up>
       </ask_followup_question>
-      <!-- Wait for user response -->
+      <!-- Wait for user response. Assume user responds "High Impact". -->
       <thinking>
       User responded "High Impact".
-      Type: Risk
-      Description: Server might be overloaded during peak traffic.
-      Impact: High
-      Source: User
-      Date: [Current Date YYYY-MM-DD]
+      Details for new entry:
+      - Type: Risk
+      - Description: Server might be overloaded during peak traffic.
+      - Impact: High
+      - Source: User
+      - Date: [Current Date YYYY-MM-DD]
+      - Owner: Project-Manager
+      - Status: Open
+      - Notes: "Investigate scaling options." (Initial PM note)
 
-      Now, I need to generate the ID and log it. I'll first try to read `global/risk_issue_register.md`.
+      Now, generate ID and log it.
+      **Step 2: Read `global/risk_issue_register.md` to find next ID.**
       </thinking>
       <read_file>
         <path>./.roo/memory-bank/global/risk_issue_register.md</path>
       </read_file>
-      <!-- Wait for file content or error if not exists -->
+      <!-- Wait for file content or error if not exists. If error (and not 'file not found'), inform user and stop. -->
       <thinking>
       I have the content (or know it doesn't exist).
-      If it doesn't exist, the new ID for a Risk is R-001. The file content will start with a header.
-      If it exists, I'll scan for the last 'R-' ID. Let's assume the last was R-002, so new is R-003.
-      New entry: `| R-003 | [Current Date YYYY-MM-DD] | Server might be overloaded during peak traffic. | Risk | Open | High | User | Project-Manager | Investigate scaling options. |`
+      If it doesn't exist, the new ID for a Risk is R-001.
+      If it exists, I'll scan existing 'R-' IDs to find the highest and increment. Let's assume last was R-002, so new is R-003.
+      Let `{var_new_risk_id}` = "R-003".
+      Let `{var_current_date}` = "YYYY-MM-DD".
 
-      I will now prepare the content for `risk_issue_register.md`.
-      If the file was new, the content will be:
-      ```
-      # Risk and Issue Register
-      | ID    | Date Logged | Description                                  | Type | Status | Impact | Source | Owner           | Notes / Mitigation / Resolution Plan |
-      |-------|-------------|----------------------------------------------|------|--------|--------|--------|-----------------|--------------------------------------|
-      | R-003 | YYYY-MM-DD  | Server might be overloaded during peak traffic. | Risk | Open   | High   | User   | Project-Manager | Investigate scaling options.         |
-      ```
-      If the file existed and had entries, I will append the new row.
-      This is best done by taking the existing content, adding the new line, and writing it all back.
+      **Step 3: Construct new log entry string.**
+      `{var_new_log_entry}` = `| {var_new_risk_id} | {var_current_date} | Server might be overloaded during peak traffic. | Risk | Open | High | User | Project-Manager | Investigate scaling options. |`
+
+      **Step 4: Append entry to `global/risk_issue_register.md`.**
+      If file was new, content will be header + new entry.
+      If file existed, I will use `insert_content` to add the new row. Assuming table rows start at line 4 (after header and separator). I'll find the current last row or insert at a known line if table is empty.
+      For simplicity, if the file is new or only contains the header, I'll use `write_to_file`. Otherwise, `insert_content`.
+      Assume the file exists and has entries. Let's insert at line 0 to append to the end of the file (which should be the end of the table).
       </thinking>
+      <insert_content>
+        <path>./.roo/memory-bank/global/risk_issue_register.md</path>
+        <line>0</line> <!-- Append to end of file -->
+        <content>
+{var_new_log_entry}
+        </content>
+      </insert_content>
+      <!-- Wait for confirmation. If error, inform user and stop. -->
+      <!-- Alternative for new file or if insert_content is tricky for tables:
       <write_to_file>
         <path>./.roo/memory-bank/global/risk_issue_register.md</path>
         <content>
-        <!-- Full new content of risk_issue_register.md with the new entry -->
-        <!-- LLM to ensure the Markdown table format is maintained correctly -->
-        </content>
-        <line_count>...</line_count> <!-- LLM to calculate -->
-      </write_to_file>
-      <!-- Wait for confirmation -->
-      <thinking>
-      Risk/Issue logged. Now update manifest timestamp.
-      </thinking>
-      <!-- Subsequent step to update manifest.yaml's last_updated_timestamp -->
-      <read_file>
-        <path>./.roo/memory-bank/manifest.yaml</path>
-      </read_file>
-      <!-- Wait for manifest content -->
-      <thinking>
-      I have manifest.yaml. I will update the `last_updated` field with current timestamp and write it back.
-      (Assume PM knows how to parse/update YAML safely from previous rules).
-      </thinking>
-      <write_to_file>
-        <path>./.roo/memory-bank/manifest.yaml</path>
-        <content>
-        <!-- Updated manifest.yaml content -->
+      # Risk and Issue Register
+      | ID    | Date Logged | Description                                  | Type   | Status | Impact   | Source | Owner           | Notes / Mitigation / Resolution Plan |
+      |-------|-------------|----------------------------------------------|--------|--------|----------|--------|-----------------|--------------------------------------|
+      | R-003 | YYYY-MM-DD  | Server might be overloaded during peak traffic. | Risk | Open   | High   | User   | Project-Manager | Investigate scaling options.         |
+      (any existing rows would be here too if read-modify-write was used)
         </content>
         <line_count>...</line_count>
       </write_to_file>
-      <!-- Wait for confirmation -->
+      -->
+
+      <thinking>
+      **Step 6: Update `manifest.yaml`'s `last_updated` timestamp.**
+      </thinking>
+      <read_file><path>./.roo/memory-bank/manifest.yaml</path></read_file>
+      <!-- Wait for manifest content. If error, log it but proceed with completion message for risk log. -->
+      <thinking>
+      I have `manifest.yaml`. I will parse it, update the root `last_updated` field with current timestamp, and write it back.
+      </thinking>
+      <write_to_file>
+        <path>./.roo/memory-bank/manifest.yaml</path>
+        <content><!-- LLM generates complete updated YAML for manifest.yaml with new timestamp --></content>
+        <line_count>...</line_count>
+      </write_to_file>
+      <!-- Wait for confirmation. If error, log it. -->
+
+      <thinking>
+      **Step 7: Inform User.**
+      </thinking>
       <attempt_completion>
         <result>
-        The potential risk "Server might be overloaded during peak traffic" has been logged as R-003 in `global/risk_issue_register.md` with High impact. I (Project-Manager) will own the initial investigation. The `manifest.yaml` has also been updated.
+        The potential risk "Server might be overloaded during peak traffic" has been logged as {var_new_risk_id} in `global/risk_issue_register.md` with High impact.
+        I (Project-Manager) will own the initial investigation. The `manifest.yaml` has also been updated.
         </result>
       </attempt_completion>
       My status becomes `[PROJECT_MANAGER: ACTIVE]`.
 
   update_existing_entry:
-    trigger: "When an update for an existing risk or issue (identified by its ID) is provided by the user or another mode."
+    trigger: "When an update for an existing risk or issue (identified by its ID, e.g., R-001) is provided by the user or another mode, or due to PM's re-assessment."
     priority: 690
     action: |
       <thinking>
@@ -109,100 +128,115 @@ risk_issue_management:
       An existing risk/issue in `global/risk_issue_register.md` needs an update (e.g., status change, new owner, mitigation notes).
       I need the Entry ID (e.g., R-001) and the specific fields to update with their new values.
 
-      1.  Read `global/risk_issue_register.md`.
-      2.  In thought: Find the line corresponding to the Entry ID.
-      3.  Reconstruct that specific line (row in the Markdown table) with the updated information, keeping other fields intact if not specified for change.
-      4.  Replace the old line with the new line in the full file content.
-      5.  Use `write_to_file` to save the modified content.
-      6.  Update `manifest.yaml`'s `last_updated_timestamp`.
-      7.  Inform the user.
+      Process:
+      1.  Read `global/risk_issue_register.md`. If read fails, inform user and abort.
+      2.  In thought: Find the line corresponding to the Entry ID. Determine its line number.
+      3.  Construct the new, updated Markdown table row string for that entry, keeping other fields intact if not specified for change.
+      4.  Use `apply_diff` to replace the old line with the new line, using the determined start line number.
+      5.  If `apply_diff` fails, inform user and abort.
+      6.  Update `manifest.yaml`'s `last_updated` timestamp.
+      7.  Inform the user of the update.
+      My status becomes `[PROJECT_MANAGER: ACTIVE]` after successful completion.
       </thinking>
 
       <!-- Example: User says "For R-003, set status to Mitigating and add note: Load balancer configured." -->
       <thinking>
-      Entry ID: R-003
-      Updates: Status: Mitigating, Notes: Load balancer configured.
+      Entry ID: R-003.
+      Updates: Status: Mitigating, Notes / Mitigation / Resolution Plan: "Load balancer configured."
 
-      I will read `global/risk_issue_register.md`.
+      **Step 1: Read `global/risk_issue_register.md`.**
       </thinking>
       <read_file>
         <path>./.roo/memory-bank/global/risk_issue_register.md</path>
       </read_file>
-      <!-- Wait for file content -->
+      <!-- Wait for file content. If error, inform user and stop. -->
       <thinking>
-      I have the content. I'll find the line for R-003.
+      I have the content. I'll find the line for R-003 and its line number `{var_line_num_R003}`.
       Old line might be: `| R-003 | YYYY-MM-DD  | Server might be overloaded during peak traffic. | Risk | Open   | High   | User   | Project-Manager | Investigate scaling options.         |`
       New line will be:  `| R-003 | YYYY-MM-DD  | Server might be overloaded during peak traffic. | Risk | Mitigating | High   | User   | Project-Manager | Load balancer configured.            |`
-      (Date Logged and Description typically don't change unless explicitly stated).
+      (Date Logged and Description typically don't change unless explicitly stated for update).
+      Let `{var_updated_R003_row}` be the new row string.
 
-      I will replace the old line with the new line in the full content string.
+      **Step 4: Use `apply_diff` to replace the line.**
       </thinking>
-      <write_to_file>
+      <apply_diff>
         <path>./.roo/memory-bank/global/risk_issue_register.md</path>
-        <content>
-        <!-- Full new content of risk_issue_register.md with the updated R-003 entry -->
-        </content>
-        <line_count>...</line_count> <!-- LLM to calculate -->
-      </write_to_file>
-      <!-- Wait for confirmation -->
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_line_num_R003}
+-------
+| R-003 | YYYY-MM-DD  | Server might be overloaded during peak traffic. | Risk | Open   | High   | User   | Project-Manager | Investigate scaling options.         |
+=======
+{var_updated_R003_row}
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait for confirmation. If error, inform user and stop. -->
+
       <thinking>
-      Risk/Issue R-003 updated. Now update manifest timestamp.
+      **Step 6: Update `manifest.yaml` timestamp.** (Similar read-modify-write as in `log_new_entry`)
       </thinking>
-      <!-- Subsequent step to update manifest.yaml's last_updated_timestamp (similar to above) -->
+      <!-- ... manifest update steps ... -->
+
+      <thinking>
+      **Step 7: Inform User.**
+      </thinking>
       <attempt_completion>
         <result>
-        Entry R-003 ("Server might be overloaded during peak traffic") in `global/risk_issue_register.md` has been updated: Status is now 'Mitigating', and notes reflect that the load balancer is configured. `manifest.yaml` also updated.
+        Entry R-003 ("Server might be overloaded during peak traffic") in `global/risk_issue_register.md` has been updated: Status is now 'Mitigating', and notes reflect "Load balancer configured." `manifest.yaml` also updated.
         </result>
       </attempt_completion>
       My status becomes `[PROJECT_MANAGER: ACTIVE]`.
 
   review_entries:
-    trigger: "When user requests a 'risk review', 'issue summary', or similar, or when Project-Manager deems a periodic review necessary."
+    trigger: "When user requests a 'risk review', 'issue summary', or similar, or when Project-Manager deems a periodic review necessary based on project phase or events."
     priority: 680
     action: |
       <thinking>
       **[Review Risks/Issues - Project Manager]**
       My status is `[PROJECT_MANAGER: REVIEWING_RISK_ISSUE]`.
       A review of logged risks/issues is needed.
-      1.  Read `global/risk_issue_register.md`.
-      2.  Extract relevant entries (e.g., all 'Open' or 'High' impact, or based on user filter).
-      3.  Present a summary to the user.
+      1.  Read `global/risk_issue_register.md`. If read fails, inform user I cannot perform review.
+      2.  Parse the Markdown table content.
+      3.  Filter entries based on user request (e.g., all 'Open', or 'High' impact, or specific type) or default to all 'Open' items.
+      4.  Present a formatted summary to the user.
+      My status becomes `[PROJECT_MANAGER: ACTIVE]` after presenting the review.
       </thinking>
       <read_file>
         <path>./.roo/memory-bank/global/risk_issue_register.md</path>
       </read_file>
-      <!-- Wait for file content -->
+      <!-- Wait for file content. If error, inform user and stop. -->
       <thinking>
       I have the content. I will parse the Markdown table.
-      I'll filter for, e.g., all entries with Status 'Open'.
-      I will then format a summary.
+      I'll filter for, e.g., all entries with Status 'Open' and Impact 'High' or 'Critical'.
+      I will then format a summary for the user.
       </thinking>
       <attempt_completion>
         <result>
-        **Risk/Issue Register Review (Open Items):**
+        **Risk/Issue Register Review (Open High/Critical Items):**
         Based on `global/risk_issue_register.md`:
-        | ID    | Date Logged | Description                                  | Type | Status | Impact | Owner           | Notes / Mitigation Plan              |
-        |-------|-------------|----------------------------------------------|------|--------|--------|-----------------|--------------------------------------|
-        | R-001 | YYYY-MM-DD  | Another example risk.                        | Risk | Open   | Medium | Feature-Lead-X  | Pending analysis.                    |
-        | I-001 | YYYY-MM-DD  | Login page occasionally slow.                | Issue| Open   | Low    | Code-Frontend-Y | Monitoring server logs.              |
-        (List other 'Open' entries)
+        | ID    | Date Logged | Description                                  | Type | Status | Impact   | Owner           | Notes / Mitigation Plan              |
+        |-------|-------------|----------------------------------------------|------|--------|----------|-----------------|--------------------------------------|
+        | R-003 | YYYY-MM-DD  | Server might be overloaded during peak traffic. | Risk | Mitigating | High   | Project-Manager | Load balancer configured.            |
+        <!-- LLM lists other matching entries here based on actual file content and filter -->
+        | I-00X | YYYY-MM-DD  | Critical integration point failing.          | Issue| Open   | Critical | Feature-Lead-Y  | Investigation underway.              |
 
-        Please review. Any actions or updates required?
+        Please review. Any actions or updates required for these items?
         </result>
       </attempt_completion>
       My status becomes `[PROJECT_MANAGER: ACTIVE]`.
 
-  _risk_issue_register_md_format:
+  _risk_issue_register_md_format: # Internal guideline for PM
     # Guideline for the structure of global/risk_issue_register.md
-    # LLM should aim to create/maintain this Markdown table format.
+    # PM should aim to create/maintain this Markdown table format.
     header: |
       # Risk and Issue Register
-      | ID    | Date Logged | Description                                  | Type | Status                       | Impact         | Source | Owner           | Notes / Mitigation / Resolution Plan |
-      |-------|-------------|----------------------------------------------|------|------------------------------|----------------|--------|-----------------|--------------------------------------|
+      | ID    | Date Logged | Description                                  | Type   | Status                       | Impact         | Source | Owner           | Notes / Mitigation / Resolution Plan |
+      |-------|-------------|----------------------------------------------|--------|------------------------------|----------------|--------|-----------------|--------------------------------------|
     row_template: "| {ID} | {Date} | {Description} | {Type} | {Status} | {Impact} | {Source} | {Owner} | {Notes} |"
     id_prefixes:
       risk: "R-"
       issue: "I-"
-    status_options: ["Open", "Investigating", "Mitigating", "Monitoring", "Resolved", "Closed", "Deferred"]
+    status_options: ["Open", "Investigating", "Mitigating", "Monitoring", "Resolved", "Closed", "Deferred", "Accepted"]
     impact_options: ["Critical", "High", "Medium", "Low"]
     type_options: ["Risk", "Issue"]

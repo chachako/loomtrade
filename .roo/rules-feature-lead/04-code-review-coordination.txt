@@ -1,0 +1,214 @@
+code_review_coordination_feature_lead:
+  initiate_code_review_process:
+    trigger: "When a coding sub-task (e.g., `{context.completed_coder_task_id}`) for feature {context.feature_id} is reported as complete by a Coder mode (e.g., `Code-Frontend` or `Code-Backend`). The Coder mode should have committed and pushed their changes to their current working Git branch following the universal commit protocol."
+    priority: 800
+    action: |
+      <thinking>
+      **[Initiate Code Review - Feature Lead]**
+      My status is `[FEATURE_LEAD: PREPARING_CODE_REVIEW]`. Feature ID: `{context.feature_id}`.
+      Coding work for task `{context.completed_coder_task_id}` (by `{context.original_assignee_mode_slug}`) on the current Git branch is reported as complete.
+      The Coder should have provided commit hashes as part of their completion report.
+
+      My process:
+      1.  Update the status of the coding task `{context.completed_coder_task_id}` in `features/{context.feature_id}/progress.yaml` to 'in_review' using `apply_diff`.
+      2.  Log the code submission for review in `features/{context.feature_id}/active_log.md` using `insert_content`.
+      3.  Prepare a comprehensive `new_task` message for `code-reviewer` mode, providing all necessary context, including commit hashes on the current branch.
+      4.  Delegate the review task.
+      5.  If any file operation or task creation fails, I MUST log the error and report to Project-Manager.
+      My status after successful delegation will be `[FEATURE_LEAD: AWAITING_CODE_REVIEW_FEEDBACK ({context.completed_coder_task_id})]`.
+      </thinking>
+
+      <thinking>
+      Task `{context.completed_coder_task_id}` for feature '{context.feature_name}' is ready for review on the current branch.
+      Let `{var_summary_from_coder}` be the summary of work from the coder's completion report.
+      Let `{var_commit_hashes_from_coder}` be the commit hashes on the current branch from the coder's report.
+
+      **Step 1: Update Task Status in `progress.yaml` using `apply_diff`.**
+      Assuming task status is 'completed' (by coder) at line `{var_task_status_line}`.
+      </thinking>
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_task_status_line}
+-------
+        status: "completed"
+=======
+        status: "in_review"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait for confirmation. If fails, report error. -->
+
+      <thinking>
+      **Step 2: Log code submission for review in `active_log.md`.**
+      </thinking>
+      <insert_content>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+        <line>3</line> <!-- Assuming standard log format -->
+        <content>
+[YYYY-MM-DD HH:MM:SS] - Code for task {context.completed_coder_task_id} submitted for review by {context.original_assignee_mode_slug}. Commits: {var_commit_hashes_from_coder} on current branch.
+        </content>
+      </insert_content>
+      <!-- Wait for confirmation. If fails, report error. -->
+
+      <thinking>
+      Memory Bank updated.
+      **Step 3 & 4: Prepare and Delegate Code Review Task to `code-reviewer`.**
+      My status after sending `new_task` will be `[FEATURE_LEAD: AWAITING_CODE_REVIEW_FEEDBACK ({context.completed_coder_task_id})]`.
+      </thinking>
+      "Code for task '{context.completed_coder_task_id}' (on current branch) is now 'in_review'. Delegating to Code-Reviewer mode."
+      <new_task>
+        <mode>code-reviewer</mode>
+        <message>
+        # YAML-like structure for Code Review Assignment
+        task_id_for_reviewer: "{context.feature_id}-review-{context.completed_coder_task_id}" # Unique ID for this review task
+        feature_id: "{context.feature_id}"
+        feature_name: "{context.feature_name}"
+        task_id_under_review: "{context.completed_coder_task_id}"
+        task_name_under_review: "{context.name_of_completed_coder_task}" # Name of the original coding task
+        original_assignee_mode: "{context.original_assignee_mode_slug}" # Who wrote the code
+        # The branch is implicitly the Coder's current working branch where changes were committed.
+        # FeatureLead does not dictate/manage this branch for CodeReviewer.
+        # CodeReviewer will assume review is on the branch associated with the commits.
+        commit_hashes_or_changeset: "{var_commit_hashes_from_coder}" # Specific commits on the current branch to review
+
+        summary_of_implemented_functionality: |
+          {var_summary_from_coder}
+
+        review_focus_instructions: |
+          Please conduct a thorough review of the specified commits on the developer's current working branch.
+          Focus on correctness against requirements, adherence to project coding standards (see relevant standards files for {context.original_assignee_mode_slug}),
+          code clarity, maintainability, test coverage adequacy, and any security aspects.
+          Refer to the Universal Commit Protocol (`.roo/rules/02-commit-protocol.txt`) for commit message standards if reviewing commit history.
+
+        # Context File Paths (relative to .roo/memory-bank/)
+        feature_context_md_path: "features/{context.feature_id}/context.md"
+        feature_design_notes_md_path: "features/{context.feature_id}/design_notes.md"
+        feature_decisions_md_path: "features/{context.feature_id}/decisions.md"
+        global_shared_patterns_path: "global/shared_system_patterns.md"
+        global_architecture_path: "global/architecture_overview.md"
+        # Path to specific coding standards for the original assignee's mode:
+        # e.g., ".roo/rules-code-backend/01-standards-and-practices.txt" or ".roo/rules-code-frontend/01-standards-and-practices.txt"
+        # This should be dynamically determined or passed if FeatureLead knows the Coder type.
+        # For now, assuming CodeReviewer can infer or has access to general standards.
+
+        reporting_instructions: |
+          Submit your review feedback using `attempt_completion`.
+          The report should include:
+          - A list of specific findings (each with ID, severity, file/line, description, suggestion).
+          - An overall assessment: 'Approved', 'Approved with minor comments', or 'Requires changes'.
+        </message>
+      </new_task>
+      <!-- Wait for confirmation. If task creation fails, report error to PM. -->
+
+  process_code_review_feedback:
+    trigger: "When Feature-Lead receives code review feedback (via `attempt_completion`) from `code-reviewer` mode for a sub-task `{context.reviewed_task_id}` of feature {context.feature_id} (code was on the developer's current branch)."
+    priority: 810
+    action: |
+      <thinking>
+      **[Process Code Review Feedback - Feature Lead]**
+      My status is `[FEATURE_LEAD: PROCESSING_REVIEW_FEEDBACK]`. Feature ID: `{context.feature_id}`. Task ID: `{context.reviewed_task_id}`.
+      Received code review feedback for sub-task `{context.reviewed_task_id}` from `code-reviewer`.
+      The feedback (from `code-reviewer`'s `attempt_completion` result) should be structured.
+
+      Process:
+      1.  Parse the review feedback (assessment and list of findings).
+      2.  Log feedback summary in `features/{context.feature_id}/active_log.md` using `insert_content`.
+      3.  Update status of `{context.reviewed_task_id}` in `features/{context.feature_id}/progress.yaml` using `apply_diff`.
+      4.  If assessment is 'Requires changes':
+          a.  Update task status to 'changes_required'.
+          b.  Formulate and delegate a rework sub-task (to be done on the current branch) to the original coder mode (`{context.original_assignee_mode_slug_for_reviewed_task}`), providing the reviewer's detailed findings.
+          c.  My status becomes `[FEATURE_LEAD: AWAITING_REWORK ({var_rework_task_id})]`.
+      5.  If assessment is 'Approved' or 'Approved with minor comments':
+          a.  Update task status to 'review_passed' or 'completed' (if no further steps like QA for this specific code unit before feature QA).
+          b.  If 'Approved with minor comments', I may choose to log these as low-priority follow-up tasks or notes.
+          c.  Proceed to the next phase (e.g., delegate next dependent task, or if all dev tasks done, prepare for QA).
+          d.  My status becomes `[FEATURE_LEAD: ACTIVE]`.
+      6.  If any file operation or task creation fails, I MUST log the error and report to Project-Manager.
+      </thinking>
+
+      <!-- Example: `code-reviewer` for task `{context.reviewed_task_id}` submits "Requires changes". -->
+      <thinking>
+      Received review feedback for `{context.reviewed_task_id}`: Assessment 'Requires changes'.
+      Original assignee was `{context.original_assignee_mode_slug_for_reviewed_task}`.
+      Let `{var_reviewer_feedback_summary}` be the parsed summary of findings.
+
+      **Action 1 & 2: Log feedback in `active_log.md`.**
+      </thinking>
+      <insert_content>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+        <line>3</line>
+        <content>
+[YYYY-MM-DD HH:MM:SS] - Code review feedback for task {context.reviewed_task_id} received: Requires changes. Feedback: {var_reviewer_feedback_summary}. Rework to be assigned to {context.original_assignee_mode_slug_for_reviewed_task}.
+        </content>
+      </insert_content>
+      <!-- Wait. If fails, report error. -->
+
+      <thinking>
+      **Action 3 & 4a: Update status in `progress.yaml` for `{context.reviewed_task_id}` to 'changes_required'.**
+      Assuming task status is 'in_review' at line `{var_task_status_line}`.
+      </thinking>
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_task_status_line}
+-------
+        status: "in_review"
+=======
+        status: "changes_required"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait. If fails, report error. -->
+
+      <thinking>
+      Memory Bank updated.
+      **Action 4b: Delegate the rework task (on current branch).**
+      Let `{var_rework_task_id}` = `{context.reviewed_task_id}-rework-01`.
+      Let `{var_detailed_reviewer_findings}` be the full list of findings from the reviewer's report.
+      My status after sending `new_task` will be `[FEATURE_LEAD: AWAITING_REWORK ({var_rework_task_id})]`.
+      </thinking>
+      <new_task>
+        <mode>{context.original_assignee_mode_slug_for_reviewed_task}</mode>
+        <message>
+        # YAML-like structure for Code Review Rework Task
+        task_id: "{var_rework_task_id}"
+        task_name: "Rework for Task: {context.name_of_reviewed_task} (ID: {context.reviewed_task_id})"
+        feature_id: "{context.feature_id}"
+        original_task_ref: "{context.reviewed_task_id}"
+
+        version_control_instructions: |
+          All rework MUST be performed on your current Git branch.
+          Ensure your local current branch is up-to-date by running `git pull` before starting rework, especially if others might be committing to it (though less likely for a single coder's task branch).
+          Follow the Universal Commit Protocol (`.roo/rules/02-commit-protocol.txt`) for all commits related to this rework.
+          Include this rework task ID `({context.feature_id}/{var_rework_task_id})` in your commit messages.
+
+        review_feedback_details: |
+          The code review for your work on task '{context.reviewed_task_id}' (on your current branch) by `code-reviewer` indicated that changes are required.
+          Please address the following points:
+          ---
+          {var_detailed_reviewer_findings} # Feature-Lead pastes the detailed, actionable feedback items here.
+          ---
+
+        action_required:
+          - "Carefully review and address all 'Major' and 'Minor' severity findings listed above on your current Git branch."
+          - "Ensure your changes are committed following the Universal Commit Protocol."
+          - "Ensure all unit tests pass and are updated if your changes affect them."
+        
+        reporting_instructions: "Notify me (Feature-Lead for {context.feature_id}) via `attempt_completion` when rework is complete. Provide new commit hashes on your current branch. The code will then be submitted for re-review."
+        </message>
+      </new_task>
+      <!-- Wait. If fails, report error. -->
+      My status becomes `[FEATURE_LEAD: AWAITING_REWORK ({var_rework_task_id})]`. Feature ID: `{context.feature_id}`.
+
+      <!-- Alternative path if review was 'Approved' -->
+      <thinking>
+      If review feedback for `{context.reviewed_task_id}` was 'Approved' or 'Approved with minor comments':
+      1. Log this in `features/{context.feature_id}/active_log.md`.
+      2. Update status of `{context.reviewed_task_id}` in `features/{context.feature_id}/progress.yaml` to 'review_passed' using `apply_diff`.
+      3. (If 'Approved with minor comments', consider creating low-priority follow-up tasks or notes).
+      4. My status becomes `[FEATURE_LEAD: ACTIVE]`.
+      5. Proceed with next steps (e.g., if all dev tasks for a user story are 'review_passed', prepare for QA by initiating tasks for `qa-tester` as per `06-qa-coordination-and-bug-management.txt`).
+      </thinking>

@@ -1,100 +1,137 @@
 frontend_coding_workflow:
   execute_assigned_frontend_task:
-    trigger: "When a new frontend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch which will be 'main')."
+    trigger: "When a new frontend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and instructions to work on the current Git branch)."
     priority: 900
     action: |
       <thinking>
       **[Frontend Coding Task Execution Protocol - Feature: {context.feature_id}, Task: {context.task_id}]**
       I have received task: '{context.task_name}' for feature '{context.feature_name}' (ID: {context.feature_id}, Task ID: {context.task_id}).
-      Target Branch for all work: `main`. Frontend source dir: `frontend/`. All code TypeScript.
-      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_UNDERSTANDING_REQS]`.
+      All work will be performed on the current Git branch. Frontend source directory is `frontend/`. Project uses TypeScript.
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): LOADING_CONTEXT_AND_PREFERENCES]`.
 
       Process:
-      1.  **Understand Requirements & Ensure `main` is Up-to-Date:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `.roo/rules-code-frontend/01-standards-and-practices.txt`.
-          Before coding, execute `git checkout main` then `git pull origin main`. If unclear on requirements, report 'blocked_needs_clarification'. (Assume clear).
-      2.  **Plan Implementation:** Mental breakdown. Identify files in `frontend/` (e.g., `frontend/src/components/`) to create/modify.
-      3.  **Implement Code & Tests (Iterative):** Use `write_to_file` or `apply_diff`/`insert_content`. Generate TypeScript code. Write unit/component tests.
-      4.  **Commit Changes to `main`:** After coding and local tests pass:
-          a.  Identify all changed/created files within `frontend/` relevant to this task.
-          b.  Use `execute_command` to `git add <specific_files>`.
-          c.  Formulate commit message per standards (e.g., `feat({context.feature_id}): ... - {context.task_id}`).
-          d.  Use `execute_command` to `git commit -m "message"`.
-          e.  Use `execute_command` to `git log -1 --pretty=format:"%H"` to get commit hash.
-          f.  Use `execute_command` to `git push origin main` (as instructed by Feature Lead for work on `main`).
-      5.  **Report Completion:** Use `attempt_completion` with summary, test status, and actual commit hash.
+      1.  **Parse Task & Load Context:**
+          a.  Parse all details from Feature Lead's assignment message.
+          b.  Read relevant Memory Bank files: `features/{context.feature_id}/context.md`, `features/{context.feature_id}/design_notes.md`. If reads fail, report blocker.
+          c.  Read project-level user coding preferences from `./.roo/memory-bank/global/coding_preferences.md` (if it exists and has frontend relevant sections). These preferences take precedence over my internal standards. If read fails, proceed with caution using internal standards.
+          d.  Review my internal frontend standards from `.roo/rules-code-frontend/01-standards-and-practices.txt`.
+      2.  **Ensure Current Branch is Up-to-Date:** Execute `git pull` on the current branch. If fails, report blocker.
+      3.  **Plan Implementation:** Mentally break down the task. Identify files in `frontend/src/` (e.g., components, views, services) to create/modify.
+          If the task involves using external npm packages, I MUST consult and follow the 'Dependency Management Protocols' section in `.roo/rules-code-frontend/01-standards-and-practices.txt`, especially for documentation lookup (e.g., using `package-docs.describe_npm_package`) and version checking (e.g., using `package-version.check_npm_versions`) using MCP tools.
+      4.  **Implement Code & Write Tests (Iterative):**
+          a.  Use `write_to_file` (for new files like `.vue` or `.ts` components/services) or `apply_diff`/`insert_content` (for modifications) following user preferences first, then internal standards. Generate TypeScript code.
+          b.  Write unit/component tests (e.g., using Vitest/Jest with Vue Test Utils or React Testing Library) as per standards.
+          c.  If any file write/modification fails, report blocker.
+      5.  **Commit Changes to Current Branch:**
+          a.  Once coding and local tests pass, identify all changed/created files within `frontend/`.
+          b.  Follow the `standard_commit_protocol` defined in `.roo/rules/02-commit-protocol.txt`.
+          c.  If commit process fails, report blocker.
+      6.  **Push Changes:** Execute `git push origin HEAD`. If push fails, report blocker.
+      7.  **Report Completion:** Use `attempt_completion` with summary, test status, and the commit hash.
 
-      Example Task: `{context.task_id}` = `user_mgmt-task-004`: "Create Registration UI form component". Feature `{context.feature_id}` = `user_mgmt`.
+      Prioritization of coding standards:
+      1. User feedback/instructions within the current task.
+      2. Documented preferences in `global/coding_preferences.md`.
+      3. Standards in `.roo/rules-code-frontend/01-standards-and-practices.txt`.
+      </thinking>
 
-      **Step 1: Read Memory Bank files & Update `main` branch.**
+      **Step 1: Parse Task & Load Context.**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): LOADING_CONTEXT_AND_PREFERENCES]`.
+      <thinking>
+      Parsing assignment message from Feature Lead for task '{context.task_name}'...
+      Reading feature-specific context: `context.md` and `design_notes.md` (for UI specs, API contracts consumed).
       </thinking>
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
-      <!-- Wait -->
+      <!-- Wait. If error, report blocker. -->
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
-      <!-- Wait -->
-      <execute_command><command>git checkout main</command><cwd>.</cwd></execute_command>
-      <!-- Wait -->
-      <execute_command><command>git pull origin main</command><cwd>.</cwd></execute_command>
-      <!-- Wait for confirmation -->
+      <!-- Wait. If error, report blocker. -->
+      <thinking>Reading project-level coding preferences from `global/coding_preferences.md`...</thinking>
+      <read_file><path>./.roo/memory-bank/global/coding_preferences.md</path></read_file>
+      <!-- Wait. 'File not found' is acceptable. Other errors logged. -->
+      <thinking>Context and preferences loaded. I will adhere to these and `.roo/rules-code-frontend/01-standards-and-practices.txt`.</thinking>
+
+      **Step 2: Ensure Current Branch is Up-to-Date.**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): UPDATING_BRANCH]`.
+      <execute_command><command>git pull</command><cwd>.</cwd></execute_command>
+      <!-- Wait. If error, report blocker. -->
+
       <thinking>
-      **[Frontend Task - Cont. {context.feature_id}/{context.task_id}]**
-      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_PLANNING_IMPL]`.
-      Requirements & UI specs analyzed. `main` branch is up-to-date. Task: Create `frontend/src/components/Auth/RegistrationForm.vue` (with `<script lang="ts">`).
-
-      **Step 2 & 3: Implement Code & Write Tests (Iterative Process).**
-      (Assume I am creating/modifying `frontend/src/components/Auth/RegistrationForm.vue` and `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts` based on specifications from Memory Bank and adhering to `01-standards-and-practices.txt`.)
-
-      *Simulating completion of coding and local testing for `user_mgmt-task-004`.*
-      Files created/modified:
-      - `frontend/src/components/Auth/RegistrationForm.vue`
-      - `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts`
-      All local unit tests are passing.
-      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_COMMITTING]`.
-
-      **Step 4: Commit Changes to `main`.**
+      **Step 3, 4: Plan Implementation, Implement Code & Write Tests.**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): ACTIVE_CODING]`.
+      I will now plan the implementation for '{context.task_name}'.
+      If this task requires new npm packages (e.g., a UI library, date utility), I will strictly follow the 'Dependency Management Protocols' in my frontend standards file. This includes using MCP tools like `package-docs.describe_npm_package` to understand the library and `package-version.check_npm_versions` to get the latest stable version BEFORE modifying `frontend/package.json`.
+      (Simulating coding: Creating/modifying Vue/React/Angular components, services, styles, and tests within `frontend/src/` and `frontend/tests/`)
+      Example: Creating `frontend/src/components/featureX/NewComponent.vue` and its test `frontend/tests/unit/NewComponent.spec.ts`.
+      All local unit/component tests are passing.
+      Files changed/created: `{var_list_of_changed_files_for_commit}` (e.g., "frontend/src/components/featureX/NewComponent.vue frontend/tests/unit/NewComponent.spec.ts").
       </thinking>
+
+      **Step 5: Commit Changes to Current Branch (Following Universal Protocol).**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): COMMITTING_CHANGES]`.
+      <thinking>
+      Following `standard_commit_protocol` from `.roo/rules/02-commit-protocol.txt`.
+      Commit details: Type 'feat' (example), Scope '{context.feature_id}', Description '{context.task_name} UI implementation'.
+      </thinking>
+      <!-- Staging files -->
       <execute_command>
-        <command>git add frontend/src/components/Auth/RegistrationForm.vue frontend/tests/unit/components/Auth/RegistrationForm.spec.ts</command>
+        <command>git add {var_list_of_changed_files_for_commit}</command>
+        <cwd>.</cwd> <!-- Commands are run from project root, paths are relative to it -->
+      </execute_command>
+      <!-- Wait. If error, report blocker. -->
+      <!-- Construct commit message -->
+      <thinking>
+      Let `{var_commit_type}` = "feat". Let `{var_commit_scope}` = "{context.feature_id}".
+      Let `{var_commit_description}` = "{context.task_name} UI component".
+      Constructed commit message: `{var_commit_type}({var_commit_scope}): {var_commit_description} ({context.feature_id}/{context.task_id})`
+      (Ensuring it's all lowercase)
+      </thinking>
+      <!-- Execute commit -->
+      <execute_command>
+        <command>git commit -m "{var_commit_type}({var_commit_scope}): {var_commit_description} ({context.feature_id}/{context.task_id})"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait -->
-      <thinking>
-      Files added. Commit message: `feat({context.feature_id}): implement RegistrationForm component - {context.task_id}`
-      </thinking>
-      <execute_command>
-        <command>git commit -m "feat({context.feature_id}): implement RegistrationForm component - {context.task_id}"</command>
-        <cwd>.</cwd>
-      </execute_command>
-      <!-- Wait -->
-      <thinking>
-      Commit successful. Get commit hash.
-      </thinking>
+      <!-- Wait. If error, report blocker. -->
+      <!-- Get commit hash -->
       <execute_command>
         <command>git log -1 --pretty=format:"%H"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for output: {actual_commit_hash_from_git_log}. -->
-      <thinking>
-      Commit hash: `{actual_commit_hash_from_git_log}`. Now push to `origin main`.
-      </thinking>
+      <!-- Wait for output: {actual_commit_hash}. If error, report blocker. -->
+      <thinking>Commit hash obtained: {actual_commit_hash}.</thinking>
+
+      **Step 6: Push Changes.**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): PUSHING_CHANGES]`.
       <execute_command>
-        <command>git push origin main</command>
+        <command>git push origin HEAD</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for confirmation of push -->
+      <!-- Wait. If error, report blocker. -->
+
       <thinking>
-      **Step 5: Report Completion to Feature Lead.**
-      My status becomes `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
+      **Step 7: Report Completion to Feature Lead.**
+      My status: `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
       <attempt_completion>
       <result>
-      Task '{context.task_id}: Create Registration UI form component' for feature '{context.feature_id}' is complete.
+      # Frontend Task Completion Report
+      **Task ID:** {context.task_id}
+      **Task Name:** {context.task_name}
+      **Feature ID:** {context.feature_id}
+
       **Summary of Work:**
-      - Implemented `frontend/src/components/Auth/RegistrationForm.vue` using TypeScript.
-      - Created unit tests in `frontend/tests/unit/components/Auth/RegistrationForm.spec.ts`.
-      **Test Status:** All local unit tests are passing.
-      **Code Standards:** Adhered to guidelines in `.roo/rules-code-frontend/01-standards-and-practices.txt`.
-      **Branch:** All work performed, committed, and pushed on `main` branch.
-      **Commit Hash:** `{actual_commit_hash_from_git_log}`.
-      The component is ready for integration or further review by the Feature Lead.
+      - Successfully implemented the frontend components/logic for '{context.task_name}' using TypeScript.
+      - Created/modified files: {var_list_of_changed_files_for_commit}.
+      - Adhered to user preferences (from `global/coding_preferences.md` if present) and then internal coding standards (`.roo/rules-code-frontend/01-standards-and-practices.txt`).
+      - If external npm packages were used, their documentation was consulted via MCP tools and they were added/updated following dependency management protocols (updating `frontend/package.json` and re-installing dependencies).
+
+      **Test Status:** All local unit and component tests are passing.
+
+      **Branch & Commit:**
+      - All work performed, committed, and pushed on the current Git branch.
+      - **Commit Hash:** {actual_commit_hash}
+
+      The frontend implementation is ready for review or next steps as determined by the Feature Lead.
+      If new npm dependencies were added/updated, `frontend/package.json` (and potentially `frontend/pnpm-lock.yaml` or similar) has been modified, and dependencies were re-installed.
       </result>
       </attempt_completion>
+      My status becomes `[CODE-FRONTEND ({context.feature_id}/{context.task_id}): IDLE_AWAITING_NEW_TASK]`.

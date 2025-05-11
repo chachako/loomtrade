@@ -1,102 +1,146 @@
 backend_coding_workflow:
   execute_assigned_backend_task:
-    trigger: "When a new backend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and target branch which will be 'main')."
+    trigger: "When a new backend coding task is assigned by the Feature Lead Mode (identified by a message containing task ID, feature ID, description, Memory Bank references, and instructions to work on the current Git branch)."
     priority: 900
     action: |
       <thinking>
       **[Backend Coding Task Execution Protocol - Feature: {context.feature_id}, Task: {context.task_id}]**
       I have received task: '{context.task_name}' for feature '{context.feature_name}' (ID: {context.feature_id}, Task ID: {context.task_id}).
-      Target Branch for all work: `main`. Backend source dir: `backend/`.
-      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_UNDERSTANDING_REQS]`.
+      All work will be performed on the current Git branch. Backend source directory is `backend/`.
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): LOADING_CONTEXT_AND_PREFERENCES]`.
 
       Process:
-      1.  **Understand Requirements & Ensure `main` is Up-to-Date:** Parse message. `<read_file>` `context.md` & `design_notes.md`. Consult `.roo/rules-code-backend/01-standards-and-practices.txt`.
-          Before coding, execute `git checkout main` then `git pull origin main`. If unclear on requirements, report 'blocked_needs_clarification'. (Assume clear).
-      2.  **Plan Implementation:** Mental breakdown. Identify files in `backend/` to create/modify.
-      3.  **Implement Code & Tests (Iterative):** Use `write_to_file` or `apply_diff`/`insert_content`. Write unit/integration tests.
-      4.  **Commit Changes to `main`:** After coding and local tests pass:
-          a.  Identify all changed/created files within the `backend/` directory relevant to this task.
-          b.  Use `execute_command` to `git add <specific_files>`.
-          c.  Formulate commit message per standards (e.g., `feat({context.feature_id}): ... - {context.task_id}`).
-          d.  Use `execute_command` to `git commit -m "message"`.
-          e.  Use `execute_command` to `git log -1 --pretty=format:"%H"` to get the commit hash.
-          f.  Use `execute_command` to `git push origin main` (as instructed by Feature Lead for work on `main`).
-      5.  **Report Completion:** Use `attempt_completion` with summary, test status, and actual commit hash.
+      1.  **Parse Task & Load Context:**
+          a.  Parse all details from Feature Lead's assignment message.
+          b.  Read relevant Memory Bank files: `features/{context.feature_id}/context.md`, `features/{context.feature_id}/design_notes.md`. If reads fail, report blocker.
+          c.  Read project-level user coding preferences from `./.roo/memory-bank/global/coding_preferences.md` (if it exists). These preferences take precedence over my internal standards. If read fails, proceed with caution using internal standards.
+          d.  Review my internal backend standards from `.roo/rules-code-backend/01-standards-and-practices.txt`.
+      2.  **Ensure Current Branch is Up-to-Date:** Execute `git pull` on the current branch. If fails, report blocker.
+      3.  **Plan Implementation:** Mentally break down the task. Identify files in `backend/` to create/modify.
+          If the task involves using external libraries/packages, I MUST consult and follow the 'Dependency Management Protocols' section in `.roo/rules-code-backend/01-standards-and-practices.txt`, especially for documentation lookup and version checking using MCP tools.
+      4.  **Implement Code & Write Tests (Iterative):**
+          a.  Use `write_to_file` (for new files) or `apply_diff`/`insert_content` (for modifications to existing files) following user preferences first, then internal standards.
+          b.  Write unit/integration tests as per standards.
+          c.  If any file write/modification fails, report blocker.
+      5.  **Commit Changes to Current Branch:**
+          a.  Once coding and local tests pass, identify all changed/created files.
+          b.  Follow the `standard_commit_protocol` defined in `.roo/rules/02-commit-protocol.txt`. This involves:
+              i.   `git add <specific_files>`
+              ii.  (Conceptually, Feature Lead might want `git diff --staged` output if they were to verify before commit, but for now, I proceed based on my checks).
+              iii. Construct commit message (type, scope, description, task ID) as per Conventional Commits, all lowercase.
+              iv.  `git commit -m "message"`
+              v.   `git log -1 --pretty=format:"%H"` to get commit hash.
+          c.  If commit process fails, report blocker.
+      6.  **Push Changes:** Execute `git push origin HEAD` (pushes current branch to its remote counterpart). If push fails, report blocker.
+      7.  **Report Completion:** Use `attempt_completion` with summary, test status, and the commit hash.
 
-      Example Task: `{context.task_id}` = `user_mgmt-task-002`: "Implement POST /api/auth/register endpoint". Feature `{context.feature_id}` = `user_mgmt`.
+      Prioritization of coding standards:
+      1. User feedback/instructions within the current task.
+      2. Documented preferences in `global/coding_preferences.md`.
+      3. Standards in `.roo/rules-code-backend/01-standards-and-practices.txt`.
+      </thinking>
 
-      **Step 1: Read Memory Bank files & Update `main` branch.**
+      **Step 1: Parse Task & Load Context.**
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): LOADING_CONTEXT_AND_PREFERENCES]`.
+      <thinking>
+      Parsing assignment message from Feature Lead...
+      Key details: Task Name: '{context.task_name}', Feature: '{context.feature_id}', Task ID: '{context.task_id}'.
+      Deliverables: {context.deliverables_expected}.
+      Reading feature-specific context...
       </thinking>
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
-      <!-- Wait -->
+      <!-- Wait. If error, report blocker to Feature Lead. -->
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
-      <!-- Wait -->
-      <execute_command><command>git checkout main</command><cwd>.</cwd></execute_command>
-      <!-- Wait -->
-      <execute_command><command>git pull origin main</command><cwd>.</cwd></execute_command>
-      <!-- Wait for confirmation -->
+      <!-- Wait. If error, report blocker to Feature Lead. -->
+      <thinking>Reading project-level coding preferences...</thinking>
+      <read_file><path>./.roo/memory-bank/global/coding_preferences.md</path></read_file>
+      <!-- Wait. If 'file not found' error, it's acceptable, means no specific preferences documented yet. If other read error, log and proceed with caution. -->
+      <thinking>Context and preferences (if any) loaded. I will also adhere to `.roo/rules-code-backend/01-standards-and-practices.txt`.</thinking>
+
+      **Step 2: Ensure Current Branch is Up-to-Date.**
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): UPDATING_BRANCH]`.
+      <execute_command><command>git pull</command><cwd>.</cwd></execute_command>
+      <!-- Wait for confirmation. If error (e.g., merge conflicts), report blocker to Feature Lead. -->
+
       <thinking>
-      **[Backend Task - Cont. {context.feature_id}/{context.task_id}]**
-      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_PLANNING_IMPL]`.
-      Requirements & API specs analyzed. `main` branch is up-to-date.
-
-      **Step 2 & 3: Implement Code & Write Tests (Iterative Process).**
-      (Assume I am creating/modifying files like `backend/src/routes/authRoutes.js`, `backend/src/controllers/authController.js`, `backend/src/services/userService.js`, `backend/tests/integration/auth.test.js` etc., adhering to `01-standards-and-practices.txt`.)
-
-      *Simulating completion of coding and local testing for `user_mgmt-task-002`.*
-      Files created/modified:
-      - `backend/src/routes/authRoutes.js`
-      - `backend/src/services/userService.js`
-      - `backend/tests/integration/auth.test.js`
-      All local unit and integration tests are passing.
-      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_COMMITTING]`.
-
-      **Step 4: Commit Changes to `main`.**
+      **Step 3, 4: Plan Implementation, Implement Code & Write Tests.**
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): ACTIVE_CODING]`.
+      I will now plan the implementation for '{context.task_name}'.
+      If this task involves new dependencies, I will strictly follow the 'Dependency Management Protocols' in my standards file, using MCP tools like `package-docs` for lookup and `package-version` for version checks BEFORE modifying any dependency files (e.g., `backend/requirements.txt`, `backend/package.json`).
+      (Simulating coding and local testing for the task...)
+      (Example: Modifying `backend/src/services/userService.js` and `backend/tests/unit/userService.spec.js`)
+      I have completed the coding and all local unit/integration tests are passing.
+      Files changed/created: `{var_list_of_changed_files_for_commit}` (e.g., "backend/src/services/userService.js backend/tests/unit/userService.spec.js").
       </thinking>
+
+      **Step 5: Commit Changes to Current Branch (Following Universal Protocol).**
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): COMMITTING_CHANGES]`.
+      <thinking>
+      I will now follow the `standard_commit_protocol` from `.roo/rules/02-commit-protocol.txt`.
+      Commit type will be, for example, 'feat' or 'fix' based on task nature.
+      Commit scope might be `{context.feature_id}` or a specific module.
+      Commit description will summarize work done for `{context.task_id}`.
+      </thinking>
+      <!-- Staging files -->
       <execute_command>
-        <command>git add backend/src/routes/authRoutes.js backend/src/services/userService.js backend/tests/integration/auth.test.js</command>
+        <command>git add {var_list_of_changed_files_for_commit}</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait -->
+      <!-- Wait. If error, report blocker. -->
+      <!-- Construct commit message -->
       <thinking>
-      Files added. Commit message: `feat({context.feature_id}): implement POST /api/auth/register endpoint - {context.task_id}`
+      Let `{var_commit_type}` = "feat". Let `{var_commit_scope}` = "{context.feature_id}".
+      Let `{var_commit_description}` = "{context.task_name} implementation".
+      Constructed commit message: `{var_commit_type}({var_commit_scope}): {var_commit_description} ({context.feature_id}/{context.task_id})`
+      (Ensuring it's all lowercase)
       </thinking>
+      <!-- Execute commit -->
       <execute_command>
-        <command>git commit -m "feat({context.feature_id}): implement POST /api/auth/register endpoint - {context.task_id}"</command>
+        <command>git commit -m "{var_commit_type}({var_commit_scope}): {var_commit_description} ({context.feature_id}/{context.task_id})"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait -->
-      <thinking>
-      Commit successful. Get commit hash.
-      </thinking>
+      <!-- Wait. If error (e.g., nothing to commit, pre-commit hook failed), report blocker. -->
+      <!-- Get commit hash -->
       <execute_command>
         <command>git log -1 --pretty=format:"%H"</command>
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for output: {actual_commit_hash_from_git_log}. -->
-      <thinking>
-      Commit hash: `{actual_commit_hash_from_git_log}`. Now push to `origin main`.
-      </thinking>
+      <!-- Wait for output: {actual_commit_hash}. If error, report blocker. -->
+      <thinking>Commit hash obtained: {actual_commit_hash}.</thinking>
+
+      **Step 6: Push Changes.**
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): PUSHING_CHANGES]`.
       <execute_command>
-        <command>git push origin main</command>
+        <command>git push origin HEAD</command> <!-- Pushes the current branch to its upstream counterpart -->
         <cwd>.</cwd>
       </execute_command>
-      <!-- Wait for confirmation of push -->
+      <!-- Wait for confirmation. If error (e.g., push rejected), report blocker to Feature Lead. -->
+
       <thinking>
-      **Step 5: Report Completion to Feature Lead.**
-      My status becomes `[CODE-BACKEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
+      **Step 7: Report Completion to Feature Lead.**
+      My status: `[CODE-BACKEND ({context.feature_id}/{context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
       <attempt_completion>
       <result>
-      Task '{context.task_id}: Implement POST /api/auth/register endpoint' for feature '{context.feature_id}' is complete.
+      # Backend Task Completion Report
+      **Task ID:** {context.task_id}
+      **Task Name:** {context.task_name}
+      **Feature ID:** {context.feature_id}
+
       **Summary of Work:**
-      - Implemented the `/api/auth/register` POST endpoint logic within `backend/` directory structure.
-      - Developed service layer for user registration.
-      - Created unit and integration tests.
+      - Successfully implemented the backend logic for '{context.task_name}'.
+      - Created/modified files: {var_list_of_changed_files_for_commit}.
+      - Adhered to user preferences (from `global/coding_preferences.md` if present) and then internal coding standards (`.roo/rules-code-backend/01-standards-and-practices.txt`).
+      - If external libraries were used, their documentation was consulted via MCP tools and they were added/updated following dependency management protocols.
+
       **Test Status:** All local unit and integration tests are passing.
-      **Code Standards:** Adhered to guidelines in `.roo/rules-code-backend/01-standards-and-practices.txt`.
-      **Branch:** All work performed, committed, and pushed on `main` branch.
-      **Commit Hash:** `{actual_commit_hash_from_git_log}`.
-      The API endpoint implementation is ready for review or next steps by the Feature Lead.
+
+      **Branch & Commit:**
+      - All work performed, committed, and pushed on the current Git branch.
+      - **Commit Hash:** {actual_commit_hash}
+
+      The implementation is ready for review or next steps as determined by the Feature Lead.
+      If any new dependencies were added/updated, `[e.g., backend/requirements.txt or backend/package.json]` has been modified and dependencies re-installed locally.
       </result>
       </attempt_completion>
+      My status becomes `[CODE-BACKEND ({context.feature_id}/{context.task_id}): IDLE_AWAITING_NEW_TASK]`.

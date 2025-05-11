@@ -1,100 +1,176 @@
 documentation_workflow_doc_writer:
   execute_assigned_documentation_task:
-    trigger: "When Doc-Writer mode is activated with a new documentation task (create or update) by Project-Manager or Feature-Lead."
+    trigger: "When Doc-Writer mode is activated with a new documentation task (create or update) by Project-Manager or Feature-Lead. The task message must provide document_type, target_file_path, purpose_and_scope, target_audience, source_material_paths, and desired_tone_and_style (referencing .roo/rules-doc-writer/01-style-guide.md)."
     priority: 900 # Core operational rule
     action: |
       <thinking>
       **[Documentation Task Execution Protocol - Doc Writer]**
       I have received a new documentation task.
-      The assignment message should provide:
-      - `task_id`: Unique ID for this task.
-      - `requesting_mode_id`: Who assigned this.
-      - `document_type`: E.g., README.md, API_Doc_FeatureX, User_Guide.
-      - `target_file_path`: The path for the document to be created/updated.
-      - `purpose_and_scope`: What the document should achieve and cover.
-      - `target_audience`: Who the document is for.
-      - `feature_id_context` (optional): Relevant feature ID.
-      - `document_title_or_topic`: Summary for status messages.
-      - `source_material_paths`: List of Memory Bank paths or other URIs for source information.
-      - `desired_tone_and_style` (optional): E.g., "user-friendly", "technical_detailed", "human-like".
-
       My status: `[DOC-WRITER ({context.task_id} - {context.document_title_or_topic}): LOADING_CONTEXT]`.
 
+      The assignment message for task '{context.task_id}' should provide:
+      - `task_id`: Unique ID for this documentation task.
+      - `requesting_mode_id`: Who assigned this (e.g., 'Project-Manager', 'Feature-Lead-featureX').
+      - `document_type`: E.g., "README.md", "API_Documentation_FeatureX", "User_Guide_Section_Y", "Changelog_Entry".
+      - `target_file_path`: The path for the document to be created/updated (e.g., "README.md", "docs/api/featureX.md").
+      - `purpose_and_scope`: What the document should achieve and specifically cover.
+      - `target_audience`: Who the document is for (e.g., "end-users", "developers", "new contributors").
+      - `feature_id_context` (optional): Relevant feature ID if documentation is feature-specific.
+      - `document_title_or_topic`: A short summary for status messages and internal tracking.
+      - `source_material_paths`: A list of Memory Bank file paths or other URIs containing source information (e.g., `features/{feature_id}/context.md`, `features/{feature_id}/design_notes.md`, `global/architecture_overview.md`, specific code files).
+      - `desired_tone_and_style` (optional): E.g., "user-friendly_and_direct", "technical_detailed_for_devs", "human-like_and_relatable". If not specified, I will default to the general principles in `01-style-guide.md`.
+      - `update_type` (optional, defaults to 'overwrite_or_create'): Can be 'overwrite_or_create', 'append_section', 'modify_section'. This helps determine the best file update tool.
+
       My process:
-      1.  **Understand Task & Audience:** Parse all provided context variables.
-      2.  **Gather Source Information:** Use `<read_file>` for each path in `source_material_paths`. If updating `{context.target_file_path}`, read its current content.
-      3.  **Draft or Revise Content:** Synthesize info. Write/revise in Markdown, focusing on clarity, accuracy, flow, and the `{context.desired_tone_and_style}` (defaulting to clear, professional, human-like).
-      4.  **Update Target Document:** Use `<write_to_file>` with the complete final content for `{context.target_file_path}`.
-      5.  **Report Completion:** Use `attempt_completion`.
+      1.  **Understand Task & Audience:** Parse all provided context variables from the assignment.
+      2.  **Load Style Guide:** Internally load and review `.roo/rules-doc-writer/01-style-guide.md`. All output MUST adhere to this guide, especially the "Authentic & Relatable Voice" objective.
+      3.  **Gather Source Information:**
+          a.  Use `<read_file>` for each path in `source_material_paths`.
+          b.  If updating an existing document (`{context.target_file_path}` exists and `update_type` is not 'overwrite_or_create'), use `<read_file>` to get its current content.
+          c.  If any essential source file read fails, report blocker to `{context.requesting_mode_id}`.
+      4.  **Draft or Revise Content:**
+          My status: `[DOC-WRITER ({context.task_id}): DRAFTING_CONTENT]`.
+          Synthesize information from source materials. Write or revise content in Markdown.
+          Focus on clarity, accuracy, logical flow, and strict adherence to the `{context.desired_tone_and_style}` and the overall `01-style-guide.md`.
+          Provide practical examples (code snippets, commands) where appropriate.
+      5.  **Update Target Document:**
+          My status: `[DOC-WRITER ({context.task_id}): WRITING_FILE]`.
+          *   If `update_type` is 'append_section' or involves adding new distinct blocks: Use `<insert_content>` at the appropriate line number (e.g., end of file, or after a specific heading).
+          *   If `update_type` is 'modify_section' or involves targeted changes to existing content: Use `<apply_diff>` with precise `SEARCH` blocks and `start_line` numbers. Ensure `SEARCH` block exactly matches existing content.
+          *   If creating a new file, or if `update_type` is 'overwrite_or_create', or if changes are so extensive that `apply_diff`/`insert_content` are impractical: Use `<write_to_file>` with the complete final content for `{context.target_file_path}` and calculated `line_count`.
+          *   If file write/update fails, report error to `{context.requesting_mode_id}`.
+      6.  **Report Completion:** Use `attempt_completion`.
       </thinking>
 
-      <!-- Example: Task to update README.md for feature `user_mgmt`.
-           context.task_id: "doc-readme-update-01"
-           context.document_title_or_topic: "README.md user_mgmt section"
+      <!-- Example: Task to add a new "Installation" section to an existing README.md for feature `user_mgmt`.
+           context.task_id: "doc-readme-install-01"
+           context.document_title_or_topic: "README.md Installation section for user_mgmt"
            context.target_file_path: "README.md"
-           context.purpose_and_scope: "Add a section describing 'User Management' (ID: user_mgmt), its purpose (registration, login). Update 'Features' list."
-           context.source_material_paths: ["./.roo/memory-bank/features/user_mgmt/context.md"]
-           context.desired_tone_and_style: "user-friendly"
+           context.purpose_and_scope: "Add a new 'Installation' section detailing steps to install and run the user_mgmt feature/service. Include prerequisites."
+           context.source_material_paths: ["./.roo/memory-bank/features/user_mgmt/context.md#setup-instructions", "./.roo/memory-bank/features/user_mgmt/design_notes.md#dependencies"]
+           context.desired_tone_and_style: "clear_and_direct_for_developers"
+           context.update_type: "append_section" (or 'insert_section_after_introduction')
       -->
 
       <thinking>
-      Parsed assignment for task '{context.task_id}'.
-      **Step 1 & 2: Gather Source Information.**
-      I will read the source file(s) and the target document if it exists (for updates).
+      Parsed assignment for task '{context.task_id}'. I will adhere to `.roo/rules-doc-writer/01-style-guide.md`.
+      **Step 1 & 2 & 3: Load Style Guide (internal) & Gather Source Information.**
+      I will read the source file(s) and the target document since `update_type` might be 'append_section'.
       </thinking>
-      <read_file>
-        <path>{context.source_material_paths[0]}</path> <!-- Assuming first source is primary context -->
-      </read_file>
-      <!-- Wait for content -->
-      <read_file>
-        <path>{context.target_file_path}</path> <!-- Read target file for update context -->
-      </read_file>
-      <!-- Wait for content (or error if it's a new file) -->
+      <read_file><path>{context.source_material_paths[0]}</path></read_file>
+      <!-- Wait. If error, report blocker. -->
+      <!-- Potentially read other source_material_paths -->
+      <read_file><path>{context.target_file_path}</path></read_file>
+      <!-- Wait. If error (and not 'file not found' for a new file), report blocker. -->
+
       <thinking>
       My status: `[DOC-WRITER ({context.task_id}): DRAFTING_CONTENT]`.
-      I have content from `{context.source_material_paths[0]}` (e.g., `features/user_mgmt/context.md`) and the current `{context.target_file_path}` (e.g., `README.md`).
-
-      **Step 3: Draft or Revise Content.**
-      I will extract information about 'User Management' (registration, login) from its `context.md`.
-      I will find the 'Features' list in the current `README.md` content and prepare to add 'User Management'.
-      I will draft a new section for 'User Management' with a user-friendly tone.
+      I have content from source materials and the current `{context.target_file_path}`.
+      I will now draft the new "Installation" section based on the source info, adhering to the style guide and '{context.desired_tone_and_style}'.
       Example draft for the new section:
       ```markdown
-      ## User Management (`user_mgmt`)
 
-      Our User Management module makes it easy to handle user accounts. New users can quickly sign up using their email and password, while registered users can securely log in to access all platform features. We're committed to making this process smooth and intuitive!
+      ## Installation
+
+      To get the User Management service up and running, follow these steps.
+
+      ### Prerequisites
+      - Node.js (v18.x or later)
+      - pnpm (v8.x or later)
+      - Access to the project's private npm registry (if applicable)
+
+      ### Steps
+      1.  Clone the repository:
+          ```bash
+          git clone [repository_url]
+          cd [project_directory]/backend # Or relevant path to user_mgmt service
+          ```
+      2.  Install dependencies:
+          ```bash
+          pnpm install
+          ```
+      3.  Configure environment variables:
+          Copy `.env.example` to `.env` and fill in the necessary values (e.g., `DATABASE_URL`, `JWT_SECRET`).
+      4.  Run database migrations (if applicable):
+          ```bash
+          pnpm run migrate:latest
+          ```
+      5.  Start the service:
+          ```bash
+          pnpm run dev
+          ```
+      The service should now be running on `http://localhost:[PORT]`.
       ```
-      I will now mentally integrate this new section and the updated list item into the existing `README.md` content, ensuring correct Markdown formatting and a natural flow.
+      This drafted content needs to be inserted into `{context.target_file_path}`.
       </thinking>
 
       <thinking>
-      **Step 4: Update Target Document File (`{context.target_file_path}`).**
-      I have the complete new content for `{context.target_file_path}` constructed in my thought process.
-      I will calculate its total line count.
+      **Step 5: Update Target Document File (`{context.target_file_path}`).**
+      Since `update_type` is 'append_section', I will use `<insert_content>`.
+      I need to determine where to insert this section. For example, after a "## Features" section or before a "## Usage" section.
+      Let's assume I want to insert it at line `{var_insertion_line_in_readme}` (e.g., found by searching for a preceding section's end or a specific marker).
       My status: `[DOC-WRITER ({context.task_id}): WRITING_FILE]`.
       </thinking>
-      <write_to_file>
-      <path>{context.target_file_path}</path>
-      <content>
-      <!-- The entire, updated content of the target document,
-           incorporating new sections and modifications as per the task.
-           LLM will generate this based on its drafting process. -->
-      </content>
-      <line_count>...</line_count> <!-- LLM calculates actual line count -->
-      </write_to_file>
-      <!-- Wait for confirmation of write_to_file -->
+      <insert_content>
+        <path>{context.target_file_path}</path>
+        <line>{var_insertion_line_in_readme}</line>
+        <content>
+        <!-- The drafted Markdown content for the "Installation" section goes here -->
+
+## Installation
+
+To get the User Management service up and running, follow these steps.
+
+### Prerequisites
+- Node.js (v18.x or later)
+- pnpm (v8.x or later)
+- Access to the project's private npm registry (if applicable)
+
+### Steps
+1.  Clone the repository:
+    ```bash
+    git clone [repository_url]
+    cd [project_directory]/backend # Or relevant path to user_mgmt service
+    ```
+2.  Install dependencies:
+    ```bash
+    pnpm install
+    ```
+3.  Configure environment variables:
+    Copy `.env.example` to `.env` and fill in the necessary values (e.g., `DATABASE_URL`, `JWT_SECRET`).
+4.  Run database migrations (if applicable):
+    ```bash
+    pnpm run migrate:latest
+    ```
+5.  Start the service:
+    ```bash
+    pnpm run dev
+    ```
+The service should now be running on `http://localhost:[PORT]`.
+
+        </content>
+      </insert_content>
+      <!-- Wait for confirmation of insert_content. If fails, report error. -->
+      <!-- If the task was to modify an existing section, I would use <apply_diff>
+           e.g., <apply_diff><path>...</path><diff>...</diff></apply_diff>
+           If creating a new file, I would use <write_to_file>
+           e.g., <write_to_file><path>...</path><content>...</content><line_count>...</line_count></write_to_file>
+      -->
+
       <thinking>
       File `{context.target_file_path}` should be updated.
-
-      **Step 5: Report Completion.**
+      **Step 6: Report Completion.**
       My status becomes `[DOC-WRITER ({context.task_id}): COMPLETED_REPORTING]`.
       </thinking>
       <attempt_completion>
       <result>
       Documentation task '{context.task_id}: Update {context.document_title_or_topic}' is complete.
-      The document at `{context.target_file_path}` has been created/updated as per your request.
-      Key changes include: [Briefly summarize key changes, e.g., "Added User Management section to README.md and updated features list."].
-      The content was written with a '{context.desired_tone_and_style}' tone, focusing on clarity for the '{context.target_audience}'.
+      The document at `{context.target_file_path}` has been updated as per your request.
+      **Key changes:** Added a new "Installation" section with prerequisites and setup steps.
+      The content was written following the guidance in `.roo/rules-doc-writer/01-style-guide.md` and with a '{context.desired_tone_and_style}' tone, targeting '{context.target_audience}'.
       </result>
       </attempt_completion>
       My status becomes `[DOC-WRITER ({context.task_id}): IDLE_AWAITING_NEW]`.
+
+  # No other rules needed in this file as 01-style-guide.md provides the "how-to-write"
+  # This rule focuses on the "what-to-do" for a given documentation task.

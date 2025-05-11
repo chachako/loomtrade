@@ -1,165 +1,209 @@
 sub_task_delegation_and_tracking:
   delegate_sub_task:
-    trigger: "After feature {context.feature_id}'s `progress.yaml` has been populated with defined sub-tasks (status 'backlog' or 'defined') and Feature-Lead decides to initiate work on a specific sub-task, which will be developed directly on the `main` branch."
+    trigger: "When feature {context.feature_id}'s `progress.yaml` has defined sub-tasks (status 'backlog' or 'defined') and Feature-Lead decides to initiate work on a specific sub-task `{var_task_id_to_delegate}`. All development work occurs on the user's current Git branch."
     priority: 850
     action: |
       <thinking>
       **[Delegate Sub-Task - Feature Lead]**
       My status is `[FEATURE_LEAD: PREPARING_SUB_TASK_DELEGATION]`. Feature ID: `{context.feature_id}`.
-      I need to delegate a sub-task for feature '{context.feature_name}' to be worked on directly on the `main` branch.
-      1.  **Identify Sub-Task:** Read `features/{context.feature_id}/progress.yaml`. Select task `{var_task_id_to_delegate}` (name: `{var_task_name}`, assignee: `{var_assignee_slug}`, description link: `{var_desc_link}`).
-      2.  **Update `progress.yaml`:** Mark task `{var_task_id_to_delegate}` as 'delegated'.
-      3.  **Formulate `new_task` Message for `{var_assignee_slug}`:**
-          This message must provide:
-          - `task_id` (this is `{var_task_id_to_delegate}`)
-          - `task_name` (this is `{var_task_name}`)
-          - `feature_id` (this is `{context.feature_id}`)
-          - `feature_name` (this is `{context.feature_name}`)
-          - `feature_branch`: "main" (explicitly state work is on main)
-          - `detailed_task_description`: Specific instructions, using `{var_desc_link}`.
-          - `feature_context_md_path`: Path to `./.roo/memory-bank/features/{context.feature_id}/context.md`
-          - `feature_design_notes_md_path`: Path to `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`
-          - `feature_decisions_md_path`: Path to `./.roo/memory-bank/features/{context.feature_id}/decisions.md`
-          - `global_shared_patterns_path`: Path to `./.roo/memory-bank/global/shared_system_patterns.md`
-          - `global_architecture_path`: Path to `./.roo/memory-bank/global/architecture_overview.md`
-          - `deliverables_expected`: List of expected outputs.
-          - `reporting_instructions`: How to report completion.
-          - `version_control_instructions`: Specific instructions for working on `main` (from `04-version-control-main-branch-guidance.txt`).
-      4.  **Delegate using `new_task`.**
-      My status after delegation will be `[FEATURE_LEAD: AWAITING_SUB_TASK_COMPLETION ({var_task_id_to_delegate})]`.
+      I need to delegate sub-task `{var_task_id_to_delegate}` (name: `{var_task_name}`, assignee: `{var_assignee_slug}`) for feature '{context.feature_name}'.
+      Work will be performed on the user's current Git branch.
+
+      Process:
+      1.  Read `features/{context.feature_id}/progress.yaml` to confirm task details and ensure it's ready for delegation.
+      2.  Update `features/{context.feature_id}/progress.yaml`: Mark task `{var_task_id_to_delegate}` as 'delegated'. This MUST be done using `apply_diff` to modify only the specific task's status field.
+      3.  Formulate a `new_task` message for the assigned mode (`{var_assignee_slug}`). The message must include instructions to work on the current branch and follow the universal commit protocol defined in `.roo/rules/02-commit-protocol.txt`.
+      4.  Delegate using `new_task`.
+      5.  If any step fails (e.g., file read/update, task creation), I MUST log the error in `features/{context.feature_id}/active_log.md` and report the failure to Project-Manager.
+      My status after successful delegation will be `[FEATURE_LEAD: AWAITING_SUB_TASK_COMPLETION ({var_task_id_to_delegate})]`.
       </thinking>
 
-      <!-- Example: Delegating backend API design task {context.feature_id}-api-001 to be worked on main -->
+      <!-- Example: Delegating backend API design task {context.feature_id}-api-001 -->
       <thinking>
-      Let `{var_task_id_to_delegate}` = `{context.feature_id}-api-001`.
+      Let `{var_task_id_to_delegate}` = `{context.feature_id}-api-design-001`.
       Let `{var_task_name}` = "Design product creation API endpoint".
       Let `{var_assignee_slug}` = `code-backend`.
-      Let `{var_desc_for_task}` = "Design the API endpoint contract (request/response schema, HTTP methods, status codes) for creating a new product. Ensure the design aligns with our global API design guidelines and specific requirements for this feature. Key details can be found in `context.md` (section 'Product Creation API Specs') and `design_notes.md` (section 'API Registration Endpoint'). All work will be on the `main` branch."
-      Let `{var_deliverables}` = ["A well-defined API contract (e.g., OpenAPI snippet or clear Markdown description).", "Document this design by creating/updating a section in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`."]
-      Let `{var_vc_instructions}` = "All work MUST be done directly on the `main` branch. Before starting, ensure your local `main` is up-to-date (`git checkout main && git pull origin main`). Follow Universal Commit Protocol, including task ID `({context.feature_id}/{var_task_id_to_delegate})`. Push changes to `origin main` upon completion."
+      Let `{var_task_details_for_coder}` = "Design the API endpoint contract (request/response schema, HTTP methods, status codes) for creating a new product. Ensure the design aligns with global API design guidelines and specific requirements for this feature. Document this design by creating or updating the API Design section in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`. All work is on the current Git branch."
+      Let `{var_deliverables}` = ["A well-defined API contract (e.g., OpenAPI snippet or clear Markdown description).", "Documentation of this design updated in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`."]
 
-      **Step 1: Update Sub-Task Status in `progress.yaml` (Before Delegation).**
+      **Step 1: Confirm Task Details from `progress.yaml`.**
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Updating task `{context.feature_id}-api-001` status to 'delegated' in `progress.yaml`.
-      </thinking>
-      <write_to_file>
+      <read_file>
         <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
-        <content><!-- YAML content with task {context.feature_id}-api-001 status updated to 'delegated' --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
-      <thinking>
-      Status updated. Now, prepare and send `new_task` to `{var_assignee_slug}`.
-      My status after sending `new_task` will be `[FEATURE_LEAD: AWAITING_SUB_TASK_COMPLETION ({context.feature_id}-api-001)]`.
-      </thinking>
+      </read_file>
+      <!-- User confirms file content. I will verify the task {var_task_id_to_delegate} exists and is in 'backlog' or 'defined' state. -->
+      <!-- If read_file fails or task is not ready, I will trigger error handling: log to active_log.md and report to PM. -->
 
-      **Step 2: Formulate Message and Delegate the Sub-Task.**
-      "Delegating sub-task '{var_task_name}' to `{var_assignee_slug}` (on `main` branch)."
+      <thinking>
+      **Step 2: Update Sub-Task Status in `progress.yaml` using `apply_diff`.**
+      Assuming task `{var_task_id_to_delegate}` is found and its current status line is `      status: "backlog"` at line `{var_task_status_line_in_progress_yaml}` within the YAML structure for this task.
+      The diff will target this specific line.
+      </thinking>
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_task_status_line_in_progress_yaml}
+-------
+        status: "backlog"
+=======
+        status: "delegated"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- User confirms apply_diff result. -->
+      <!-- If apply_diff fails, I will trigger error handling: log to active_log.md and report to PM. -->
+
+      <thinking>
+      Status updated in `progress.yaml`.
+      **Step 3 & 4: Formulate Message and Delegate the Sub-Task.**
+      My status after sending `new_task` (if successful) will be `[FEATURE_LEAD: AWAITING_SUB_TASK_COMPLETION ({var_task_id_to_delegate})]`.
+      </thinking>
+      "Delegating sub-task '{var_task_name}' to `{var_assignee_slug}` (on current Git branch)."
       <new_task>
         <mode>{var_assignee_slug}</mode>
         <message>
         # YAML-like structure for Sub-Task Assignment
-        task_id: "{context.feature_id}-api-001"
-        task_name: "Design product creation API endpoint"
+        task_id: "{var_task_id_to_delegate}"
+        task_name: "{var_task_name}"
         feature_id: "{context.feature_id}"
         feature_name: "{context.feature_name}"
-        feature_branch: "main" # Explicitly main branch
-
-        detailed_task_description: |
-          Design the API endpoint contract (request/response schema, HTTP methods, status codes) for creating a new product.
-          Ensure the design aligns with our global API design guidelines and specific requirements for this feature.
-          Key details can be found in `context.md` (section 'Product Creation API Specs') and `design_notes.md` (section 'API Registration Endpoint').
 
         version_control_instructions: |
-          All work MUST be done directly on the `main` branch.
-          Before starting work, ensure your local `main` branch is up-to-date with the remote `origin/main` by running `git checkout main` and then `git pull origin main`.
-          Follow the Universal Commit Protocol (`.roo/rules/01-universal-commit-protocol.txt`) for all commits. This protocol requires atomic commits with Conventional Commit formatted messages (all lowercase), including this task ID `({context.feature_id}/{context.feature_id}-api-001)`.
-          Ensure all unit tests pass before committing.
-          Push your changes on `main` to `origin/main` frequently, and especially before signaling task completion.
+          All work MUST be performed on your current Git branch.
+          Before starting, ensure your local current branch is up-to-date by running `git pull`.
+          You MUST follow the Standard Commit Protocol defined in the project rule file at `.roo/rules/02-commit-protocol.txt` for all commits.
+          This involves using Conventional Commit messages (all lowercase) and including this task ID `({context.feature_id}/{var_task_id_to_delegate})` in your commit message description.
+          Context for the commit protocol (like changed files, commit type, description) will be determined by your work on this task.
+          Push your changes on the current branch to its remote counterpart before signaling task completion.
+
+        detailed_task_description: |
+          {var_task_details_for_coder}
 
         deliverables_expected:
-          - "A well-defined API contract (e.g., OpenAPI snippet or clear Markdown description)."
-          - "Document this design by creating/updating a section in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md`."
+          - "{var_deliverables[0]}"
+          - "{var_deliverables[1]}"
 
         # Context File Paths (relative to .roo/memory-bank/)
         feature_context_md_path: "features/{context.feature_id}/context.md"
+        # You are expected to create or update the design_notes.md file for this feature:
         feature_design_notes_md_path: "features/{context.feature_id}/design_notes.md"
         feature_decisions_md_path: "features/{context.feature_id}/decisions.md"
         global_shared_patterns_path: "global/shared_system_patterns.md"
         global_architecture_path: "global/architecture_overview.md"
 
-        reporting_instructions: "Upon completion, use `attempt_completion` with a summary of the designed API contract, a reference to where it's documented, and the commit hash for changes made on `main`."
+        reporting_instructions: "Upon completion, use `attempt_completion` with a summary of work, reference to deliverables (e.g., confirmation of `design_notes.md` update, commit hashes on current branch). If you encounter any blockers or errors you cannot resolve, report them immediately."
         </message>
       </new_task>
+      <!-- User confirms new_task creation. -->
+      <!-- If new_task fails, I will trigger error handling: log to active_log.md and report to PM. -->
 
   track_sub_task_completion:
-    trigger: "When Feature-Lead receives an `attempt_completion` message from a sub-task mode (e.g., `code-backend`, `code-frontend`, `qa-tester`, `code-reviewer`) for a sub-task related to feature {context.feature_id}."
+    trigger: "When Feature-Lead receives an `attempt_completion` message from a sub-task mode (e.g., `code-backend`, `code-frontend`, `qa-tester`, `code-reviewer`) for a sub-task `{context.completed_task_id}` related to feature {context.feature_id}."
     priority: 860
     action: |
       <thinking>
       **[Track Sub-Task Completion - Feature Lead]**
       My status is `[FEATURE_LEAD: PROCESSING_SUB_TASK_RESULT]`. Feature ID: `{context.feature_id}`.
-      I've received a completion signal for sub-task `{context.completed_task_id}` from mode `{context.reporting_mode_slug}`.
+      Received completion signal for sub-task `{context.completed_task_id}` from mode `{context.reporting_mode_slug}`.
       The `attempt_completion` result from the sub-task mode should be a structured message or parsable text. I expect it to contain at least:
       - `task_id_completed`
-      - `status_of_completion` (e.g., 'success', 'failure_with_blocker', 'needs_clarification')
+      - `status_of_completion` (e.g., 'success', 'failure_with_blocker', 'needs_clarification', 'partially_complete_needs_feedback')
       - `summary_of_work_done`
-      - `outputs_or_artifacts_paths` (e.g., commit hashes on `main`, path to new/updated docs)
+      - `outputs_or_artifacts_paths` (e.g., commit hashes on current branch, path to new/updated docs)
       - `new_issues_or_blockers_encountered` (if any)
 
-      My process:
-      1.  **Parse the sub-task's result.** (Extract the above fields).
-      2.  **Update `features/{context.feature_id}/progress.yaml`:**
-          *   Set status of `{context.completed_task_id}`.
-          *   Log commit hashes (on `main`) from `outputs_or_artifacts_paths`.
-      3.  **Log significant events/issues from `new_issues_or_blockers_encountered` into `features/{context.feature_id}/active_log.md`.**
-      4.  **Decision Point:** Based on `status_of_completion` and feature progress, decide next steps.
+      Process:
+      1.  Parse the sub-task's result.
+      2.  If `status_of_completion` indicates failure or requires intervention (e.g., 'failure_with_blocker', 'needs_clarification'):
+          a. Log the blocker/issue in `features/{context.feature_id}/active_log.md` (using `apply_diff` or `insert_content` to prepend).
+          b. Update status of `{context.completed_task_id}` in `features/{context.feature_id}/progress.yaml` to 'blocked', 'failed', or 'awaiting_clarification' using `apply_diff`.
+          c. If the issue requires rework from the sub-mode: formulate feedback and delegate a new task for rework using `new_task`.
+          d. If the blocker requires PM intervention, prepare a report and use `new_task` to inform Project-Manager.
+          e. My status becomes `[FEATURE_LEAD: SUB_TASK_BLOCKED ({context.completed_task_id})]` or `[FEATURE_LEAD: AWAITING_SUB_TASK_REWORK ({context.completed_task_id})]`.
+      3.  If `status_of_completion` is 'success':
+          a. Update status of `{context.completed_task_id}` in `features/{context.feature_id}/progress.yaml` to 'completed' (or 'in_review' if next step is review) using `apply_diff`.
+          b. Log significant events/outputs (like commit hashes) from the report into `features/{context.feature_id}/active_log.md`.
+          c. Decide next steps (e.g., delegate next dependent task, initiate review, initiate QA).
+          d. My status becomes `[FEATURE_LEAD: ACTIVE]`.
+      4.  If any file update fails during this process, I MUST log the error in `active_log.md` and report to Project-Manager.
       </thinking>
 
+      <!-- Example: Received successful completion for task {context.completed_task_id} -->
       <thinking>
       Received completion for task `{context.completed_task_id}`.
       Parsing the result from `{context.reporting_mode_slug}`...
-      Assume result: `task_id_completed: "{context.completed_task_id}", status_of_completion: "success", summary_of_work_done: "API design complete.", outputs_or_artifacts_paths: ["Commit hash: {actual_commit_hash_on_main}", "./.roo/memory-bank/features/{context.feature_id}/design_notes.md#product-creation-api"], new_issues_or_blockers_encountered: "None"`.
+      Assume result: `task_id_completed: "{context.completed_task_id}", status_of_completion: "success", summary_of_work_done: "API design documented in design_notes.md.", outputs_or_artifacts_paths: ["Commit hash: {actual_commit_hash_on_current_branch}", "./.roo/memory-bank/features/{context.feature_id}/design_notes.md#product-creation-api"], new_issues_or_blockers_encountered: "None"`.
 
-      I will update `features/{context.feature_id}/progress.yaml`.
+      **Action: Update `features/{context.feature_id}/progress.yaml` using `apply_diff`.**
+      Assuming task `{context.completed_task_id}`'s status line is `        status: "delegated"` at line `{var_task_status_line_in_progress_yaml}`.
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Updating task `{context.completed_task_id}` status to 'completed' and logging commit hash in `progress.yaml`.
-      </thinking>
-      <write_to_file>
+      <apply_diff>
         <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
-        <content><!-- Full updated content of progress.yaml --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_task_status_line_in_progress_yaml}
+-------
+        status: "delegated"
+=======
+        status: "completed" # Or "in_review" if the next step is code review
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- User confirms apply_diff result. -->
+      <!-- If apply_diff fails, trigger error handling. -->
+
       <thinking>
-      Sub-task `{context.completed_task_id}` is marked complete.
-      Next, I'll check `progress.yaml` for dependent tasks.
-      If ready, I will trigger `delegate_sub_task` logic for it.
+      **Action: Log commit hash and completion in `active_log.md`.**
+      I will prepend an entry to `active_log.md`.
+      </thinking>
+      <read_file>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+      </read_file>
+      <!-- Wait for content -->
+      <thinking>
+      Current `active_log.md` content received. I will construct the new content with the log entry prepended.
+      Log entry: `[YYYY-MM-DD HH:MM:SS] - Sub-task {context.completed_task_id} ('{context.name_of_completed_task}') completed by {context.reporting_mode_slug}. Commit: {actual_commit_hash_on_current_branch}. Outputs: {outputs_or_artifacts_paths}.`
+      (This is a conceptual representation; the actual update would use `insert_content` at line after header or careful `apply_diff` if prepending is complex with it.)
+      For simplicity with `apply_diff`, if `active_log.md` has a known structure like a placeholder `<!-- LATEST_LOG_ENTRY_BELOW -->`, `apply_diff` can target that. Otherwise, `insert_content` at line 2 (after a header) is safer for prepending.
+      Let's assume `insert_content` for logging for now.
+      </thinking>
+      <insert_content>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+        <line>3</line> <!-- Assuming line 1 is # Active Log Title, line 2 is --- or timestamp format line -->
+        <content>
+[YYYY-MM-DD HH:MM:SS] - Sub-task {context.completed_task_id} ('{context.name_of_completed_task}') reported as '{status_of_completion}' by {context.reporting_mode_slug}. Summary: {summary_of_work_done}. Commit(s): {actual_commit_hash_on_current_branch}.
+        </content>
+      </insert_content>
+      <!-- User confirms insert_content result. -->
+      <!-- If insert_content fails, trigger error handling. -->
+
+      <thinking>
+      Sub-task `{context.completed_task_id}` is marked complete and logged.
+      I will now check `progress.yaml` for dependent tasks or next lifecycle steps (e.g., code review if this was a coding task, or QA if all dev tasks for a user story are done).
+      If ready, I will trigger `delegate_sub_task` logic for the next task or `initiate_code_review` from `05-code-review-coordination.txt`.
       </thinking>
       <attempt_completion>
         <result>
-        Sub-task '{context.completed_task_id}' for feature '{context.feature_name}' has been processed as completed. Changes are on the `main` branch.
-        Preparing to delegate next sub-task if applicable.
+        Sub-task '{context.completed_task_id}' for feature '{context.feature_name}' has been processed. Status: '{status_of_completion}'. Changes are on the current Git branch. Log updated.
+        Preparing for next steps.
         </result>
       </attempt_completion>
       My status becomes `[FEATURE_LEAD: ACTIVE]`. Feature ID: `{context.feature_id}`.
 
   monitoring_sub_tasks:
-    _comment: "Proactive sub-task monitoring can be added later."
+    _comment: "Proactive sub-task monitoring, including handling timeouts or lack of response."
     action: |
       <thinking>
-      If a sub-task for feature {context.feature_id} is stalled:
-      1.  Log internal note in `active_log.md`.
-      2.  Prepare `new_task` for the assignee:
+      **[Monitor Sub-Task - Feature Lead]**
+      If a sub-task for feature {context.feature_id}, `{var_stalled_task_id}`, appears stalled (e.g., past an internal soft deadline, or no update for a significant period):
+      1.  Log an internal note in `features/{context.feature_id}/active_log.md` using `insert_content`.
+      2.  Prepare a `new_task` for the assignee (`{var_assignee_slug_of_stalled_task}`):
           `task_type: "status_inquiry"`
           `original_task_id: "{var_stalled_task_id}"`
           `feature_id: "{context.feature_id}"`
-          `query: "Status update for task '{var_stalled_task_name}'? All work is on main branch."`
-      3.  Send `new_task`. My status becomes `[FEATURE_LEAD: AWAITING_STATUS_INQUIRY_RESPONSE ({var_stalled_task_id})]`.
+          `query: "Please provide a status update for task '{var_stalled_task_name}' (ID: {var_stalled_task_id}) for feature {context.feature_id}. Are there any blockers? All work is on the current Git branch."`
+      3.  Send `new_task`.
+      4.  My status becomes `[FEATURE_LEAD: AWAITING_STATUS_INQUIRY_RESPONSE ({var_stalled_task_id})]`.
+      5.  If no response or unsatisfactory response, I may need to escalate to Project-Manager by creating a new task for them.
       </thinking>

@@ -1,1 +1,5 @@
-中文和英文之间始终用空格隔开！
+# Priority: 99999 # This rule has a very high priority
+
+ALL content **written** to ANY file by any mode MUST be in English. This includes logs, notes, descriptions, YAML values, and Markdown content. If your internal thought process or input from another mode is in a different language, you MUST translate it to English before writing.
+---
+**But always maintain the original chat language when conversing with me.**

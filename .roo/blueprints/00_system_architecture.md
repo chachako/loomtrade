@@ -6,7 +6,7 @@ This document outlines the high-level architecture for the AI Trading Agent syst
 
 ```mermaid
 graph TD
-    subgraph "用户界面 (Frontend - Next.js with TypeScript & React 19)"
+    subgraph "UI/UX (Frontend - Next.js with TypeScript & React 19)"
         direction LR
         WebAppUI[Web Application UI (Magic UI)]
         BFF[API Routes (Backend for Frontend)]
@@ -16,14 +16,14 @@ graph TD
         WebAppUI --> WebSocketClient
     end
 
-    subgraph "核心后端服务 (Backend - Python with FastAPI)"
+    subgraph "Core (Backend - Python with FastAPI)"
         direction LR
         APIServer[API Server (FastAPI)]
         SystemOrchestratorAgent[System Orchestrator Agent (LLM-Powered NLU & Task Dispatch)]
         AgentManager[Agent Manager (Lifecycle & Customization)]
         StrategyEngine[Strategy Engine (Execution for Specialized Agents)]
         ToolExecutor[Tool Executor (XML-based)]
-        MemoryBankManager[Memory Bank Manager (Agent YAML/Markdown in Cache)]
+        AgentMemoryService[Agent Memory Service (Agent YAML/Markdown in Cache)]
         ExchangeConnector[Exchange Connector (Binance First)]
         NotificationService[Notification Service (Incl. Telegram)]
         TaskScheduler[Background Task Scheduler (e.g., APScheduler/Celery)]
@@ -37,11 +37,11 @@ graph TD
         SystemOrchestratorAgent -- May Directly Use --> ToolExecutor
         AgentManager --> StrategyEngine
         AgentManager --> ToolExecutor
-        AgentManager --> MemoryBankManager
+        AgentManager --> AgentMemoryService
         StrategyEngine --> ToolExecutor
         ToolExecutor --> ExchangeConnector
-        ToolExecutor --> MemoryBankManager
-        MemoryBankManager -- Reads/Writes --> FileSystemCache[Agent Memory Cache Directory]
+        ToolExecutor --> AgentMemoryService
+        AgentMemoryService -- Reads/Writes --> FileSystemCache[Agent Memory Cache Directory]
         ExchangeConnector -- API Calls --> Binance[Binance API]
         TaskScheduler -- Triggers Agents/Tasks --> AgentManager
         TaskScheduler -- Triggers Agents/Tasks --> SystemOrchestratorAgent
@@ -52,7 +52,7 @@ graph TD
         APIServer --> WebSocketServer
     end
 
-    subgraph "数据与配置存储"
+    subgraph "Data and Configuration Storage"
         AppConfig[Application Configuration (Environment Variables, Secure Vaults for secrets)]
         AgentMemoryFileSystemCache[Agent-Specific Memory (YAML/Markdown in Cache Directory)]
         GlobalMemoryBankFileSystem[Global Project Memory Bank (/.roo/memory-bank/)]
@@ -68,7 +68,7 @@ graph TD
     classDef external fill:#EBDEF0,stroke:#8E44AD,stroke-width:2px;
 
     class WebAppUI,BFF,WebSocketClient frontend;
-    class APIServer,SystemOrchestratorAgent,AgentManager,StrategyEngine,ToolExecutor,MemoryBankManager,ExchangeConnector,NotificationService,TaskScheduler,WebSocketServer,ConfigService backend;
+    class APIServer,SystemOrchestratorAgent,AgentManager,StrategyEngine,ToolExecutor,AgentMemoryService,ExchangeConnector,NotificationService,TaskScheduler,WebSocketServer,ConfigService backend;
     class AppConfig,AgentMemoryFileSystemCache,GlobalMemoryBankFileSystem storage;
     class Binance,FileSystemCache,ExternalChannels external;
 ```
@@ -77,6 +77,11 @@ graph TD
 
 ### 2.1 User Interface (Frontend - Next.js)
 *   **`WebAppUI`**: Responsible for all user interaction interfaces, built with React 19 and Magic UI. Displays market data, Agent status, trading history, configuration interfaces, and the chat interface for interacting with the System Orchestrator Agent.
+    *   Includes an **Onboarding/Setup Page** for first-time users or when critical configurations are missing. This page facilitates:
+        *   Selection/confirmation of the trading market and provider (MVP: Binance Futures, pre-selected).
+        *   Secure input and validation of LLM API Key(s).
+        *   Secure input and validation of Exchange API Key(s).
+    *   Access to the main application features is contingent upon successful completion of this initial setup.
 *   **`BFF (API Routes)`**: Acts as a Backend for Frontend, handling some frontend logic, aggregating backend API calls, and simplifying frontend data requests.
 *   **`WebSocketClient`**: Establishes and manages the WebSocket connection with the backend WebSocket server to receive real-time data updates.
 
@@ -96,7 +101,7 @@ graph TD
 *   **`ToolExecutor`**:
     *   Receives XML-formatted tool call requests from any LLM-powered agent (System Orchestrator, Analyst, Trader).
     *   Validates parameters and executes the corresponding tool logic (e.g., calling exchange APIs, calculating indicators, accessing agent memory).
-*   **`MemoryBankManager`**:
+*   **`AgentMemoryService`**:
     *   Manages read/write access to agent-specific memory files (YAML/Markdown) stored in a designated backend **cache directory** (e.g., `{app_cache_dir}/agent_memory/{agent_instance_id}/`).
     *   Provides an API for agents (via `ToolExecutor`) to interact with their memory.
 *   **`ExchangeConnector`**: Encapsulates all interaction logic with exchange APIs (Binance Futures पहला, future support for others). Handles API calls for market data, order placement, account information, etc.

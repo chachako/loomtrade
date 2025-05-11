@@ -3,6 +3,13 @@
 # and required dependency management protocols for backend code.
 # It MUST be referenced and adhered to by Code-Backend Mode during task execution.
 
+# STANDARDS APPLICATION HIERARCHY:
+# When implementing tasks, Code-Backend Mode MUST prioritize standards and preferences in the following order:
+# 1.  **User's Direct Instructions/Feedback for the Current Task:** Specific instructions or feedback provided by the user for the immediate task at hand override all other guidelines.
+# 2.  **Project-Level Coding Preferences:** Guidelines and preferences documented in `./.roo/memory-bank/global/coding_preferences.md` (if this file exists and contains relevant backend preferences).
+# 3.  **This Standards Document:** The rules and protocols defined within this file (`.roo/rules-code-backend/01-standards-and-practices.txt`).
+# 4.  **General AI Knowledge & Best Practices:** The AI's foundational knowledge of software engineering principles and common best practices should be applied when no specific higher-priority guideline exists.
+
 general_guidelines:
   title: "General Coding Standards and Best Practices"
   description: "Ensure code is readable, maintainable, performant, secure, and robust."
@@ -15,190 +22,188 @@ general_guidelines:
 
 code_style_and_formatting:
   linter_formatter:
-    rule: "Appropriate linters and formatters (e.g., ESLint/Prettier for Node.js/TypeScript, Black/Flake8/Ruff for Python, Checkstyle/Spotless for Java/Kotlin, gofmt/golint for Go) MUST be used. Adhere strictly to the project's shared configurations for these tools."
+    rule: "Appropriate linters and formatters (e.g., ESLint/Prettier for Node.js/TypeScript, Black/Flake8/Ruff for Python, Checkstyle/Spotless for Java/Kotlin, gofmt/golint for Go) MUST be used. Adhere strictly to the project's shared configurations for these tools (if provided)."
     note: "All linter/formatter reported errors/warnings MUST be resolved before considering a task complete or submitting code for review."
   indentation:
-    rule: "Use 2 spaces (common for Node.js/JS/TS) or 4 spaces (common for Python, Java) as defined by the project's established standard. Tabs are strictly prohibited."
+    rule: "Use 2 spaces (common for Node.js/JS/TS) or 4 spaces (common for Python, Java) as defined by the project's established standard or Prettier/formatter config. Tabs are strictly prohibited."
   naming_conventions: # Language-specific conventions take precedence.
-    variables_functions: "Default to camelCase (e.g., `getUserProfile`) for JavaScript/TypeScript/Java/Kotlin. Default to snake_case (e.g., `calculate_order_total`) for Python/Go. Follow specific project overrides if they exist."
+    variables_functions: "Default to camelCase (e.g., `getUserProfile`) for JavaScript/TypeScript/Java/Kotlin. Default to snake_case (e.g., `calculate_order_total`) for Python/Go. Follow specific project overrides if they exist in `global/coding_preferences.md`."
     constants: "Use UPPER_SNAKE_CASE (e.g., `DATABASE_URL`, `MAX_CONNECTIONS`)."
     classes_interfaces_types: "Use PascalCase (e.g., `UserService`, `OrderController`, `ProductType`)."
     files: "Use kebab-case (e.g., `user-service.js`, `order-controller.py`) or snake_case (`user_service.go`) based on common practice for the language/framework or project convention."
   file_structure:
-    rule: "Follow the established project directory structure for backend services (e.g., `routes/`, `controllers/` or `handlers/`, `services/`, `models/` or `entities/`, `repositories/` or `dao/`, `utils/`, `config/`, `tests/`). If unsure, ask the Feature Lead or refer to existing structure."
+    rule: "Follow the established project directory structure for backend services (e.g., `backend/src/routes/`, `backend/src/controllers/`, `backend/src/services/`, `backend/src/models/`, `backend/tests/`). If unsure, ask the Feature Lead or refer to existing structure."
 
 documentation_and_comments:
   language:
-    rule: "All comments, documentation (e.g., JSDoc, Python Docstrings, JavaDoc, KDoc, GoDoc), logs, and commit messages MUST be written in English."
+    rule: "All comments, documentation (e.g., JSDoc, Python Docstrings, JavaDoc, GoDoc), logs, and commit messages MUST be written in English."
   api_documentation:
-    rule: "Public API endpoints (e.g., REST, GraphQL resolvers) MUST have clear documentation comments explaining purpose, parameters (path, query, header), request body structure (with data types and validation rules if not using a separate schema like OpenAPI), response structure(s) for success and error cases (including status codes and data types), and any specific authorization requirements or notable behaviors."
-    reference: "If an OpenAPI/Swagger specification or other formal API design document exists (e.g., in `features/{feature_id}/design_notes.md`), ensure implementation matches it. Discrepancies must be raised with the Feature Lead."
+    rule: "Public API endpoints (e.g., REST, GraphQL resolvers) MUST have clear documentation comments explaining purpose, parameters, request body structure, response structure(s) (success and error cases, status codes), and authorization requirements. This should align with `features/{feature_id}/design_notes.md`."
   function_class_module_documentation:
-    rule: "Key public functions/methods, classes/interfaces/types, and modules/packages should have documentation explaining their purpose, parameters (with types), return values (with types), and any significant side effects, exceptions thrown, or important usage notes."
+    rule: "Key public functions/methods, classes, and modules should have documentation explaining their purpose, parameters, return values, and any significant side effects or exceptions."
   inline_comments:
-    rule: "Use inline comments sparingly, primarily to clarify complex algorithms, non-obvious logic, critical business rules, or workarounds for known issues. Explain the 'why', not just the 'what'."
+    rule: "Use inline comments sparingly, primarily to clarify complex or non-obvious logic. Explain the 'why', not just the 'what'."
   todo_fixme_notes:
-    rule: "Use `# TODO:` or `// TODO:` for planned enhancements or features not yet implemented. Use `# FIXME:` or `// FIXME:` for known issues or bugs needing to be addressed. Include a brief description and, if possible, a reference to a task ID or issue number from `features/{feature_id}/progress.yaml` or `active_log.md`."
+    rule: "Use `# TODO:` or `// TODO:` for planned work. Use `# FIXME:` or `// FIXME:` for known issues. Include a brief description and optionally a task ID."
 
 technology_stack_and_practices: # To be adapted based on actual project stack
   framework_specifics: # Examples
-    nodejs_express_fastify: "Utilize middleware effectively. Follow asynchronous patterns (async/await, Promises). Handle errors in middleware. Understand request/response lifecycle."
-    python_django_flask_fastapi: "Use framework features appropriately (e.g., Django ORM, Flask Blueprints, FastAPI Dependency Injection, Pydantic models). Understand WSGI/ASGI."
-    java_spring_boot: "Leverage Spring Boot auto-configuration and starters. Understand dependency injection, AOP, Spring Data, Spring Security concepts."
-    go_standard_library_gin_echo: "Use Go's concurrency patterns (goroutines, channels) where appropriate. Write idiomatic Go. Understand HTTP handlers and middleware."
+    nodejs_express_fastify: "Utilize middleware effectively. Follow asynchronous patterns (async/await, Promises). Handle errors in middleware."
+    python_django_flask_fastapi: "Use framework features appropriately (e.g., Django ORM, Flask Blueprints, FastAPI Dependency Injection)."
   api_design_implementation:
-    rule: "Implement APIs strictly according to the specifications provided by the Feature Lead (usually in `features/{feature_id}/design_notes.md` or equivalent). Any deviation or ambiguity must be clarified with the Feature Lead BEFORE implementation."
-    style: "Adhere to RESTful principles or the project's chosen API style (e.g., GraphQL). Use standard HTTP verbs correctly. Implement consistent URL naming conventions. Use appropriate HTTP status codes for responses."
-    versioning: "Implement API versioning as specified in `global/shared_system_patterns.md` or feature-specific design (e.g., URL path `/v1/`, Accept header)."
-    request_response_format: "Default to JSON for request and response bodies unless specified otherwise. Follow consistent naming conventions (e.g., camelCase or snake_case as per project standard) for JSON keys."
+    rule: "Implement APIs strictly according to the specifications in `features/{feature_id}/design_notes.md`. Deviations MUST be approved by Feature Lead."
+    style: "Adhere to RESTful principles or project's API style. Use standard HTTP verbs and status codes. Consistent URL naming."
+    request_response_format: "Default to JSON unless specified otherwise. Consistent JSON key naming (camelCase or snake_case per project standard)."
   database_interaction:
-    orm_query_builder:
-      rule: "Utilize the project's designated ORM (e.g., Prisma, TypeORM, SQLAlchemy, GORM, Spring Data JPA) or query builder correctly and efficiently. Follow its best practices for defining models/entities and querying."
-      best_practice: "Avoid N+1 query problems (use eager loading or specific join techniques). Use transactions for operations requiring atomicity. Write efficient queries; understand indexing."
-    raw_sql:
-      rule: "If writing raw SQL queries is necessary, they MUST be parameterized to prevent SQL injection. Queries should be readable, maintainable, and reviewed for performance."
-    migrations:
-      rule: "Database schema changes MUST be handled through migration files using the project's migration tool (e.g., Prisma Migrate, Alembic, Flyway, Liquibase, Django Migrations). Migrations should be idempotent and, where feasible, reversible."
-      coordination: "Creation of new migrations or running migrations might require coordination with the Feature Lead or a specific DevOps process. Do not run migrations directly against shared development or staging databases without approval unless it's part of an automated CI/CD pipeline for your feature branch's isolated environment."
+    orm_query_builder: "Utilize the project's ORM/query builder correctly. Avoid N+1. Use transactions."
+    raw_sql: "If raw SQL is necessary, it MUST be parameterized to prevent SQL injection."
+    migrations: "Database schema changes MUST use migration files via the project's tool. Migrations should be idempotent."
   asynchronous_operations_and_messaging: # If applicable
-    rule: "Use async/await or appropriate asynchronous patterns for the language/framework correctly to manage I/O-bound operations without blocking. For Node.js, never block the event loop."
-    message_queues_event_streaming:
-      rule: "If the feature involves producing or consuming messages from a queue (e.g., RabbitMQ, Kafka, SQS, Pub/Sub), ensure messages are processed idempotently and reliably. Handle message deserialization, validation, and error/retry logic robustly."
-    background_jobs:
-      rule: "For long-running, deferrable, or computationally intensive tasks not suitable for synchronous API responses, use the project's designated background job processing system (e.g., Celery, BullMQ, Sidekiq, Spring Batch)."
+    rule: "Use async/await or appropriate async patterns correctly. For message queues, ensure idempotent processing and robust error handling."
   error_handling_and_logging:
-    error_handling:
-      rule: "Implement robust error handling. Catch specific, expected errors. Avoid generic `catch (e)` where possible. Propagate or handle errors gracefully. For APIs, return meaningful error responses with appropriate HTTP status codes and a consistent JSON error format (e.g., `{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"Detailed message\", \"details\": { ... } } }`)."
-    logging:
-      rule: "Use the project's standard structured logging library (e.g., Winston, Pino, structlog, Logback, Zap). Log important application events, errors (with stack traces), and relevant contextual information (e.g., request ID, user ID, feature ID, task ID). Ensure log messages are informative and actionable."
-      levels: "Use appropriate log levels (DEBUG for detailed dev info, INFO for operational events, WARN for potential issues, ERROR for failures, CRITICAL/FATAL for severe system issues)."
-      sensitive_data: "NEVER log sensitive data in plain text (e.g., passwords, full credit card numbers, PII, API keys, tokens). Use redaction or tokenization if context is needed."
+    error_handling: "Implement robust error handling. Return meaningful API error responses (consistent JSON format, appropriate HTTP status codes)."
+    logging: "Use project's standard structured logging library. Log important events, errors (with stack traces), and context. Use appropriate log levels. NEVER log sensitive data in plain text."
 
 testing_practices:
   unit_tests:
-    rule: "All new or significantly modified business logic (in services, helpers, utils), complex algorithms, and critical data transformations MUST be covered by unit tests. Mock/stub all external dependencies (database, file system, network calls to other services/APIs)."
-    framework: "Use the project's standard backend unit testing framework (e.g., Jest, Mocha/Chai/Sinon for Node.js; Pytest/unittest.mock for Python; JUnit/Mockito for Java; Go's testing package)."
-    assertion: "Tests must have clear assertions verifying expected outcomes and behaviors, including edge cases and error conditions."
+    rule: "All new/significantly modified business logic, complex algorithms, and critical data transformations MUST be covered by unit tests. Mock/stub external dependencies."
+    framework: "Use the project's standard backend unit testing framework (e.g., Jest, Pytest, JUnit)."
   integration_tests:
-    rule: "API endpoints and key service integration points (e.g., service-to-database, service-to-message-queue) MUST have integration tests. These tests can interact with a real (test-scoped) database instance or in-memory versions, and mocked external third-party services."
-    scope: "Focus on testing the interaction and contract between components."
+    rule: "API endpoints and key service integration points MUST have integration tests. Can use test-scoped databases or mocked external services."
   test_organization_and_clarity:
-    rule: "Test files should be organized logically, often mirroring the source code structure. Test names MUST clearly describe the scenario being tested and the expected outcome (e.g., `test_registerUser_success_when_valid_input_provided`, `should_throw_error_when_email_is_duplicate`). Follow Arrange-Act-Assert (AAA) or Given-When-Then (GWT) patterns for structuring tests."
+    rule: "Organize test files logically. Test names MUST clearly describe the scenario and expected outcome. Follow AAA or GWT patterns."
   running_tests:
-    rule: "All relevant unit and integration tests MUST pass locally before committing code related to them or reporting task completion."
+    rule: "All relevant unit and integration tests MUST pass locally before committing code or reporting task completion."
 
 version_control_backend:
-  branching:
-    rule: "All backend development work for a feature MUST be done on the specific feature branch (e.g., `feature/{context.feature_id}`) provided by the Feature Lead."
+  branching_and_operations:
+    rule: "All backend development work for a feature MUST be done on your **current Git branch**. Before starting work, ensure your branch is up-to-date by running `git pull`."
   commits:
-    rule: "Make small, atomic commits. Each commit should represent a single logical change. Commit messages MUST follow the Conventional Commits specification (all lowercase) and include the task ID and feature ID. Example: `feat({context.feature_id}): add /users POST endpoint for registration ({context.task_id})` or `fix({context.feature_id}): resolve null pointer in order processing ({context.task_id})`."
-    signing_off: "If required by project policy, sign off on your commits (e.g., `git commit -s -m \"...\"`)."
+    rule: "You MUST follow the **Standard Commit Protocol** defined in the project rule file at `.roo/rules/02-commit-protocol.txt`. This includes making small, atomic commits, using Conventional Commit messages (all lowercase), and including the relevant task ID (e.g., `{feature_id}/{task_id}`)."
   pushing_changes:
-    rule: "Push changes to the remote feature branch regularly, and always before reporting task completion or requesting a code review."
+    rule: "Push changes to your current branch's remote counterpart (e.g., using `git push origin HEAD`) regularly, and always before reporting task completion or requesting a code review."
 
 security_best_practices_backend:
-  input_validation_and_sanitization:
-    rule: "ALL input from any external source (API request bodies, query parameters, path parameters, headers, message queue payloads, file uploads etc.) MUST be rigorously validated (for type, format, range, length, allowed characters/values) and sanitized on the server-side before processing. Use established validation libraries (e.g., Zod, class-validator, Pydantic, Bean Validation) where appropriate."
-  authentication_and_authorization:
-    rule: "Ensure proper authentication mechanisms (e.g., verifying JWTs, API keys, session tokens) are enforced for all protected resources. Implement fine-grained authorization checks (e.g., role-based access control (RBAC), attribute-based access control (ABAC)) to ensure users can only access data and perform actions they are permitted to. Refer to `global/architecture_overview.md` or specific auth design docs."
-  dependency_vulnerability_management:
-    rule: "Be mindful of backend dependencies (direct and transitive). Use reputable, well-maintained libraries. Before adding a new dependency, check for known vulnerabilities (e.g., using `npm audit`, `pip-audit`, Snyk, or as per project's SCA tools). Keep dependencies updated to patch known vulnerabilities, coordinating updates with the Feature Lead if they are major."
-  secrets_management:
-    rule: "NEVER hardcode secrets (API keys, database credentials, encryption keys, tokens, etc.) in source code, configuration files committed to version control, or log output. Use environment variables injected at runtime, or a dedicated secrets management solution (e.g., HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) as defined by the project."
-  secure_communication:
-    rule: "Ensure all external communication, especially involving sensitive data, uses HTTPS/TLS. Communication with internal services should also be secured where appropriate."
-  data_protection:
-    rule: "Handle sensitive data (PII, financial data, health records) with extreme care. Apply encryption at rest and in transit where necessary. Adhere to data privacy regulations (e.g., GDPR, CCPA) if applicable to the project."
-  least_privilege:
-    rule: "Apply the principle of least privilege for application processes, database users, and service accounts."
+  input_validation_and_sanitization: "ALL external input MUST be rigorously validated and sanitized on the server-side."
+  authentication_and_authorization: "Ensure proper authentication and fine-grained authorization are enforced for all protected resources/actions."
+  dependency_vulnerability_management: "Use reputable libraries. Check for known vulnerabilities before adding/updating dependencies (see Dependency Management Protocols). Keep dependencies updated."
+  secrets_management: "NEVER hardcode secrets. Use environment variables or a dedicated secrets management solution as per project standards."
+  secure_communication: "Use HTTPS/TLS for external communication. Secure internal communication where appropriate."
+  data_protection: "Handle sensitive data with care. Apply encryption at rest/in transit. Adhere to privacy regulations."
 
 performance_considerations_backend:
-  efficient_code:
-    rule: "Write efficient code, particularly for critical paths, database queries (use indexes, avoid N+1), and computationally intensive tasks. Be mindful of memory usage and CPU load."
-  caching:
-    rule: "Consider and implement caching strategies (e.g., in-memory, Redis, Memcached) for frequently accessed, expensive-to-compute data, where appropriate and in consultation with Feature Lead or Architect."
-  load_handling:
-    rule: "Design services to handle expected load and scale gracefully if applicable. Be aware of potential bottlenecks."
-  profiling_and_optimization:
-    rule: "Proactive, premature optimization should be avoided. Profile application performance under realistic load to identify actual bottlenecks before attempting complex optimizations. Any significant optimization should be discussed with the Feature Lead."
+  efficient_code: "Write efficient code, especially for critical paths and database queries. Be mindful of resource usage."
+  caching: "Consider and implement caching strategies where appropriate, in consultation with Feature Lead or Architect."
+  profiling_and_optimization: "Profile to identify actual bottlenecks before complex optimizations. Discuss significant optimizations."
 
-# --- Dependency Management Protocols (from Solution X, adapted for Backend) ---
-# These protocols are referenced by Code-Backend when specific triggers are met.
-
+# --- Dependency Management Protocols (Backend) ---
+# These protocols MUST be followed when dealing with external libraries/packages.
 dependency_management_protocols_backend:
+  protocol_introduction:
+    message: "IMPORTANT: When your task involves using, adding, or updating external libraries/packages (e.g., from npm, PyPI, Maven Central, Go Modules), you MUST follow the protocols below. Failure to do so may introduce outdated information, vulnerabilities, or incompatibilities."
+
   documentation_lookup_backend:
     trigger_conditions:
-      - "When planning to use a specific external backend library/package (e.g., npm, PyPI, Maven, Go module) for the first time or for a non-trivial new feature."
-      - "When encountering errors or uncertainty related to the usage of a specific external backend library."
-      - "When asked by the Feature Lead to research a library's best practices or specific usage pattern."
+      - "Before using an external backend library/package for the first time for a feature."
+      - "When encountering errors, uncertainty, or needing to understand best practices for a specific external backend library."
+      - "When asked by the Feature Lead to research a library's specific usage pattern."
     priority: 700 # High priority for correct library usage
     required_action: |
       <thinking>
       **[Protocol Triggered: Backend Library Documentation Lookup]**
-      I need information about an external backend library ('<Identify Library Name>') to ensure correct usage, implement best practices, or resolve an issue.
-      **I MUST consult the latest documentation using available MCP servers (e.g., `context7`, `package-docs`) or reliable web search BEFORE proceeding with implementation or a fix.** My internal knowledge might be outdated.
-      Plan:
-      1.  Identify Library, Context & Ecosystem (e.g., 'express' for npm, 'sqlalchemy' for python).
-      2.  Choose MCP Tool or Search: Use `context7` or `package-docs` if appropriate tools exist for the ecosystem. If not, perform a targeted web search for official documentation.
-      3.  Analyze & Apply: Use fetched info to generate/correct code following documented patterns.
+      I need up-to-date information about an external backend library: '<Identify Library Name and its ecosystem, e.g., 'express' for npm, 'sqlalchemy' for python>'.
+      My internal knowledge might be outdated. I MUST consult its official documentation.
+
+      Action Plan:
+      1.  **Identify Library and Ecosystem:** Confirm the exact library name and its package ecosystem (e.g., npm, PyPI, Maven, Go).
+      2.  **Select MCP Tool for Documentation:**
+          *   For **npm, Python, Go, Swift packages**: Prefer `package-docs` server. Use `describe_<ecosystem>_package` tool (e.g., `describe_npm_package`, `describe_python_package`) to get a summary and confirm relevance. For more detailed search within docs, use `search_package_docs`. To get full docs for npm, use `get_npm_package_doc`.
+          *   For **other ecosystems or broader topics**: Prefer `context7` server. First, use `resolve-library-id` tool with the library name to get a `context7CompatibleLibraryID`. Then, use `get-library-docs` tool with this ID and a relevant `topic`.
+          *   If MCP tools are unsuitable or fail, perform a targeted web search for "official [library_name] documentation".
+      3.  **Analyze & Apply:** Carefully review the fetched documentation. Use this information to implement the code correctly, following documented patterns, API usage, and best practices.
+      If, after consulting documentation, I still face unresolvable issues or ambiguities, I will report this as a blocker to the Feature Lead, detailing the library, the issue, and the documentation I consulted.
       </thinking>
-      <!-- Example for a Python library using package-docs -->
+      <!-- Example: Looking up 'axios' (npm) using package-docs -->
       <!--
       <use_mcp_tool>
         <server_name>package-docs</server_name>
-        <tool_name>describe_pypi_package</tool_name>
-        <arguments>{"package": "sqlalchemy"}</arguments>
+        <tool_name>describe_npm_package</tool_name>
+        <arguments>{"package": "axios"}</arguments>
+      </use_mcp_tool>
+      -->
+      <!-- Then, based on description, if more detail needed: -->
+      <!--
+      <use_mcp_tool>
+        <server_name>package-docs</server_name>
+        <tool_name>get_npm_package_doc</tool_name>
+        <arguments>{"package": "axios", "query": "interceptors"}</arguments>
       </use_mcp_tool>
       -->
 
   dependency_addition_or_update_backend:
     trigger_conditions:
-      - "When the task requires adding a new external library/package to the project's backend dependency file (e.g., `package.json`, `requirements.txt`, `pyproject.toml`, `pom.xml`, `go.mod`)."
-      - "When the task requires updating an existing backend dependency in the dependency file."
+      - "When the task requires adding a NEW external library/package to the project's backend dependency file (e.g., `backend/package.json`, `backend/requirements.txt`, `backend/pom.xml`, `backend/go.mod`)."
+      - "When the task requires UPDATING an existing backend dependency to a new version in the dependency file."
     priority: 600
     required_action: |
       <thinking>
       **[Protocol Triggered: Backend Dependency Addition/Update]**
-      The task involves adding or updating backend dependencies.
-      I MUST:
-      1.  **Check for Vulnerabilities (if adding new or major update):** Before adding, use project's SCA tool or check reputable sources (e.g., Snyk, CVE databases) for known vulnerabilities in the specific version I intend to use. If significant vulnerabilities exist, discuss with Feature Lead.
-      2.  **Check for Latest Stable Version (if updating or adding without specific version request):** Use `package-version` MCP server (if available for the ecosystem) or official repository to find the latest stable version that is compatible with project constraints.
-      3.  **Update Dependency File:**
-          a.  `<read_file>` the dependency file.
-          b.  Modify its content string to add/update the dependency line(s) correctly (e.g., `library_name==version` for requirements.txt, or update JSON/TOML structure).
-          c.  `<write_to_file>` the modified content.
-      4.  **Trigger Auto-Install:** After successful modification, the `auto_install_dependencies_backend` protocol should be triggered.
-      5.  **Document Rationale (if significant choice):** If a specific version (not latest) or a less common library is chosen, briefly note why in `features/{feature_id}/decisions.md` or commit message.
+      The current task requires adding or updating one or more backend dependencies.
+      Let the library be '<Identify Library Name>' and ecosystem '<Ecosystem e.g. npm, pip>'.
+
+      Action Plan:
+      1.  **Consult Documentation (if new library):** If this is a new library for me or the project, first trigger `documentation_lookup_backend` protocol to understand its purpose and basic usage.
+      2.  **Determine Target Version:**
+          *   If a specific version is requested by Feature Lead or design docs, use that.
+          *   Otherwise, I MUST find the latest stable version compatible with the project. Use `package-version` MCP server's `check_<ecosystem>_versions` tool (e.g., `check_npm_versions`, `check_python_versions`).
+          *   Example for npm: `<use_mcp_tool><server_name>package-version</server_name><tool_name>check_npm_versions</tool_name><arguments>{"dependencies": {"<library_name>": "latest"}}</arguments></use_mcp_tool>` (or current version if updating).
+      3.  **Check for Known Vulnerabilities (Critical):** Before finalizing a new dependency or a major version update, conceptually, I should be aware of its security posture. (Note: A dedicated tool for vulnerability scanning is ideal here. If not available, I proceed with caution and rely on up-to-date library versions as a proxy for security).
+      4.  **Update Dependency File:**
+          a.  `<read_file>` the relevant dependency file (e.g., `backend/package.json`, `backend/requirements.txt`).
+          b.  Carefully modify its content string to add the new library with the determined version, or update the existing library's version string. Ensure correct formatting for the file type.
+          c.  `<write_to_file>` the modified content back to the dependency file. If this write fails, report as a blocker.
+      5.  **Trigger Automatic Dependency Installation:** After a successful `write_to_file` for the dependency file, the `auto_install_dependencies_backend` protocol MUST be immediately triggered.
+      6.  **Document Rationale (if significant choice):** If a specific non-latest version was chosen for compatibility reasons, or if adding a less common library, briefly note the rationale in the commit message or, if more detailed, request Feature Lead to log in `features/{feature_id}/decisions.md`.
       </thinking>
-      <!-- Example: Adding 'requests' to requirements.txt -->
+      <!-- Example: Adding 'requests==2.28.0' to backend/requirements.txt after version check -->
       <!--
-      <thinking>Task requires adding 'requests' library. Will check latest stable version and then add to requirements.txt.</thinking>
       <read_file><path>backend/requirements.txt</path></read_file>
-      <thinking>Current requirements.txt content: "fastapi==0.100.0\nuvicorn>=0.20.0". New content will add "requests==2.28.0" (assuming 2.28.0 is chosen).</thinking>
+      <thinking>Current requirements.txt content: "fastapi==0.100.0\nuvicorn>=0.20.0". New content will add "requests==2.28.0".</thinking>
       <write_to_file>
         <path>backend/requirements.txt</path>
         <content>fastapi==0.100.0\nuvicorn>=0.20.0\nrequests==2.28.0\n</content>
         <line_count>3</line_count>
       </write_to_file>
       -->
+      <!-- This write_to_file success would then trigger auto_install_dependencies_backend -->
 
   auto_install_dependencies_backend:
     trigger_conditions:
-      - "Immediately after this `Code-Backend` mode successfully modifies a backend dependency file (e.g., `package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`) as part of the `dependency_addition_or_update_backend` protocol."
-    priority: 100 # Highest priority after dependency file modification
+      - "Immediately after this `Code-Backend` mode successfully modifies a backend dependency file (e.g., `backend/package.json`, `backend/requirements.txt`, `backend/pom.xml`, `backend/go.mod`) as part of the `dependency_addition_or_update_backend` protocol."
+    priority: 100 # Highest priority after dependency file modification to ensure environment consistency.
     required_action: |
       <thinking>
       **[Protocol Triggered: Auto-Install Backend Dependencies]**
-      I have just successfully modified a backend dependency file (`{modified_dependency_file_path}`).
+      I have just successfully modified a backend dependency file: `{modified_dependency_file_path}`.
       **I MUST now execute the appropriate command to install/update dependencies in the correct backend environment/directory.**
-      Plan:
-      1.  Determine Package Manager & Command based on `{modified_dependency_file_path}` type (e.g., `pip install -r requirements.txt`, `pnpm install`, `go mod tidy`).
-      2.  Determine Working Directory (e.g., `backend/` or project root if that's where deps are managed).
-      3.  Use `execute_command`.
+      This ensures my local development environment reflects the changes and allows me to test the new/updated dependencies.
+
+      Action Plan:
+      1.  **Determine Package Manager & Command:** Based on the type of `{modified_dependency_file_path}`:
+          *   `backend/package.json` (npm/yarn/pnpm): `pnpm install` (assuming pnpm is project standard, otherwise `npm install` or `yarn install`).
+          *   `backend/requirements.txt` (pip): `pip install -r backend/requirements.txt`.
+          *   `backend/pyproject.toml` (poetry/pdm): `poetry install` or `pdm install`.
+          *   `backend/pom.xml` (Maven): `mvn dependency:resolve` or `mvn install -DskipTests` (if full build is too slow).
+          *   `backend/build.gradle` (Gradle): `./gradlew dependencies` or `./gradlew assemble -x test`.
+          *   `backend/go.mod` (Go): `go mod tidy` then `go mod download`.
+      2.  **Determine Working Directory:** Usually the directory containing the dependency file (e.g., `backend/`) or the project root if commands are run from there. For `pnpm install` if `package.json` is in `backend/`, cwd should be `backend/`. For `pip install -r backend/requirements.txt`, cwd can be project root.
+      3.  Use `execute_command` with the determined command and CWD.
+      4.  If the installation command fails, I MUST report this as a blocker to the Feature Lead. It indicates an issue with the new/updated dependencies or the environment.
       </thinking>
-      <!-- Example for Python requirements.txt in backend/ directory -->
+      <!-- Example for Python requirements.txt in backend/ directory, command run from project root -->
       <execute_command>
       <command>pip install -r backend/requirements.txt</command>
-      <cwd>.</cwd> <!-- Assuming command is run from project root if requirements.txt path is relative -->
+      <cwd>.</cwd>
       </execute_command>
-      <thinking>Dependency installation command executed for backend. This will be noted in my final task report to Feature Lead.</thinking>
+      <!-- Wait for command output. If error, report blocker. -->
+      <thinking>Backend dependency installation command executed. I will note its success/failure in my final task report to Feature Lead.</thinking>

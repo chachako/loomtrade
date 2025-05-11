@@ -1,197 +1,172 @@
 code_review_execution_and_reporting:
   perform_code_review:
-    trigger: "When Code-Reviewer's status is `READY_TO_REVIEW` for task {context.task_id_under_review} (meaning all context from `00-memory-bank-and-context.txt` has been loaded)."
+    trigger: "When Code-Reviewer's status is `READY_TO_REVIEW` for feature {context.feature_id}, original task {context.task_id_under_review}, and review task {context.task_id_for_reviewer} (meaning all context from `00-memory-bank-and-context.txt` has been loaded, including relevant coding standards)."
     priority: 900 # Core operational rule for this mode
     action: |
       <thinking>
       **[Perform Code Review - Code Reviewer]**
-      My status is `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): REVIEWING_CODE]`.
+      My status is `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review} - Review Task {context.task_id_for_reviewer}): REVIEWING_CODE]`.
       I have all context for task '{context.task_id_under_review}' of feature '{context.feature_id}'.
-      Code is on branch `{context.feature_branch}`, changeset `{context.commit_hashes_or_changeset}`.
+      Code to review is identified by commits: '{context.commit_hashes_or_changeset}' on the developer's current branch.
       Implemented by: `{context.original_assignee_mode}`.
       Functionality summary: `{context.summary_of_implemented_functionality}`.
 
       My review process:
-      1.  **Code Access/Understanding:** (Mental step, assuming I can "see" the code via system capabilities or by checking out the branch and specific commits/files if I had `execute_command` for git and file reading for review). I will focus on the diffs introduced by `{context.commit_hashes_or_changeset}` against the base of `{context.feature_branch}` or its parent.
-      2.  **Systematic Review against Checklist:** I will meticulously go through the "Code Review Standards Checklist" (defined in this rule file) and apply it to the code under review.
-      3.  **Identify & Document Findings:** For each finding (issue, suggestion):
-          *   Assign a unique finding ID (e.g., CR-{context.task_id_under_review}-001).
+      1.  **Code Access/Understanding (Conceptual):**
+          *   Mentally "access" the code changes defined by `{context.commit_hashes_or_changeset}` on the developer's current branch. (The system provides me this view).
+          *   Understand the scope of changes in relation to the `summary_of_implemented_functionality`.
+      2.  **Systematic Review against Standards & Checklist:**
+          *   Meticulously review the code against:
+              a.  Feature requirements from `{context.feature_context_md_path}`.
+              b.  Design specifications from `{context.feature_design_notes_md_path}`.
+              c.  Specific coding standards for `{context.original_assignee_mode}` loaded from its `01-standards-and-practices.txt` (e.g., `.roo/rules-code-backend/01-standards-and-practices.txt`). This includes general coding principles, style, security, testing, and **dependency management protocols if dependencies were changed**.
+              d.  The general `code_review_standards_checklist` defined within this rule file for broader quality aspects.
+              e.  Project-level preferences from `global/coding_preferences.md` if applicable and loaded.
+      3.  **Identify & Document Findings:** For each issue or suggestion:
+          *   Assign a unique finding ID (e.g., CR-{context.task_id_for_reviewer}-001).
           *   Note file path and relevant line number(s).
           *   Clearly describe the finding.
           *   Assign a severity (Critical, Major, Minor, Suggestion, Question).
-          *   Reference the specific standard/requirement/guideline from the checklist or Memory Bank documents if applicable.
+          *   Reference the specific standard/requirement/guideline violated or relevant (from coding standards file, checklist, or feature docs).
           *   Suggest a concrete action or improvement if possible.
-      4.  **Formulate Overall Assessment:** Based on number and severity of findings: 'Approved', 'Approved with minor comments', or 'Requires changes'.
+      4.  **Formulate Overall Assessment:** Based on number and severity of findings: 'Approved', 'Approved_With_Minor_Comments', or 'Requires_Changes'.
       5.  **Prepare Feedback Report:** Structure all findings and the overall assessment clearly.
       6.  Use `attempt_completion` to send the report to the Feature Lead.
       </thinking>
 
       <thinking>
-      I am now "reviewing" the code changes. I will cross-reference with:
-      - Requirements from `{context.context_md_path}`.
-      - Design specs from `{context.design_notes_md_path}`.
-      - Feature decisions from `{context.decisions_md_path}`.
-      - Global standards from `{context.shared_patterns_path}`.
-      - Architecture from `{context.architecture_overview_path}`.
+      I am now "reviewing" the code changes for task '{context.task_id_under_review}'.
+      I will cross-reference with requirements (`{context.feature_context_md_path}`), design (`{context.feature_design_notes_md_path}`), global patterns (`{context.global_shared_patterns_path}`), architecture (`{context.global_architecture_path}`), and crucially, the specific coding standards for `{context.original_assignee_mode}` (e.g., `{var_coding_standards_path}`).
 
-      *Simulating review process and finding issues based on the checklist below.*
-      Let's assume after a thorough review, I have identified the following:
+      *Simulating review process and finding issues based on the loaded standards and checklist.*
+      Let's assume the code is from `code-backend` and I'm using its `01-standards-and-practices.txt`.
+      Example Finding 1 (Violates Backend Standard - Error Handling):
+        ID: CR-{context.task_id_for_reviewer}-001
+        File: backend/src/services/userService.ts, Line: 42
+        Severity: Major
+        Description: "The `getUserDetails` function catches a generic `Error` (e.g. `catch(e)`) and returns a generic 500 without logging the specific error or stack trace. This violates the 'Error Handling & Logging' standard in backend practices which requires specific error handling and structured logging."
+        Standard Ref: `.roo/rules-code-backend/01-standards-and-practices.txt` (section: `error_handling_and_logging`).
+        Suggestion: "Refactor to catch specific expected errors. Log the full error details using the project's standard logger before returning a structured error response to the controller."
+
+      Example Finding 2 (Violates General Readability - from Checklist):
+        ID: CR-{context.task_id_for_reviewer}-002
+        File: backend/src/controllers/authController.ts, Line: 78-95
+        Severity: Minor
+        Description: "A complex conditional block with multiple nested `if/else if` statements. Difficult to follow logic for different authentication scenarios."
+        Standard Ref: `code_review_standards_checklist` (Category: "Readability, Maintainability & Simplicity").
+        Suggestion: "Consider refactoring this logic into smaller helper functions or using a switch statement or a more declarative pattern to improve clarity."
       </thinking>
-      <!--
-      Finding 1:
-      ID: CR-{context.task_id_under_review}-001
-      File: backend/src/services/userService.ts
-      Line: 42
-      Severity: Major
-      Description: "Potential NullPointerException: `userData.profile` is accessed without a null check, but `profile` can be undefined based on the current data model in design_notes.md."
-      Standard: "Correctness & Functionality - Edge cases and error conditions handled." / "Security - Input Validation (indirectly, as data integrity affects this)."
-      Suggestion: "Add a guard clause: `if (!userData.profile) { /* handle missing profile */ return; }` before accessing `userData.profile.details`."
-
-      Finding 2:
-      ID: CR-{context.task_id_under_review}-002
-      File: backend/src/controllers/authController.ts
-      Line: 78
-      Severity: Minor
-      Description: "Inconsistent error response format. The endpoint returns a plain text error 'Invalid credentials' for login failure, but global API guidelines in shared_system_patterns.md specify a JSON error object: `{ \"error\": { \"code\": \"AUTH_FAILED\", \"message\": \"...\" } }`."
-      Standard: "Adherence to Design & Architecture - API contracts." / "Error Handling & Logging - Consistent error responses."
-      Suggestion: "Refactor error response to match the project's standard JSON error format."
-
-      Finding 3:
-      ID: CR-{context.task_id_under_review}-003
-      File: backend/src/services/userService.ts
-      Line: 25 (loop)
-      Severity: Suggestion (Performance)
-      Description: "The loop for processing user preferences could potentially be optimized by using a Map for faster lookups if the preference list grows very large, though current impact is likely low."
-      Standard: "Performance & Efficiency - Obvious performance bottlenecks."
-      Suggestion: "Consider if a Map lookup would be more performant here if `userPreferences` array is expected to be very large in the future. For now, it's acceptable."
-      -->
       <thinking>
-      Based on the (simulated) findings above (1 Major, 1 Minor, 1 Suggestion), the Overall Assessment is: **Requires changes**.
+      Based on the (simulated) findings (1 Major, 1 Minor), the Overall Assessment is: **Requires_Changes**.
       I will now compile these findings into a structured report.
-      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): REPORTING_FEEDBACK]`.
+      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review} - Review Task {context.task_id_for_reviewer}): PREPARING_FEEDBACK]`.
       </thinking>
       <attempt_completion>
         <result>
-        **Code Review Feedback Report**
-        **Feature ID:** {context.feature_id}
-        **Task Under Review:** {context.task_id_under_review} ({context.summary_of_implemented_functionality})
-        **Reviewed Branch:** `{context.feature_branch}`
-        **Reviewed Changeset:** `{context.commit_hashes_or_changeset}`
+        # Code Review Feedback Report
+        **Review Task ID:** {context.task_id_for_reviewer}
+        **Feature ID:** {context.feature_id} ({context.feature_name})
+        **Original Task Under Review:** {context.task_id_under_review} ({context.task_name_under_review})
+        **Original Assignee Mode:** {context.original_assignee_mode}
+        **Reviewed Commits/Changeset:** {context.commit_hashes_or_changeset} (on developer's current branch)
         **Reviewer:** Code-Reviewer Mode
-        **Date:** [YYYY-MM-DD HH:MM:SS] <!-- Current timestamp -->
+        **Date:** YYYY-MM-DD HH:MM:SS <!-- Current timestamp -->
 
-        **Overall Assessment: Requires changes.**
+        **Overall Assessment: Requires_Changes**
 
         **Detailed Findings:**
 
-        1.  **Finding ID:** CR-{context.task_id_under_review}-001
+        1.  **Finding ID:** CR-{context.task_id_for_reviewer}-001
             **Severity:** Major
             **File & Line:** `backend/src/services/userService.ts:42`
-            **Description:** Potential NullPointerException: `userData.profile` is accessed without a null check, but `profile` can be undefined based on the current data model in design_notes.md.
-            **Standard Ref:** Correctness (Edge cases), Input Validation.
-            **Suggestion:** Add a guard clause (e.g., `if (!userData.profile) { ... }`) before accessing `userData.profile.details`.
+            **Description:** Generic error catching in `getUserDetails` function without specific logging or structured error response.
+            **Standard Reference:** Violation of error handling and logging standards in `.roo/rules-code-backend/01-standards-and-practices.txt`.
+            **Suggestion:** Refactor to catch specific errors, log full error details with stack trace, and return a structured error response.
 
-        2.  **Finding ID:** CR-{context.task_id_under_review}-002
+        2.  **Finding ID:** CR-{context.task_id_for_reviewer}-002
             **Severity:** Minor
-            **File & Line:** `backend/src/controllers/authController.ts:78`
-            **Description:** Inconsistent error response format for login failure. Returns plain text, but project guidelines specify JSON error objects.
-            **Standard Ref:** Adherence to Design (API contracts), Error Handling.
-            **Suggestion:** Refactor error response to use the standard JSON format: `{ "error": { "code": "AUTH_FAILED", "message": "Invalid credentials" } }`.
+            **File & Line:** `backend/src/controllers/authController.ts:78-95`
+            **Description:** Complex nested conditional logic for authentication scenarios is difficult to read and maintain.
+            **Standard Reference:** Readability concerns as per general code review checklist.
+            **Suggestion:** Consider refactoring into smaller helper functions or using a more declarative pattern (e.g., switch statement, state machine if applicable) for clarity.
 
-        3.  **Finding ID:** CR-{context.task_id_under_review}-003
-            **Severity:** Suggestion (Performance)
-            **File & Line:** `backend/src/services/userService.ts:25` (loop)
-            **Description:** Loop for processing user preferences might be optimizable with a Map for very large lists.
-            **Standard Ref:** Performance & Efficiency.
-            **Suggestion:** For future consideration if `userPreferences` array becomes very large. Acceptable for now.
+        *(Additional findings would be listed here if found)*
+
+        **General Comments (Optional):**
+        The code generally follows the structure expected for `{context.original_assignee_mode}`. Primary concerns are around robust error handling and improving clarity in complex logical blocks.
 
         **Next Steps:**
-        The original assignee (`{context.original_assignee_mode}`) should address the 'Major' and 'Minor' severity findings. The 'Suggestion' can be considered at their discretion or discussed further.
-        Please resubmit the code for review after changes are made.
+        The original assignee (`{context.original_assignee_mode}`) should address the 'Major' and 'Minor' severity findings.
+        Please resubmit the code for review after changes are made on the current working branch.
         </result>
       </attempt_completion>
-      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): COMPLETED_AWAITING_NEW]`.
+      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review} - Review Task {context.task_id_for_reviewer}): COMPLETED_AWAITING_NEW]`.
 
-  code_review_standards_checklist:
-    # This is the comprehensive checklist Code-Reviewer uses.
-    # It serves as the internal "knowledge base" for conducting reviews.
-    title: "Code Review Standards Checklist (Applied by Code-Reviewer)"
+  code_review_standards_checklist: # General checklist, supplemented by specific mode standards
+    title: "General Code Review Standards Checklist (Applied by Code-Reviewer)"
     categories:
       - name: "1. Correctness & Functionality"
         items:
-          - "Does the code fulfill all functional requirements and acceptance criteria specified in the feature's `context.md`?"
-          - "Does it accurately implement the logic, algorithms, and data transformations described in `design_notes.md` or other technical specifications?"
-          - "Are all explicitly stated edge cases, error conditions, and boundary values handled correctly and gracefully?"
-          - "Does the code produce the expected and correct output for a comprehensive set of valid and invalid inputs?"
-          - "Are there any apparent logical flaws, off-by-one errors, race conditions (if concurrent), or other bugs?"
-          - "Does it handle null/undefined/empty values appropriately and safely where they might occur?"
-
+          - "Does the code fulfill requirements from `features/{context.feature_id}/context.md`?"
+          - "Does it implement logic/algorithms from `features/{context.feature_id}/design_notes.md` accurately?"
+          - "Are edge cases, error conditions, and boundary values handled correctly?"
+          - "Does it produce correct output for valid/invalid inputs?"
+          - "Any logical flaws, off-by-one errors, race conditions?"
+          - "Safe handling of null/undefined/empty values?"
       - name: "2. Readability, Maintainability & Simplicity"
         items:
-          - "Is the code clear, concise, well-organized, and easy for another developer to understand and follow?"
-          - "Are names (variables, functions, classes, modules, files) descriptive, unambiguous, and consistent with project naming conventions (see `global/shared_system_patterns.md` or language/framework conventions)?"
-          - "Is the code formatting consistent and compliant with project standards (e.g., as enforced by Prettier/Black/gofmt and configured linters)?"
-          - "Are comments used effectively to explain the 'why' of complex or non-obvious code, rather than just restating the 'what'? Are comments accurate and up-to-date?"
-          - "Is complex logic appropriately decomposed into smaller, single-responsibility functions, methods, or modules?"
-          - "Is there any unnecessary complexity? Could the solution be simpler (KISS principle) while still meeting requirements?"
-          - "Is the code DRY (Don't Repeat Yourself)? Is common logic properly abstracted into reusable functions, components, or services?"
-          - "Is dead or commented-out code removed (unless explicitly for temporary debugging with a TODO to remove)?"
-
+          - "Is code clear, concise, well-organized?"
+          - "Are names descriptive, unambiguous, consistent with project/language conventions (ref specific standards)?"
+          - "Is formatting consistent (ref specific standards & linters)?"
+          - "Are comments effective (explaining 'why' for complex parts, not 'what')?"
+          - "Is complex logic decomposed into smaller, single-responsibility units?"
+          - "Unnecessary complexity? (KISS principle)"
+          - "DRY (Don't Repeat Yourself)? Common logic abstracted?"
+          - "Dead or commented-out code removed (unless temporary with TODO)?"
       - name: "3. Adherence to Design, Architecture & API Contracts"
         items:
-          - "Does the code align with the overall system architecture outlined in `global/architecture_overview.md` and any feature-specific architectural decisions in `features/{feature_id}/decisions.md`?"
-          - "If implementing or consuming an API, does it strictly adhere to the API contract (endpoints, methods, request/response schemas, headers, status codes) defined in `features/{feature_id}/design_notes.md` or the relevant API specification?"
-          - "Does it make appropriate use of shared utilities, components, or patterns defined in `global/shared_system_patterns.md`?"
-          - "Are established design patterns (e.g., MVC, Repository, Service Layer, Observer) used correctly and where appropriate?"
-          - "Are there any deviations from prescribed designs or architectural patterns without a clear, documented rationale (e.g., in `decisions.md`)?"
-
-      - name: "4. Testing & Testability"
+          - "Aligns with `global/architecture_overview.md` and feature decisions in `features/{context.feature_id}/decisions.md`?"
+          - "Strict adherence to API contracts from `features/{context.feature_id}/design_notes.md`?"
+          - "Appropriate use of shared patterns from `global/shared_system_patterns.md`?"
+          - "Correct use of established design patterns?"
+      - name: "4. Testing & Testability (as per specific Coder mode's standards)"
         items:
-          - "Are there sufficient, well-written unit tests covering critical logic, different execution paths (positive/negative), and edge cases for new/modified code?"
-          - "If applicable (e.g., API endpoints, component interactions), are there adequate integration tests?"
-          - "Do all new and existing automated tests pass with the changes?"
-          - "Are tests readable, maintainable, independent, and reliable (not flaky)?"
-          - "Are dependencies correctly mocked/stubbed in unit tests to ensure isolation?"
-          - "Is the code structured in a way that makes it easily testable (e.g., dependency injection, clear separation of concerns)?"
-
-      - name: "5. Security"
+          - "Sufficient unit/component tests covering critical logic, paths, edge cases?"
+          - "Adequate integration tests if applicable?"
+          - "Do all automated tests (expected to be run by Coder) pass with these changes?"
+          - "Are tests readable, maintainable, independent, reliable?"
+          - "Dependencies correctly mocked/stubbed in unit tests?"
+          - "Is code structured for easy testability?"
+      - name: "5. Security (as per specific Coder mode's standards)"
         items:
-          - "Is all external input (from users, APIs, files, etc.) properly validated, sanitized, and type-checked on the server-side (if backend) or as a first-pass on client-side (if frontend)?"
-          - "Are there any risks of common vulnerabilities like SQL Injection, XSS, CSRF, Command Injection, insecure deserialization, etc.?"
-          - "Are authentication and authorization mechanisms correctly implemented and enforced for protected resources or actions?"
-          - "Are secrets (passwords, API keys, tokens) handled securely and never hardcoded or logged?"
-          - "Is sensitive data (PII, financial info) protected appropriately (e.g., encryption, hashing, access controls)?"
-          - "Are third-party dependencies from reputable sources and checked for known vulnerabilities?"
-          - "Does the code follow secure coding best practices for the language and framework?"
-
-      - name: "6. Performance & Efficiency"
+          - "Input validation/sanitization (client-side for UX, server-side authoritative)?"
+          - "Risks of common vulnerabilities (SQLi, XSS, CSRF etc.) mitigated?"
+          - "AuthN/AuthZ correctly implemented and enforced?"
+          - "Secrets handled securely (no hardcoding/logging)?"
+          - "Sensitive data protected (encryption, hashing)?"
+          - "Third-party dependencies vetted (ref Coder's dependency protocols)?"
+      - name: "6. Performance & Efficiency (as per specific Coder mode's standards)"
         items:
-          - "Are there any obvious performance anti-patterns or bottlenecks (e.g., inefficient loops, N+1 queries, blocking I/O in async environments, excessive DOM manipulations, large unoptimized assets)?"
-          - "Is memory usage efficient? Are there risks of memory leaks?"
-          - "Are data structures and algorithms chosen appropriate for the scale and nature of the problem?"
-          - "Are there considerations for caching where appropriate?"
-          - "For frontend: Is rendering optimized? Is bundle size managed? Are assets optimized?"
-
-      - name: "7. Error Handling & Logging"
+          - "Obvious performance anti-patterns or bottlenecks?"
+          - "Efficient memory usage? Risk of leaks?"
+          - "Appropriate data structures/algorithms?"
+          - "Caching considered where beneficial?"
+      - name: "7. Error Handling & Logging (as per specific Coder mode's standards)"
         items:
-          - "Is error handling robust and comprehensive? Are specific, anticipated errors caught and handled meaningfully?"
-          - "Are error messages clear, informative (for users or developers), and do they avoid exposing sensitive internal details?"
-          - "Is logging implemented according to project standards (structured, appropriate levels, contextual information) for important events, errors, and debugging, without logging sensitive data?"
-          - "Are resources (files, connections, etc.) properly released in all execution paths, including error paths (e.g., using finally blocks or try-with-resources)?"
-
-      - name: "8. Code-Level Documentation & Clarity"
+          - "Robust and comprehensive error handling? Specific errors caught?"
+          - "Clear, informative error messages (no sensitive details exposed)?"
+          - "Logging according to project standards (structured, levels, context, no sensitive data)?"
+          - "Resources properly released (files, connections)?"
+      - name: "8. Code-Level Documentation & Clarity (as per specific Coder mode's standards)"
         items:
-          - "Are public APIs of functions, classes, components (props, events, slots) clearly documented using TSDoc/JSDoc/Python Docstrings or equivalent?"
-          - "Are complex or non-obvious internal logic sections adequately commented?"
-          - "Are types used effectively (e.g., TypeScript, Python type hints) to improve clarity and prevent errors?"
-
-      - name: "9. Configuration & Environment"
+          - "Public APIs of functions/classes/components documented (TSDoc/JSDoc etc.)?"
+          - "Complex internal logic adequately commented?"
+          - "Types used effectively (TypeScript, Python type hints)?"
+      - name: "9. Configuration & Environment" # More general
         items:
-          - "Are configurable parameters (e.g., service URLs, timeouts, feature flags) managed through configuration files or environment variables, not hardcoded?"
-          - "Does the code behave correctly across different expected environments (dev, staging, prod – if context is available)?"
-
-      - name: "10. Language/Framework Best Practices"
+          - "Configurable parameters managed via config/env vars, not hardcoded?"
+      - name: "10. Language/Framework Best Practices (as per specific Coder mode's standards)"
         items:
-          - "Does the code adhere to idiomatic expressions and best practices for the specific programming language(s) and framework(s) being used?"
-          - "Are modern language features utilized appropriately to enhance readability, performance, or safety?"
-          - "Are deprecated features or libraries avoided?"
+          - "Adherence to idiomatic expressions and best practices for the language/framework?"
+          - "Modern language features used appropriately?"
+          - "Deprecated features/libraries avoided?"

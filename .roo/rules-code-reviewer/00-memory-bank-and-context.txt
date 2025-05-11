@@ -1,81 +1,86 @@
 code_reviewer_memory_bank_and_context:
   understand_review_assignment:
-    trigger: "When Code-Reviewer mode is activated with a new code review task by a Feature Lead (via new_task, message should contain feature_id, task_id_under_review, branch which will be 'main', commit_hashes/changeset on 'main', and links to relevant Memory Bank context files)."
+    trigger: "When Code-Reviewer mode is activated with a new code review task by a Feature Lead (via new_task). The message should contain feature_id, task_id_under_review, original_assignee_mode, commit_hashes/changeset on the developer's current branch, summary of functionality, and links to relevant Memory Bank context files."
     priority: 900
     action: |
       <thinking>
       **[Understand Code Review Assignment - Code Reviewer]**
-      I have been assigned a new code review task.
-      The assignment message from the Feature Lead should provide:
+      I have been assigned a new code review task by the Feature Lead.
+      The assignment message for feature '{context.feature_name}' (ID: {context.feature_id}), concerning task '{context.task_id_under_review}', should provide:
+      - `task_id_for_reviewer`: A unique ID for this specific review instance.
       - `feature_id`: The ID of the feature this code belongs to.
+      - `feature_name`: Human-readable name of the feature.
       - `task_id_under_review`: The specific coding task ID whose output is being reviewed.
-      - `original_assignee_mode`: The mode that performed the coding.
-      - `feature_branch`: This will be "main" as all development is on main.
-      - `commit_hashes_or_changeset`: Specific commits on "main" or a description of the changeset to review.
+      - `task_name_under_review`: Name of the original coding task.
+      - `original_assignee_mode`: The mode that performed the coding (e.g., 'code-backend', 'code-frontend'). This helps me find the relevant coding standards.
+      - `commit_hashes_or_changeset`: Specific commits on the developer's current working branch, or a description of the changeset to review.
       - `summary_of_implemented_functionality`: A brief from Feature Lead about what was implemented.
-      - Links to Memory Bank:
-          - `features/{feature_id}/context.md`
-          - `features/{feature_id}/design_notes.md`
-          - `features/{feature_id}/decisions.md`
-          - `global/shared_system_patterns.md`
-          - `global/architecture_overview.md`
+      - Links to Memory Bank for context:
+          - `feature_context_md_path` (e.g., `features/{feature_id}/context.md`)
+          - `feature_design_notes_md_path` (e.g., `features/{feature_id}/design_notes.md`)
+          - `feature_decisions_md_path` (e.g., `features/{feature_id}/decisions.md`)
+          - `global_shared_patterns_path` (`global/shared_system_patterns.md`)
+          - `global_architecture_path` (`global/architecture_overview.md`)
+      - Optionally, a direct path to the relevant coding standards for the `original_assignee_mode` (e.g., `.roo/rules-code-backend/01-standards-and-practices.txt`). If not provided, I will infer it based on `original_assignee_mode`.
 
-      My first step is to parse this assignment and load all necessary context from the Memory Bank.
-      My status will be `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): LOADING_CONTEXT]`.
-      I must have all information before starting the review defined in `01-code-review-execution-and-reporting.txt`.
+      My first step is to parse this assignment and load all necessary context.
+      My status will be `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review} - Review Task {context.task_id_for_reviewer}): LOADING_CONTEXT]`.
+      I must have all information before starting the review as defined in `01-code-review-execution-and-reporting.txt`.
+      If crucial information is missing (e.g., commit hashes, path to requirements), I must report this back to the Feature Lead as a blocker.
       </thinking>
 
-      <!-- Assume Feature Lead's message provided:
-           feature_id: "user_mgmt"
-           task_id_under_review: "user_mgmt-be-002"
-           original_assignee_mode: "code-backend"
-           feature_branch: "main"
-           commit_hashes_or_changeset: "Commits abc123def to xyz789ghi on main branch related to product creation API."
-           summary_of_implemented_functionality: "Backend logic and API endpoint for creating new products on main."
-           context_md_path: "./.roo/memory-bank/features/user_mgmt/context.md"
-           design_notes_md_path: "./.roo/memory-bank/features/user_mgmt/design_notes.md#product-creation-api"
-           decisions_md_path: "./.roo/memory-bank/features/user_mgmt/decisions.md"
-           shared_patterns_path: "./.roo/memory-bank/global/shared_system_patterns.md"
-           architecture_overview_path: "./.roo/memory-bank/global/architecture_overview.md"
-      -->
+      <!-- Assume Feature Lead's message provided necessary context variables. -->
+      <!-- context.task_id_for_reviewer, context.feature_id, context.feature_name, context.task_id_under_review, context.task_name_under_review, context.original_assignee_mode, context.commit_hashes_or_changeset, context.summary_of_implemented_functionality -->
+      <!-- context.feature_context_md_path, context.feature_design_notes_md_path, etc. -->
 
       <thinking>
-      I have parsed the assignment details for feature `{context.feature_id}`, task `{context.task_id_under_review}`. Code is on `main` branch.
-      Now I will read all referenced Memory Bank files.
+      I have parsed the assignment details for review task '{context.task_id_for_reviewer}' concerning code for feature '{context.feature_id}', original task '{context.task_id_under_review}'.
+      Code to review is identified by commits: '{context.commit_hashes_or_changeset}' on the developer's current branch.
+      The code was written by `{context.original_assignee_mode}`.
+      Now I will read all referenced Memory Bank files. If any read fails, I will report this as a blocker.
       </thinking>
 
-      1.  **Read Feature Context:**
-          <read_file><path>{context.context_md_path}</path></read_file>
-          <!-- Wait -->
-      2.  **Read Design Notes / API Specs (if applicable):**
-          <read_file><path>{context.design_notes_md_path}</path></read_file>
-          <!-- Wait -->
+      1.  **Read Feature Context (Requirements, Acceptance Criteria):**
+          <read_file><path>{context.feature_context_md_path}</path></read_file>
+          <!-- Wait. If error, report blocker. -->
+      2.  **Read Design Notes (UI/API Specifications, if applicable):**
+          <read_file><path>{context.feature_design_notes_md_path}</path></read_file>
+          <!-- Wait. If error, can proceed with caution or report as blocker if essential for review. -->
       3.  **Read Feature Decisions:**
-          <read_file><path>{context.decisions_md_path}</path></read_file>
-          <!-- Wait -->
-      4.  **Read Global Shared System Patterns:**
-          <read_file><path>{context.shared_patterns_path}</path></read_file>
-          <!-- Wait -->
-      5.  **Read Global Architecture Overview:**
-          <read_file><path>{context.architecture_overview_path}</path></read_file>
-          <!-- Wait -->
+          <read_file><path>{context.feature_decisions_md_path}</path></read_file>
+          <!-- Wait. If error, proceed with caution. -->
+      4.  **Read Global Shared System Patterns & Architecture Overview:**
+          <read_file><path>{context.global_shared_patterns_path}</path></read_file>
+          <!-- Wait. If error, proceed with caution. -->
+          <read_file><path>{context.global_architecture_path}</path></read_file>
+          <!-- Wait. If error, proceed with caution. -->
+      5.  **Read Relevant Coding Standards:**
+          <thinking>
+          The original code was written by `{context.original_assignee_mode}`.
+          I need to load the corresponding standards document.
+          If `{context.original_assignee_mode}` is 'code-backend', path is `.roo/rules-code-backend/01-standards-and-practices.txt`.
+          If `{context.original_assignee_mode}` is 'code-frontend', path is `.roo/rules-code-frontend/01-standards-and-practices.txt`.
+          Let `{var_coding_standards_path}` be the determined path.
+          </thinking>
+          <read_file><path>{var_coding_standards_path}</path></read_file>
+          <!-- Wait. If error, this is a significant blocker as I cannot review against standards. Report to Feature Lead. -->
 
       <thinking>
-      All specified context files have been requested.
-      Once I receive their content, I will have the necessary information to review the code on the `main` branch.
+      All specified essential context files, including the relevant coding standards, have been requested.
+      Once I receive their content, I will have the necessary information to review the code changes.
       The actual review process will be guided by `.roo/rules-code-reviewer/01-code-review-execution-and-reporting.txt`.
-      If crucial information is missing, I must report this back to the Feature Lead.
-      Assuming all context is loaded successfully...
+      Assuming all essential context is loaded successfully...
       </thinking>
       <attempt_completion>
         <result>
-        Context for code review of task '{context.task_id_under_review}' (Feature: '{context.feature_id}') has been successfully loaded.
-        Code to review is on the `main` branch.
-        Changeset: `{context.commit_hashes_or_changeset}`.
+        Context for code review task '{context.task_id_for_reviewer}' (Original Task: '{context.task_id_under_review}', Feature: '{context.feature_id}') has been successfully loaded.
+        Code to review is identified by commits '{context.commit_hashes_or_changeset}' on the developer's current branch.
+        Original coder mode: `{context.original_assignee_mode}`. Relevant coding standards have been loaded.
+        Summary of functionality from Feature Lead: "{context.summary_of_implemented_functionality}".
         I am ready to begin the code review process.
         </result>
       </attempt_completion>
-      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): READY_TO_REVIEW]`.
+      My status becomes `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review} - Review Task {context.task_id_for_reviewer}): READY_TO_REVIEW]`.
 
   status_prefix_code_reviewer:
-    rule: "Begin EVERY response with `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_TO_REVIEW, REVIEWING_CODE, REPORTING_FEEDBACK, CONTEXT_INCOMPLETE_BLOCKED, etc."
+    rule: "Begin EVERY response with `[CODE-REVIEWER ({context.feature_id}/{context.task_id_under_review} - Review Task {context.task_id_for_reviewer}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_TO_REVIEW, REVIEWING_CODE, PREPARING_FEEDBACK, REPORTING_FEEDBACK, COMPLETED_AWAITING_NEW, CONTEXT_INCOMPLETE_BLOCKED, etc."

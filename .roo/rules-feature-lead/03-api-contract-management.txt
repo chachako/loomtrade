@@ -1,172 +1,260 @@
 api_contract_management_feature_lead:
   define_or_update_api_contract:
-    trigger: "When a sub-task involves designing a new API, or modifying an existing API contract relevant to feature {context.feature_id}, typically after an API design task (e.g., task ID `{context.api_design_task_id}`) is completed by a `code-backend` or `code-frontend`."
+    trigger: "When a sub-task involving API design (e.g., task ID `{context.api_design_task_id}`) for feature {context.feature_id} is reported as complete by a Coder mode (e.g., `code-backend`). The Coder mode should have documented the proposed API contract in `features/{context.feature_id}/design_notes.md`."
     priority: 840
     action: |
       <thinking>
-      **[Define/Update API Contract - Feature Lead]**
+      **[Review & Finalize API Contract - Feature Lead]**
       My status is `[FEATURE_LEAD: MANAGING_API_CONTRACT]`. Feature ID: `{context.feature_id}`.
-      An API contract for feature {context.feature_id} (related to design task `{context.api_design_task_id}`) needs to be defined/updated.
-      The output of the design task (e.g., an OpenAPI snippet, Markdown description documented in `design_notes.md`) is my input.
+      Coder mode has completed API design task `{context.api_design_task_id}` and documented the proposed contract in `features/{context.feature_id}/design_notes.md`.
 
-      I need to:
-      1.  Review the documented API contract in `features/{context.feature_id}/design_notes.md`.
+      My process:
+      1.  Read and review the documented API contract in `features/{context.feature_id}/design_notes.md`.
       2.  Verify it against global API guidelines (`global/shared_system_patterns.md`) and feature requirements (`features/{context.feature_id}/context.md`).
-      3.  If acceptable, log its finalization in `features/{context.feature_id}/active_log.md`.
-      4.  Update the status of the API design task (`{context.api_design_task_id}`) in `features/{context.feature_id}/progress.yaml` to 'completed' or 'review_passed'.
+      3.  If the contract is acceptable:
+          a. Log its finalization in `features/{context.feature_id}/active_log.md` using `insert_content`.
+          b. Update the status of the API design task (`{context.api_design_task_id}`) in `features/{context.feature_id}/progress.yaml` to 'completed' or 'review_passed' using `apply_diff`.
+      4.  If the contract requires minor changes that I can make:
+          a. Update `features/{context.feature_id}/design_notes.md` using `apply_diff`.
+          b. Proceed with step 3a and 3b.
+      5.  If the contract requires significant rework:
+          a. Log issues in `active_log.md`.
+          b. Update API design task status in `progress.yaml` to 'correction_needed' using `apply_diff`.
+          c. Delegate a rework task to the original Coder mode with specific feedback.
+      6.  If any file operation fails, I MUST log the error and report to Project-Manager.
       </thinking>
 
+      "Reviewing API contract documented in `features/{context.feature_id}/design_notes.md` for design task `{context.api_design_task_id}`."
+
+      1.  **Load Context for Review:**
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
+          <!-- Wait. If fails, report error. -->
+          <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
+          <!-- Wait. If fails, report error. -->
+          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
+          <!-- Wait. If fails, report error. -->
+
       <thinking>
-      Reviewing API contract documented in `features/{context.feature_id}/design_notes.md` for design task `{context.api_design_task_id}`.
+      Context loaded. I have reviewed the API contract in `design_notes.md`.
+      Scenario A: Contract is acceptable.
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
-      <!-- Wait -->
-      <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
-      <!-- Wait -->
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
-      <!-- Wait -->
+      <!-- BEGIN Scenario A: Contract Acceptable -->
       <thinking>
-      Context loaded. Assuming API contract is reviewed and deemed acceptable.
-      Now, log finalization in `active_log.md`.
+      The API contract is well-defined and meets all requirements.
+      **Action 3a: Log finalization in `active_log.md`.**
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Prepending to `active_log.md`:
-      `[YYYY-MM-DD HH:MM:SS] - API contract for design task {context.api_design_task_id} (e.g., 'product creation API') has been reviewed and finalized. Documentation is in design_notes.md. Implementation tasks should adhere to this.`
-      </thinking>
-      <write_to_file>
+      <insert_content>
         <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
-        <content><!-- Full new content of active_log.md --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
+        <line>3</line> <!-- Assuming line 1 is # Title, line 2 is --- or timestamp format line -->
+        <content>
+[YYYY-MM-DD HH:MM:SS] - API contract for design task {context.api_design_task_id} (e.g., 'product creation API') reviewed and finalized. Documentation in `design_notes.md` is approved. Implementation tasks can proceed.
+        </content>
+      </insert_content>
+      <!-- Wait. If fails, report error. -->
+
       <thinking>
-      Now, update the status of the API design task `{context.api_design_task_id}` in `progress.yaml`.
+      **Action 3b: Update status of API design task `{context.api_design_task_id}` in `progress.yaml`.**
+      Assuming task status is 'in_review' at line `{var_task_status_line}`.
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Updating task `{context.api_design_task_id}` status to 'completed' in `progress.yaml`.
-      </thinking>
-      <write_to_file>
+      <apply_diff>
         <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
-        <content><!-- Updated progress.yaml with task status updated --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_task_status_line}
+-------
+        status: "in_review"
+=======
+        status: "completed"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait. If fails, report error. -->
       <attempt_completion>
         <result>
-        API contract related to design task '{context.api_design_task_id}' for feature '{context.feature_name}' has been reviewed, finalized, and logged. The design task status is updated. Implementation tasks can now proceed based on this contract.
+        API contract related to design task '{context.api_design_task_id}' for feature '{context.feature_name}' has been reviewed, finalized, and logged. The design task status is updated to 'completed'. Implementation tasks can now proceed based on this contract.
         </result>
       </attempt_completion>
+      <!-- END Scenario A -->
+
+      <thinking>
+      Scenario B: Contract requires significant rework.
+      (If this scenario is met, the logic below would execute instead of Scenario A's completion)
+      The API contract is missing key elements / conflicts with global standards.
+      **Action 5a: Log issues in `active_log.md`.**
+      </thinking>
+      <!--
+      <insert_content>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+        <line>3</line>
+        <content>
+[YYYY-MM-DD HH:MM:SS] - API contract for design task {context.api_design_task_id} requires rework. Issues: [e.g., Missing error codes, non-standard pagination]. Feedback provided to Coder.
+        </content>
+      </insert_content>
+      -->
+      <!-- Wait. If fails, report error. -->
+      <thinking>
+      **Action 5b: Update API design task status in `progress.yaml` to 'correction_needed'.**
+      </thinking>
+      <!--
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+      <<<<<<< SEARCH
+      :start_line:{var_task_status_line}
+      -------
+              status: "in_review"
+      =======
+              status: "correction_needed"
+      >>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      -->
+      <!-- Wait. If fails, report error. -->
+      <thinking>
+      **Action 5c: Delegate rework task to original Coder mode.**
+      Let original Coder mode be `{context.original_coder_mode_slug}`.
+      Rework task ID: `{context.api_design_task_id}-rework-01`.
+      </thinking>
+      <!--
+      <new_task>
+        <mode>{context.original_coder_mode_slug}</mode>
+        <message>
+        # API Design Rework Required
+        task_id: "{context.api_design_task_id}-rework-01"
+        original_task_id: "{context.api_design_task_id}"
+        feature_id: "{context.feature_id}"
+        feedback: |
+          The API contract submitted for design task {context.api_design_task_id} needs rework.
+          Please address the following points:
+          1. Missing error code definitions for X, Y, Z.
+          2. Pagination parameters do not follow global standards (see `global/shared_system_patterns.md#pagination`).
+          Update the API contract in `features/{context.feature_id}/design_notes.md` accordingly.
+        </message>
+      </new_task>
+      -->
+      <!-- My status becomes [FEATURE_LEAD: AWAITING_SUB_TASK_REWORK ({context.api_design_task_id}-rework-01)] -->
+      <!-- END Scenario B -->
       My status becomes `[FEATURE_LEAD: ACTIVE]`. Feature ID: `{context.feature_id}`.
 
   ensure_contract_adherence_during_development:
-    trigger: "When delegating frontend or backend sub-tasks that implement or consume an API defined for feature {context.feature_id}."
+    trigger: "When delegating frontend or backend sub-tasks that implement or consume an API whose contract is defined in `features/{context.feature_id}/design_notes.md`."
     priority: 830
     action: |
       <thinking>
       **[Ensure API Contract Adherence - Feature Lead]**
-      This rule guides how I construct delegation messages.
-      When using `delegate_sub_task` from `02-sub-task-delegation-and-tracking.txt` for a task `{task_id_being_delegated}` involving API implementation/consumption:
-      The `new_task` message to `code-frontend` or `code-backend` (as defined in `02-...txt`) MUST include in its `detailed_task_description` or a dedicated `api_contract_reference` field:
-      - A clear reference to the API contract document, e.g., "Please implement/consume the API as defined in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md#api-section-for-this-task`."
-      - Emphasis on adhering strictly to defined schemas, data types, and status codes.
-      - Instruction to raise discrepancies or necessary deviations with me (Feature-Lead) immediately *before* non-compliant implementation.
+      This rule guides how I construct delegation messages for API implementation/consumption tasks.
+      When using `delegate_sub_task` from `02-sub-task-delegation-and-tracking.txt` for a task `{task_id_being_delegated}` involving an API:
+      The `new_task` message to `code-frontend` or `code-backend` MUST include in its `detailed_task_description` or a dedicated `api_contract_reference` field:
+      - A clear reference: "Implement/consume the API as defined in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md#[relevant-API-section-if-applicable]`."
+      - Emphasis on adhering strictly to defined schemas, data types, methods, and status codes.
+      - Instruction: "If you identify any discrepancies, ambiguities, or necessary deviations from this contract during implementation, you MUST raise them with me (Feature-Lead) for discussion and approval *before* proceeding with a non-compliant implementation. Log your query in `./.roo/memory-bank/features/{context.feature_id}/active_log.md` and notify me."
       </thinking>
-      "API contract adherence instructions will be included in relevant sub-task delegation messages."
+      "API contract adherence instructions will be included in relevant sub-task delegation messages for feature '{context.feature_name}'."
 
   handle_api_contract_conflicts_or_changes:
-    trigger: "When a `code-frontend` or `code-backend` mode reports a conflict with the API contract during implementation (task `{context.conflicting_task_id}`), or suggests a necessary change to an established API contract for feature {context.feature_id}."
+    trigger: "When a Coder mode (e.g., `code-frontend` or `code-backend`) reports a conflict with an established API contract during implementation (task `{context.conflicting_task_id}`), or suggests a necessary change to an API contract for feature {context.feature_id} documented in `design_notes.md`."
     priority: 845
     action: |
       <thinking>
       **[Handle API Contract Conflict/Change - Feature Lead]**
       My status is `[FEATURE_LEAD: RESOLVING_API_CONFLICT]`. Feature ID: `{context.feature_id}`. Conflicting Task: `{context.conflicting_task_id}`.
-      A sub-task mode reported an issue/change for an API contract.
-      I need to:
-      1.  Understand the issue/proposal from the reporting mode's message.
-      2.  Assess impact. Consult other affected parties. Make a decision.
-      3.  **If a fix/change is needed from another mode:**
-          a.  Log the issue, my decision, and the plan to delegate correction in `features/{context.feature_id}/active_log.md`.
-          b.  Update status of the original API implementation task (`{context.original_api_impl_task_id}`) in `progress.yaml` to 'correction_needed' or similar. Create a new task ID for the correction work (e.g., `{context.original_api_impl_task_id}-fix-01`).
-          c.  **Then, use `new_task` to delegate the correction task to the appropriate mode, providing all necessary context for them to understand and execute the fix.**
-      4.  If API contract document (`design_notes.md`) itself needs update due to an approved change, I will update it or delegate its update.
-      5.  Communicate resolution/updated contract to all affected modes.
+      A sub-task mode reported an issue or proposed change for an API contract.
+
+      Process:
+      1.  Understand the issue/proposal from the reporting mode's message/log.
+      2.  Read `features/{context.feature_id}/design_notes.md` and other relevant context (e.g., `active_log.md` for the report).
+      3.  Assess impact of the conflict/change. Consult Architect via PM if it's a significant architectural deviation.
+      4.  Make a decision:
+          a.  **Approve change:** If change is valid and approved.
+              i.  Log decision in `features/{context.feature_id}/decisions.md`.
+              ii. Instruct/delegate update of `features/{context.feature_id}/design_notes.md` to reflect the change (could be the reporting Coder, another Coder, or myself if minor).
+              iii.Notify all affected Coder modes of the updated contract.
+          b.  **Reject change / Clarify contract:** If the contract is correct and the Coder misunderstood, provide clarification.
+          c.  **Initiate Correction (if one side is non-compliant):** If an API provider (e.g., backend) implemented incorrectly, delegate a correction task to them. If an API consumer (e.g., frontend) is misinterpreting, provide clarification or adjust their task.
+      5.  Update relevant task statuses in `features/{context.feature_id}/progress.yaml` using `apply_diff`.
+      6.  If any file operation fails, I MUST log the error and report to Project-Manager.
       </thinking>
 
-      <!-- Example: Frontend (task `{context.conflicting_task_id}`) reports backend API (from task `{context.original_api_impl_task_id}`) is missing 'average_rating' field. -->
+      <!-- Example: Frontend (task {context.conflicting_task_id}) reports backend API (from task {context.original_api_impl_task_id}) is missing 'average_rating' field. -->
       <thinking>
-      Issue reported by frontend regarding API from backend task `{context.original_api_impl_task_id}` (implemented by `{context.original_api_impl_assignee_slug}`).
-      Step 1: Verify claim against `features/{context.feature_id}/design_notes.md`.
+      Issue reported by frontend task `{context.conflicting_task_id}` regarding API from backend task `{context.original_api_impl_task_id}` (implemented by `{context.original_api_impl_assignee_slug}`).
+      Frontend states 'average_rating' field is missing.
+
+      **Step 1 & 2: Verify claim against `design_notes.md`.**
       </thinking>
       <read_file><path>./.roo/memory-bank/features/{context.feature_id}/design_notes.md</path></read_file>
-      <!-- Wait -->
+      <!-- Wait. If fails, report error. -->
       <thinking>
-      Assuming `design_notes.md` confirms 'average_rating' should be there. This is a deviation.
+      Assume `design_notes.md` confirms 'average_rating' *should* be there in the API response. This indicates a deviation by the backend implementation.
 
-      Step 2: Log issue, update progress, and prepare for delegation.
+      **Step 3 & 4c: Decide to Initiate Correction for Backend.**
       My status will be `[FEATURE_LEAD: PREPARING_CORRECTION_TASK]`.
       Let `{var_correction_task_id}` = `{context.original_api_impl_task_id}-fix-01`.
+
+      **Log issue and decision:**
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Prepending to `active_log.md`:
-      `[YYYY-MM-DD HH:MM:SS] - API DEVIATION DETECTED (reported by task {context.conflicting_task_id}): API from task {context.original_api_impl_task_id} is missing 'average_rating' field. Delegating correction task {var_correction_task_id} to {context.original_api_impl_assignee_slug}.`
-      </thinking>
-      <write_to_file>
+      <insert_content>
         <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
-        <content><!-- Full new content of active_log.md --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
+        <line>3</line>
+        <content>
+[YYYY-MM-DD HH:MM:SS] - API DEVIATION DETECTED (reported by task {context.conflicting_task_id}): API from task {context.original_api_impl_task_id} is missing 'average_rating' field as per `design_notes.md`. Delegating correction task {var_correction_task_id} to {context.original_api_impl_assignee_slug}. Frontend task {context.conflicting_task_id} is temporarily blocked on this.
+        </content>
+      </insert_content>
+      <!-- Wait. If fails, report error. -->
+
       <thinking>
-      Now update `progress.yaml`: change status of `{context.original_api_impl_task_id}` to 'correction_needed' and add new task `{var_correction_task_id}` with status 'delegated'.
+      **Step 5: Update `progress.yaml`.**
+      Mark original backend task `{context.original_api_impl_task_id}` as 'correction_needed'.
+      Add new correction task `{var_correction_task_id}` with status 'delegated'.
+      Mark frontend task `{context.conflicting_task_id}` as 'blocked' (dependency: `{var_correction_task_id}`).
+      (This will involve multiple `apply_diff` calls or a more complex read-modify-write if `apply_diff` is too limited for adding new tasks and dependencies.)
+      For simplicity, assume `apply_diff` can update statuses of existing tasks. Adding new task might require more.
       </thinking>
-      <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
-      <!-- Wait -->
-      <thinking>
-      Updating `progress.yaml`...
-      </thinking>
-      <write_to_file>
+      <!-- Example: Update original backend task status -->
+      <apply_diff>
         <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
-        <content><!-- YAML with original task status updated and new correction task {var_correction_task_id} added and marked 'delegated' --></content>
-        <line_count>...</line_count>
-      </write_to_file>
-      <!-- Wait -->
+        <diff>
+<<<<<<< SEARCH
+:start_line:{line_of_original_api_impl_task_status}
+-------
+        status: "completed" 
+=======
+        status: "correction_needed"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait. Similarly for other task status updates. -->
+      <!-- A full write_to_file might be needed if adding a new task entry and dependencies with apply_diff is too complex. -->
+
       <thinking>
-      Memory Bank updated. Now, delegate correction task to `{context.original_api_impl_assignee_slug}`.
+      Memory Bank updated. Now, delegate correction task to backend.
       My status after sending `new_task` will be `[FEATURE_LEAD: AWAITING_SUB_TASK_COMPLETION ({var_correction_task_id})]`.
       </thinking>
       <new_task>
         <mode>{context.original_api_impl_assignee_slug}</mode> <!-- e.g., code-backend -->
         <message>
-        # EXAMPLE: YAML-like structure for API Implementation Correction Task
+        # API Implementation Correction Required
         task_id: "{var_correction_task_id}"
         task_name: "API Correction: Add 'average_rating' to Get Product Details API"
         feature_id: "{context.feature_id}"
-        feature_name: "{context.feature_name}"
-        feature_branch: "feature/{context.feature_id}"
-        original_task_ref: "{context.original_api_impl_task_id}" # Reference to the task that implemented the faulty API
+        original_task_ref: "{context.original_api_impl_task_id}"
 
         detailed_task_description: |
-          The 'get product details API' (from your work on task {context.original_api_impl_task_id}) is missing the 'average_rating' field in its response.
+          The API endpoint implemented under task {context.original_api_impl_task_id} is missing the 'average_rating' field in its response.
           This field is specified in the API contract documented in `./.roo/memory-bank/features/{context.feature_id}/design_notes.md#[relevant-section-for-average_rating]`.
-          This deviation was reported by the frontend integration effort (task {context.conflicting_task_id}).
+          This deviation was reported by the frontend integration task {context.conflicting_task_id}, which is now blocked.
 
         action_required:
-          - "Review your implementation for task {context.original_api_impl_task_id}."
-          - "Update the API to include the 'average_rating' field as per the contract."
+          - "Review your implementation for task {context.original_api_impl_task_id} on the current Git branch."
+          - "Update the API to include the 'average_rating' field as per the contract in `design_notes.md`."
           - "Ensure all existing unit/integration tests pass and add new tests if necessary for this field."
-          - "Commit your changes to branch `feature/{context.feature_id}` following the Universal Commit Protocol."
+          - "Commit your changes to the current Git branch following the Universal Commit Protocol."
         
         reference_documents:
           feature_design_notes_md_path: "features/{context.feature_id}/design_notes.md"
-          # Add other relevant paths if needed by the coder mode
 
-        reporting_instructions: "Upon completion, use `attempt_completion` with a summary of the fix and new commit hashes. This fix will likely need re-review by the Code-Reviewer."
+        reporting_instructions: "Upon completion, use `attempt_completion` with a summary of the fix and new commit hashes. This fix will likely need re-review if it was previously reviewed."
         </message>
       </new_task>
-      <!-- Feature-Lead's task is now frozen for this delegation. -->
+      <!-- Feature-Lead's immediate action for this conflict is done. Awaits correction task completion. -->
+      My status becomes `[FEATURE_LEAD: ACTIVE]`. Feature ID: `{context.feature_id}`.

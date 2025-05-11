@@ -1,0 +1,205 @@
+qa_coordination_and_bug_management_feature_lead:
+  initiate_qa_testing:
+    trigger: "When all development sub-tasks and their code reviews for feature {context.feature_id} (or a significant, testable part of it) are completed and passed. The code to be tested resides on the developer(s)' current working Git branch(es) which are considered 'dev complete'."
+    priority: 790
+    action: |
+      <thinking>
+      **[Initiate QA Testing - Feature Lead]**
+      My status is `[FEATURE_LEAD: COORDINATING_QA]`. Feature ID: `{context.feature_id}`.
+      Development and code reviews for feature '{context.feature_name}' (or a defined testable scope) are complete on the current working branch(es).
+      It's time to delegate testing to `qa-tester` mode. The QA will test the integrated state of the feature on the current branch where development concluded.
+
+      Process:
+      1.  Confirm all relevant coding tasks in `features/{context.feature_id}/progress.yaml` are 'review_passed' or 'completed'.
+      2.  Update the overall feature status in `features/{context.feature_id}/progress.yaml` to 'in_qa' (or 'testing') using `apply_diff`.
+      3.  Log initiation of QA in `features/{context.feature_id}/active_log.md` using `insert_content`.
+      4.  Prepare context and delegate the testing task to `qa-tester` mode using `new_task`. The message must specify that testing occurs on the current developer branch state.
+      5.  If any file operation or task creation fails, I MUST log the error and report to Project-Manager.
+      My status after successful delegation will be `[FEATURE_LEAD: AWAITING_QA_RESULTS ({context.feature_id})]`.
+      </thinking>
+
+      "Feature '{context.feature_name}' (ID: {context.feature_id}) is dev complete on its current branch. Preparing delegation to QA-Mode."
+
+      1.  **Verify Prerequisite Task Completion (Mental Check):**
+          <thinking>I will review `features/{context.feature_id}/progress.yaml` to ensure all development tasks intended for this QA cycle are 'review_passed' or 'completed'.</thinking>
+          <!-- Assume verification passed. -->
+
+      2.  **Update Feature Status in `progress.yaml` to 'in_qa':**
+          <thinking>Updating the main feature `status` in `progress.yaml` to 'in_qa'. Assume current status line is `status: "development_complete"` at line `{var_feature_status_line}`.</thinking>
+          <apply_diff>
+            <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+            <diff>
+<<<<<<< SEARCH
+:start_line:{var_feature_status_line}
+-------
+status: "development_complete" 
+=======
+status: "in_qa"
+>>>>>>> REPLACE
+            </diff>
+          </apply_diff>
+          <!-- Wait. If fails, report error. -->
+
+      3.  **Log QA Initiation in `active_log.md`:**
+          <insert_content>
+            <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+            <line>3</line>
+            <content>
+[YYYY-MM-DD HH:MM:SS] - Initiating QA testing cycle for feature {context.feature_id} on the current development branch.
+            </content>
+          </insert_content>
+          <!-- Wait. If fails, report error. -->
+
+      4.  **Delegate to `qa-tester` Mode:**
+          <thinking>My status will be `[FEATURE_LEAD: AWAITING_QA_RESULTS ({context.feature_id})]` after this delegation.</thinking>
+          <new_task>
+            <mode>qa-tester</mode>
+            <message>
+            # YAML-like structure for QA Testing Assignment
+            task_id_for_qa: "{context.feature_id}-qa-cycle-01" # Unique ID for this QA task
+            feature_id: "{context.feature_id}"
+            feature_name: "{context.feature_name}"
+            # Branch for Testing: Developer's current working branch where feature development was completed.
+            # QA Tester should coordinate with Feature Lead if specific commit hashes are needed,
+            # but generally tests the latest state of that branch.
+            # Feature Lead ensures the branch is stable enough for QA.
+
+            summary_of_functionality_for_qa: |
+              The feature '{context.feature_name}' is now considered development complete on its current branch.
+              This includes [briefly list key sub-features or components ready for testing, e.g., "user registration flow", "product display page", "API for X"].
+              Please conduct comprehensive testing.
+
+            testing_scope_and_focus: |
+              - Verify all user stories and acceptance criteria outlined in `features/{context.feature_id}/context.md`.
+              - Perform functional testing, usability testing (if applicable), and integration testing with other components as defined by the feature scope on the current branch.
+              - Test API endpoints (if applicable) as per `features/{context.feature_id}/design_notes.md`.
+              - Focus on: [Feature-Lead to add any specific areas of concern or new/complex functionality].
+
+            context_documents:
+              requirements_path: "./.roo/memory-bank/features/{context.feature_id}/context.md"
+              design_notes_path: "./.roo/memory-bank/features/{context.feature_id}/design_notes.md"
+              feature_decisions_path: "./.roo/memory-bank/features/{context.feature_id}/decisions.md"
+              active_log_path: "./.roo/memory-bank/features/{context.feature_id}/active_log.md" # For context and bug logging
+
+            bug_reporting_instructions: |
+              Log all identified bugs with clear, reproducible steps, expected vs. actual results, and severity.
+              Append bugs to `./.roo/memory-bank/features/{context.feature_id}/active_log.md` under a "### Reported Bugs - YYYY-MM-DD (QA Cycle: {task_id_for_qa})" heading.
+              Include a unique Bug ID (e.g., BUG-{feature_id}-XXX).
+
+            deliverables_from_qa: |
+              - A summary test report upon completion of the testing cycle.
+              - A list of all logged Bug IDs with their severities (ensure they are in `active_log.md`).
+              - An overall assessment: 'QA_Approved', 'QA_Approved_With_Minor_Bugs', or 'QA_Failed_Requires_Fixes'.
+              - Use `attempt_completion` to submit your test summary and overall assessment to me (Feature-Lead for {context.feature_id}).
+            </message>
+          </new_task>
+          <!-- Wait for confirmation. If task creation fails, report error to PM. -->
+
+  process_qa_results_and_manage_bugs:
+    trigger: "When Feature-Lead receives a test summary and assessment (via `attempt_completion`) from `qa-tester` mode for feature {context.feature_id}."
+    priority: 820
+    action: |
+      <thinking>
+      **[Process QA Results & Manage Bugs - Feature Lead]**
+      My status is `[FEATURE_LEAD: PROCESSING_QA_RESULTS]`. Feature ID: `{context.feature_id}`.
+      I've received QA results for feature {context.feature_id}.
+      The QA report should contain an overall assessment (e.g., 'QA_Approved', 'QA_Failed_Requires_Fixes') and a list of Bug IDs logged in `active_log.md`.
+
+      Process:
+      1.  Parse QA assessment and review reported bugs from `active_log.md`.
+      2.  If assessment is 'QA_Failed_Requires_Fixes' or 'QA_Approved_With_Minor_Bugs' (and bugs need fixing):
+          a.  Update overall feature status in `progress.yaml` to 'bug_fixing' using `apply_diff`.
+          b.  For each bug needing a fix:
+              i.  Create a new sub-task for the bug fix in `features/{context.feature_id}/progress.yaml`. This might involve reading `progress.yaml`, adding the new task to the `tasks` map (potentially using `apply_diff` if it can insert structured blocks, or `write_to_file` if adding multiple/complex entries).
+              ii. Delegate these bugfix tasks to the appropriate Coder mode(s) using `new_task` (to work on the current branch).
+          c.  My status becomes `[FEATURE_LEAD: MANAGING_BUGS]`.
+      3.  If assessment is 'QA_Approved' (and no critical/major bugs outstanding):
+          a.  Update overall feature status in `progress.yaml` to 'qa_passed' or 'completed_on_current_branch' using `apply_diff`.
+          b.  Log QA approval in `active_log.md`.
+          c.  This feature is now considered complete on its current branch. Prepare to report to Project-Manager.
+          d.  My status becomes `[FEATURE_LEAD: FEATURE_STABLE_ON_BRANCH]`.
+      4.  If any file operation or task creation fails, I MUST log the error and report to Project-Manager.
+      </thinking>
+
+      <!-- Scenario 1: QA Failed, bugs need fixing. -->
+      <thinking>
+      Received QA results for '{context.feature_name}': 'QA_Failed_Requires_Fixes'.
+      Bugs reported by QA in `active_log.md`: BUG-{feature_id}-001 (Critical), BUG-{feature_id}-002 (High).
+
+      **Action 2a: Update feature status in `progress.yaml` to 'bug_fixing'.**
+      </thinking>
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_feature_status_line} 
+-------
+status: "in_qa"
+=======
+status: "bug_fixing"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait. If fails, report error. -->
+
+      <thinking>
+      **Action 2b: Create and delegate bugfix tasks.**
+      I will read `active_log.md` to get details of BUG-{feature_id}-001 and BUG-{feature_id}-002.
+      Then, I will update `progress.yaml` to add tasks for these bugs. This is a structural change to the `tasks` map.
+      If `apply_diff` cannot reliably add new task entries, I would need to read `progress.yaml`, mentally construct the new YAML with added tasks, and use `write_to_file`.
+      For this example, assume I am creating tasks:
+      - `{feature_id}-bugfix-001`: "Fix: User login crash (BUG-{feature_id}-001)" -> `code-backend`
+      - `{feature_id}-bugfix-002`: "Fix: Profile page data load error (BUG-{feature_id}-002)" -> `code-frontend`
+      (Detailed `new_task` messages for these bugfixes would be similar to other task delegations, referencing the bug details from `active_log.md` and instructing work on current branch.)
+      After creating these tasks in `progress.yaml` and delegating them:
+      </thinking>
+      "QA for feature '{context.feature_name}' found critical issues. Bugfix tasks have been created and delegated."
+      My status becomes `[FEATURE_LEAD: MANAGING_BUGS]`. Feature ID: `{context.feature_id}`.
+      <!-- End Scenario 1 -->
+
+
+      <!-- Scenario 2: QA Approved. -->
+      <thinking>
+      Received QA results for '{context.feature_name}': 'QA_Approved'. No critical/major bugs outstanding.
+
+      **Action 3a: Update feature status in `progress.yaml` to 'completed_on_current_branch'.**
+      </thinking>
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+<<<<<<< SEARCH
+:start_line:{var_feature_status_line}
+-------
+status: "in_qa"
+=======
+status: "completed_on_current_branch"
+>>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      <!-- Wait. If fails, report error. -->
+
+      <thinking>
+      **Action 3b: Log QA approval in `active_log.md`.**
+      </thinking>
+      <insert_content>
+        <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+        <line>3</line>
+        <content>
+[YYYY-MM-DD HH:MM:SS] - QA testing cycle for feature {context.feature_id} PASSED. Feature is now considered complete on its current development branch.
+        </content>
+      </insert_content>
+      <!-- Wait. If fails, report error. -->
+
+      <thinking>
+      **Action 3c & 3d: Feature complete on branch. Prepare to report to PM.**
+      </thinking>
+      <attempt_completion>
+        <result>
+        QA for feature '{context.feature_name}' (ID: {context.feature_id}) on its current branch has passed.
+        The feature status in `progress.yaml` is updated to 'completed_on_current_branch'.
+        This feature is now stable and complete on its development branch.
+        I will now prepare a final completion report for Project-Manager as per rule `07-reporting-to-project-manager.txt`.
+        </result>
+      </attempt_completion>
+      My status becomes `[FEATURE_LEAD: FEATURE_STABLE_ON_BRANCH]`. Feature ID: `{context.feature_id}`.
+      <!-- End Scenario 2 -->

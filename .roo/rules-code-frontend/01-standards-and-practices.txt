@@ -3,6 +3,13 @@
 # and required dependency management protocols for frontend code (TypeScript-focused).
 # It MUST be referenced and adhered to by Code-Frontend Mode during task execution.
 
+# STANDARDS APPLICATION HIERARCHY:
+# When implementing tasks, Code-Frontend Mode MUST prioritize standards and preferences in the following order:
+# 1.  **User's Direct Instructions/Feedback for the Current Task:** Specific instructions or feedback provided by the user for the immediate task at hand override all other guidelines.
+# 2.  **Project-Level Coding Preferences:** Guidelines and preferences documented in `./.roo/memory-bank/global/coding_preferences.md` (if this file exists and contains relevant frontend preferences).
+# 3.  **This Standards Document:** The rules and protocols defined within this file (`.roo/rules-code-frontend/01-standards-and-practices.txt`).
+# 4.  **General AI Knowledge & Best Practices:** The AI's foundational knowledge of software engineering principles and common best practices should be applied when no specific higher-priority guideline exists.
+
 general_guidelines:
   title: "General Coding Standards and Best Practices"
   description: "Ensure frontend code is readable, maintainable, performant, accessible, secure, and robust."
@@ -15,151 +22,152 @@ general_guidelines:
 
 code_style_and_formatting:
   linter_formatter:
-    rule: "ESLint (with appropriate TypeScript plugins like `@typescript-eslint/eslint-plugin`) and Prettier MUST be used for code linting and formatting. Adhere strictly to the project's shared configurations (e.g., `.eslintrc.js`, `.prettierrc.js`)."
+    rule: "ESLint (with appropriate TypeScript plugins like `@typescript-eslint/eslint-plugin`) and Prettier MUST be used for code linting and formatting. Adhere strictly to the project's shared configurations (e.g., `.eslintrc.js`, `.prettierrc.js` if present in project root or `frontend/`)."
     note: "All linter/formatter reported errors/warnings MUST be resolved before considering a task complete or submitting code for review."
   indentation:
-    rule: "Use 2 spaces for indentation in all `.ts`, `.tsx`, `.js`, `.jsx`, `.vue`, `.html`, `.css`, `.scss`, `.less` files. Tabs are strictly prohibited."
+    rule: "Use 2 spaces for indentation in all `.ts`, `.tsx`, `.js`, `.jsx`, `.vue`, `.html`, `.css`, `.scss`, `.less` files. Tabs are strictly prohibited. Follow Prettier config if available."
   naming_conventions:
-    variables_functions_props: "Use camelCase (e.g., `userProfileData`, `calculateTotalPrice`, `isLoading`). For Vue props, kebab-case is used in templates but camelCase in script."
+    variables_functions_props: "Use camelCase (e.g., `userProfileData`, `calculateTotalPrice`, `isLoading`). For Vue props, kebab-case is used in templates but camelCase in `<script setup lang='ts'>`."
     constants: "Use UPPER_SNAKE_CASE (e.g., `API_BASE_URL`, `MAX_ITEMS_PER_PAGE`)."
     components_classes_interfaces_types_enums: "Use PascalCase (e.g., `UserProfileCard`, `AuthService`, `IUser`, `OrderStatus`). Component file names should match the component name (e.g., `UserProfileCard.vue`, `RegistrationForm.tsx`). Type/Interface files might be `types.ts` or feature-specific."
-    css_classes_ids: "Use kebab-case (e.g., `user-profile-card`, `submit-button-primary`) or BEM (`block__element--modifier`) or a convention dictated by the chosen CSS methodology (e.g., Tailwind utility classes, CSS Modules generated class names)."
+    css_classes_ids: "Use kebab-case (e.g., `user-profile-card`, `submit-button-primary`), BEM (`block__element--modifier`), or a convention dictated by the chosen CSS methodology (e.g., Tailwind CSS utility classes, CSS Modules generated class names)."
   file_structure:
-    rule: "Follow the established project directory structure for frontend applications (e.g., `src/components/`, `src/views/` or `src/pages/`, `src/services/` or `src/api/`, `src/store/` or `src/composables/`, `src/utils/`, `src/assets/`, `src/router/`, `src/types/`, `tests/unit/`, `tests/e2e/`). Group components by feature or commonality. If unsure, ask the Feature Lead or refer to existing structure."
+    rule: "Follow the established project directory structure within `frontend/src/` (e.g., `components/`, `views/` or `pages/`, `services/` or `api/`, `store/` or `composables/`, `utils/`, `assets/`, `router/`, `types/`). Group components by feature or commonality. Test files (e.g., `*.spec.ts`) should be co-located or in a `__tests__` subdirectory. If unsure, ask the Feature Lead or refer to existing structure."
 
 documentation_and_comments:
   language:
-    rule: "All comments, documentation (JSDoc/TSDoc, component API comments), logs, and commit messages MUST be written in English."
+    rule: "All comments, documentation (TSDoc for components/props/events, services), logs, and commit messages MUST be written in English."
   component_documentation:
-    rule: "All reusable UI components MUST have clear documentation, typically using TSDoc/JSDoc comments above prop type definitions, emits declarations (Vue), or within the component's main comment block. This should explain: purpose, all props (name, type, required status, default value, description), emitted events (name, payload structure), and slots (if applicable). Provide usage examples if the component is complex or has non-obvious behavior."
+    rule: "All reusable UI components MUST have clear TSDoc comments above prop type definitions, emits declarations (Vue), or within the component's main comment block. Document: purpose, all props (name, type, required, default, description), emitted events (name, payload structure), and slots."
   hook_service_documentation:
-    rule: "Reusable hooks (React), composables (Vue), and service functions MUST be documented with their purpose, parameters (with types), return values (with types), and any important side effects or usage notes."
-  inline_comments:
-    rule: "Use inline comments sparingly, primarily to clarify complex algorithms, non-obvious logic, critical business rules, or workarounds for known issues. Explain the 'why', not just the 'what'."
-  todo_fixme_notes:
-    rule: "Use `// TODO:` or `/* TODO: */` for planned enhancements or refactors. Use `// FIXME:` or `/* FIXME: */` for known issues or bugs needing to be addressed. Include a brief description and, if possible, a reference to a task ID from `features/{feature_id}/progress.yaml`."
+    rule: "Reusable hooks (React), composables (Vue), and service functions MUST be documented with TSDoc: purpose, parameters (with types), return values (with types), and important side effects."
+  inline_comments: "Use sparingly for complex or non-obvious logic. Explain the 'why'."
+  todo_fixme_notes: "Use `// TODO:` or `// FIXME:`. Include a brief description and optionally a task ID."
 
-technology_stack_and_practices_frontend: # Adapted for frontend
-  framework_specifics: # Examples (Vue, React, Angular - project will use one)
-    vue_js: "Utilize Vue 3 Composition API where appropriate for logic reuse and organization. Follow SFC (Single File Component) best practices. Understand reactivity system, component lifecycle, props/emits, slots. Use `<script setup lang=\"ts\">` for new components."
-    react_ts: "Favor functional components with Hooks. Understand component lifecycle, state management with `useState`/`useReducer`, context API. Properly type props and state. Use JSX/TSX effectively."
-    angular_ts: "Follow Angular module structure, component architecture, dependency injection, RxJS for asynchronous operations, and TypeScript best practices within the Angular ecosystem."
+technology_stack_and_practices_frontend: # Assuming Vue 3 with TypeScript as an example
+  framework_specifics:
+    vue_js_ts: "Utilize Vue 3 Composition API with `<script setup lang=\"ts\">` for new components. Follow SFC best practices. Understand reactivity, component lifecycle, props/emits, slots. Use Pinia for state management if adopted project-wide."
   state_management:
-    rule: "Utilize the project's designated state management library (e.g., Pinia for Vue; Redux Toolkit, Zustand, or Jotai for React; NgRx for Angular) for managing global or complex shared application state. Avoid excessive prop drilling."
-    best_practice: "Keep state normalized and serializable. Use selectors/getters for derived data. Follow established patterns for actions/mutations/reducers/stores. Ensure state changes are traceable."
+    rule: "Use the project's designated state management library (e.g., Pinia, Vuex, Redux Toolkit, Zustand) for global or complex shared state. Avoid excessive prop drilling."
   component_design:
-    rule: "Design components to be as reusable and decoupled as possible. Break down complex UI into smaller, manageable, and testable components. Clearly define component APIs via props (with types and validation) and emitted events/callbacks."
-    props_events: "Props should be clearly typed. For events, define their names and payload structures consistently."
+    rule: "Design reusable, decoupled components. Break down complex UI. Clearly define component APIs (typed props, emits)."
   routing:
-    rule: "Use the project's standard routing library (e.g., Vue Router, React Router DOM, Angular Router) for client-side navigation. Define routes clearly, using route parameters and guards where necessary. Implement lazy loading for feature modules/routes to improve initial load time."
+    rule: "Use the project's standard routing library (e.g., Vue Router). Define routes clearly. Implement lazy loading for routes/modules."
   api_interaction:
-    client:
-      rule: "Use the designated API client utility/library (e.g., an Axios instance wrapper, a service using `fetch`, TanStack Query, SWR, Apollo Client for GraphQL) configured for the project. This client should handle base URLs, common headers (like Authorization), and potentially global error handling or request/response interceptors."
-    best_practice: "Handle API request states (loading, success, error) gracefully in the UI, providing appropriate user feedback (e.g., loading spinners, success messages, error notifications). Centralize API call logic in services or custom hooks/composables rather than directly in components."
-    data_contracts: "Strictly adhere to API contracts provided by the backend (see `features/{feature_id}/design_notes.md` or API specs). Use TypeScript interfaces/types to model request payloads and expected response data. Raise discrepancies with Feature Lead."
+    client: "Use the designated API client utility (e.g., Axios instance, TanStack Query wrapper). Handle base URLs, headers, and global error handling/interceptors centrally."
+    best_practice: "Handle API request states (loading, success, error) gracefully in UI. Centralize API call logic in services/composables."
+    data_contracts: "Strictly adhere to backend API contracts (`features/{feature_id}/design_notes.md`). Use TypeScript interfaces/types for request/response payloads."
   styling:
-    rule: "Use the project's established styling approach (e.g., Scoped CSS in Vue SFCs, CSS Modules with TypeScript, Styled Components/Emotion for React, Tailwind CSS, or a global SCSS/LESS architecture). Avoid unscoped global styles unless part of a deliberate theming strategy."
-    responsiveness_adaptiveness:
-      rule: "All UI components and layouts MUST be responsive and adapt gracefully to common viewport sizes (mobile, tablet, desktop) and orientations, unless explicitly stated otherwise for a specific component or target platform. Test responsiveness thoroughly."
-  internationalization_i18n:
-    rule: "All user-facing strings (UI text, labels, buttons, error messages, date/number formats, etc.) MUST NOT be hardcoded in components. Use the project's designated i18n library (e.g., `vue-i18n`, `react-i18next`, `ngx-translate`) and translation keys stored in locale-specific JSON or JS/TS files."
-    best_practice: "Use descriptive and consistently structured keys. Provide default English (or project's primary language) translations. Ensure mechanisms for handling pluralization and interpolation are used correctly."
-  accessibility_a11y:
-    rule: "Develop all UI components and features with accessibility (a11y) as a primary concern from the start. Use semantic HTML5 elements correctly. Ensure full keyboard navigability for all interactive elements. Provide appropriate ARIA (Accessible Rich Internet Applications) attributes where semantic HTML is insufficient (e.g., for custom widgets, dynamic content updates). Ensure sufficient color contrast."
-    best_practice: "Refer to WCAG (Web Content Accessibility Guidelines) 2.1 AA as a minimum target. Use browser developer tools, accessibility linters (e.g., eslint-plugin-jsx-a11y), and automated checkers. Perform manual testing with keyboard and screen readers if possible."
+    rule: "Use project's established styling (e.g., Scoped CSS in Vue SFCs, Tailwind CSS, CSS Modules). Avoid unscoped global styles unless for theming."
+  responsiveness_adaptiveness: "UI MUST be responsive (mobile, tablet, desktop) unless specified otherwise."
+  internationalization_i18n: "All user-facing strings MUST use the project's i18n library and translation keys. No hardcoded strings."
+  accessibility_a11y: "Develop with accessibility (WCAG 2.1 AA minimum) as a primary concern. Use semantic HTML, ensure keyboard navigability, provide ARIA attributes where needed, ensure sufficient color contrast."
 
 testing_practices_frontend:
   unit_component_tests:
-    rule: "All significant UI components (especially those with logic, props, events, or slots) and utility functions/hooks/composables MUST have corresponding unit or component tests. Aim for good coverage of rendering logic, props validation/effects, event emissions, user interactions, and edge cases."
-    framework: "Use the project's standard frontend testing framework (e.g., Vitest or Jest with Vue Test Utils for Vue; Jest or Vitest with React Testing Library for React; Jest/Karma with Angular Testing Utilities for Angular)."
-    best_practice: "Tests should be isolated, fast, and readable. Focus on testing component behavior from a user's perspective. Mock child components, API calls, and external dependencies appropriately. Follow Arrange-Act-Assert (AAA) or Given-When-Then (GWT)."
-  integration_tests_frontend: # Component integration or page-level tests
-    rule: "Consider integration tests for views/pages that orchestrate multiple components, interact with global state, or involve complex user flows. These tests verify that components work together correctly."
-  end_to_end_e2e_tests: # Usually handled by QA-Mode or dedicated E2E automation
-    _comment: "Code-Frontend mode is typically not responsible for writing E2E tests, but should be aware that their code will be subject to them. Ensure DOM elements have stable selectors for E2E testability if requested."
-  test_organization_and_clarity:
-    rule: "Test files (e.g., `MyComponent.spec.ts`) should be colocated with the component or organized logically (e.g., in a `__tests__` subdirectory). Test names MUST clearly describe the scenario and expected outcome. Test code should be clean and maintainable."
-  running_tests:
-    rule: "All relevant unit and component tests MUST pass locally before committing code related to them or reporting task completion."
+    rule: "Significant UI components (logic, props, events, slots) and utility functions/composables MUST have unit/component tests. Aim for good coverage of rendering, interactions, and edge cases."
+    framework: "Use project's standard frontend testing framework (e.g., Vitest or Jest with Vue Test Utils / React Testing Library)."
+  integration_tests_frontend: "Consider integration tests for views/pages orchestrating multiple components or complex user flows."
+  test_organization_and_clarity: "Co-locate test files (e.g., `MyComponent.spec.ts`) or use `__tests__`. Test names MUST be descriptive. Follow AAA/GWT."
+  running_tests: "All relevant unit/component tests MUST pass locally before committing or reporting task completion."
 
 version_control_frontend:
-  branching:
-    rule: "All frontend development work for a feature MUST be done on the specific feature branch (e.g., `feature/{context.feature_id}`) provided by the Feature Lead."
+  branching_and_operations:
+    rule: "All frontend development work for a feature MUST be done on your **current Git branch**. Before starting work, ensure your branch is up-to-date by running `git pull`."
   commits:
-    rule: "Make small, atomic commits. Each commit should represent a single logical change. Commit messages MUST follow the Conventional Commits specification (all lowercase) and include the task ID and feature ID. Example: `feat({context.feature_id}): add registration form component ({context.task_id})` or `fix({context.feature_id}): correct validation logic in login form ({context.task_id})`."
+    rule: "You MUST follow the **Standard Commit Protocol** defined in the project rule file at `.roo/rules/02-commit-protocol.txt`. This includes making small, atomic commits, using Conventional Commit messages (all lowercase), and including the relevant task ID (e.g., `{feature_id}/{task_id}`)."
   pushing_changes:
-    rule: "Push changes to the remote feature branch regularly, and always before reporting task completion or requesting a code review."
+    rule: "Push changes to your current branch's remote counterpart (e.g., using `git push origin HEAD`) regularly, and always before reporting task completion or requesting a code review."
 
 security_best_practices_frontend:
-  client_side_validation:
-    rule: "Implement client-side input validation for immediate user feedback and better UX, but NEVER rely solely on it. Server-side validation by the backend is the authoritative source of truth for data integrity and security."
-  data_exposure_and_handling:
-    rule: "Avoid exposing sensitive information (e.g., internal API keys meant for backend use, raw user tokens if not necessary for direct use, excessive internal state details) in the frontend JavaScript bundle, browser local storage/session storage (unless absolutely necessary and understood), or console logs. Sanitize any user-generated content before rendering it to prevent XSS (Cross-Site Scripting) vulnerabilities (modern frameworks often do this by default, but be aware)."
-  api_security:
-    rule: "Ensure API requests are made over HTTPS. Handle authentication tokens (e.g., JWTs) securely (e.g., store in HttpOnly cookies if possible, or secure local storage with appropriate measures, and send via Authorization header). Be aware of CSRF (Cross-Site Request Forgery) and CORS (Cross-Origin Resource Sharing) policies."
-  dependency_vulnerability_management:
-    rule: "Be mindful of frontend dependencies (npm packages). Use reputable, well-maintained libraries. Check for known vulnerabilities before adding new dependencies and keep existing ones updated (coordinated with Feature Lead). Use tools like `npm audit` or project's SCA solution."
+  client_side_validation: "Implement for UX, but NEVER rely on it solely. Server-side validation is authoritative."
+  data_exposure_and_handling: "Avoid exposing sensitive info in JS bundle, local storage (unless essential & secured), or logs. Sanitize user-generated content before rendering (frameworks often help)."
+  api_security: "Use HTTPS. Handle auth tokens securely (e.g., HttpOnly cookies or secure local storage if necessary; send via Authorization header). Be aware of CSRF, CORS."
+  dependency_vulnerability_management: "Use reputable npm packages. Check for vulnerabilities before adding/updating (see Dependency Management Protocols). Keep dependencies updated via `pnpm up` or similar, coordinated with Feature Lead."
 
 performance_considerations_frontend:
-  efficient_rendering_and_updates:
-    rule: "Write efficient component code to minimize unnecessary re-renders (e.g., use `React.memo`, `shouldComponentUpdate`, `PureComponent` in React; computed properties, `v-memo` in Vue; OnPush change detection in Angular). Be mindful of prop drilling and its impact."
-  bundle_size_and_code_splitting:
-    rule: "Strive for small bundle sizes. Utilize code splitting (route-based, component-based) to load only necessary JavaScript/CSS for the initial view. Lazy load non-critical components and routes."
-  asset_optimization:
-    rule: "Optimize images (compression, responsive images using `<picture>` or `srcset`). Use web fonts efficiently. Minify JS/CSS (usually handled by build tools)."
-  data_fetching_and_state:
-    rule: "Fetch only necessary data. Avoid over-fetching. Use efficient state management patterns to prevent redundant data or excessive updates. Consider client-side caching for API responses where appropriate (e.g., using TanStack Query, SWR, Apollo Client cache)."
-  profiling_and_optimization:
-    rule: "Use browser developer tools (Performance tab, Lighthouse) to profile frontend performance (load time, rendering, JS execution). Identify and address actual bottlenecks. Avoid premature optimization."
+  efficient_rendering_and_updates: "Minimize unnecessary re-renders (e.g., `React.memo`, Vue's reactivity optimizations)."
+  bundle_size_and_code_splitting: "Strive for small bundles. Use route/component-based code splitting. Lazy load."
+  asset_optimization: "Optimize images, fonts. Minify JS/CSS (build tool's job)."
+  data_fetching_and_state: "Fetch only necessary data. Use efficient state management. Consider client-side caching for API responses."
+  profiling_and_optimization: "Use browser dev tools (Performance, Lighthouse) to profile and address actual bottlenecks."
 
-# --- Frontend Dependency Management Protocols (Adapted from Backend/Solution X) ---
+# --- Frontend Dependency Management Protocols (npm) ---
+# These protocols MUST be followed when dealing with external npm packages.
 dependency_management_protocols_frontend:
+  protocol_introduction:
+    message: "IMPORTANT: When your task involves using, adding, or updating npm packages for the frontend, you MUST follow the protocols below. This ensures up-to-date information, helps avoid vulnerabilities, and maintains project compatibility."
+
   documentation_lookup_frontend:
     trigger_conditions:
-      - "When planning to use a specific external frontend library/package (npm dependency) for the first time or for a non-trivial new feature."
-      - "When encountering errors (e.g., type errors, runtime errors, build issues) or uncertainty related to the usage of a specific external frontend library."
+      - "Before using an npm package for the first time for a feature."
+      - "When encountering errors (type errors, runtime issues, build problems), uncertainty, or needing to understand best practices for a specific npm package."
+      - "When asked by the Feature Lead to research an npm package's specific usage pattern."
     priority: 700
     required_action: |
       <thinking>
-      **[Protocol Triggered: Frontend Library Documentation Lookup]**
-      I need information about an external frontend library ('<Identify Library Name>') for correct usage.
-      **I MUST consult the latest official documentation (via MCP tools like `package-docs`, `context7`, or web search) BEFORE proceeding.**
-      Plan:
-      1.  Identify Library & Context (e.g., 'react-query', 'zustand', 'vue-router').
-      2.  Use `package-docs.describe_npm_package` or `context7` or targeted web search.
-      3.  Analyze & Apply fetched info for implementation or troubleshooting.
+      **[Protocol Triggered: Frontend (npm) Library Documentation Lookup]**
+      I need up-to-date information about the npm package: '<Identify Package Name>'.
+      My internal knowledge might be outdated. I MUST consult its official documentation.
+
+      Action Plan:
+      1.  **Identify Package Name:** Confirm the exact npm package name.
+      2.  **Select MCP Tool for Documentation:**
+          *   Prefer `package-docs` server:
+              *   Use `describe_npm_package` tool to get a summary and confirm relevance. Arguments: `{"package": "<package_name>"}`.
+              *   For detailed search within docs, use `search_package_docs`. Arguments: `{"package": "<package_name>", "query": "<search_term>", "language": "npm"}`.
+              *   To get full README/documentation sections, use `get_npm_package_doc`. Arguments: `{"package": "<package_name>", "section": "[optional_section_name]", "query": "[optional_query]"}`.
+          *   Alternatively, use `context7` server: First, `resolve-library-id` (e.g., `{"libraryName": "<package_name>"}`), then `get-library-docs` with the obtained ID.
+          *   If MCP tools fail or are unsuitable, perform a targeted web search for "official [package_name] documentation" or "[package_name] npm".
+      3.  **Analyze & Apply:** Carefully review the fetched documentation. Use this information to implement the code correctly, following documented patterns, API usage, and best practices for the frontend framework in use (e.g., Vue, React, Angular).
+      If, after consulting documentation, I still face unresolvable issues, I will report this as a blocker to the Feature Lead, detailing the package, the issue, and the documentation I consulted.
       </thinking>
-      <!-- Example for an npm package -->
+      <!-- Example: Looking up 'axios' using package-docs -->
       <!--
       <use_mcp_tool>
         <server_name>package-docs</server_name>
         <tool_name>describe_npm_package</tool_name>
-        <arguments>{"package": "zustand"}</arguments>
+        <arguments>{"package": "axios"}</arguments>
       </use_mcp_tool>
       -->
 
   dependency_addition_or_update_frontend:
     trigger_conditions:
-      - "When the task requires adding a new npm package to `frontend/package.json`."
-      - "When the task requires updating an existing npm package in `frontend/package.json`."
+      - "When the task requires adding a NEW npm package to `frontend/package.json`."
+      - "When the task requires UPDATING an existing npm package to a new version in `frontend/package.json`."
     priority: 600
     required_action: |
       <thinking>
-      **[Protocol Triggered: Frontend Dependency Addition/Update]**
-      Task involves frontend dependencies in `frontend/package.json`.
-      I MUST:
-      1.  **Check for Vulnerabilities & Compatibility:** Before adding/major update, check for known vulnerabilities and ensure compatibility with current framework versions (e.g., React, Vue).
-      2.  **Check Latest Stable Version:** Use `package-version.check_npm_versions` MCP tool or npmjs.com to find the latest stable and compatible version.
-      3.  **Update `package.json`:** `<read_file>`, modify `dependencies` or `devDependencies` object in thought, `<write_to_file>` updated content.
-      4.  **Trigger Auto-Install:** `auto_install_dependencies_frontend` protocol should follow.
-      5.  **Document Rationale (if significant):** Note in `features/{feature_id}/decisions.md` or commit if a non-obvious choice was made.
+      **[Protocol Triggered: Frontend (npm) Dependency Addition/Update]**
+      The current task requires adding or updating npm package(s) in `frontend/package.json`.
+      Let the package be '<Identify Package Name>'.
+
+      Action Plan:
+      1.  **Consult Documentation (if new package):** If this is a new package for me or the project, first trigger `documentation_lookup_frontend` protocol.
+      2.  **Determine Target Version:**
+          *   If a specific version is requested, use that.
+          *   Otherwise, I MUST find the latest stable version compatible with the project's frontend framework and other key dependencies. Use `package-version` MCP server's `check_npm_versions` tool.
+          *   Example: `<use_mcp_tool><server_name>package-version</server_name><tool_name>check_npm_versions</tool_name><arguments>{"dependencies": {"<package_name>": "latest"}}</arguments></use_mcp_tool>`. The result will provide the latest stable version string (e.g., "^1.2.3").
+      3.  **Check for Known Vulnerabilities (Conceptual):** (Note: A dedicated tool for vulnerability scanning is ideal. If not available, rely on up-to-date library versions from reputable sources).
+      4.  **Update `frontend/package.json`:**
+          a.  `<read_file><path>frontend/package.json</path></read_file>`.
+          b.  Modify the `dependencies` or `devDependencies` object in the parsed JSON content to add the new package with the determined version (e.g., `"<package_name>": "^1.2.3"`) or update the existing package's version string.
+          c.  Convert the modified JSON object back to a string.
+          d.  `<write_to_file><path>frontend/package.json</path><content>[new_json_string]</content><line_count>[lc]</line_count></write_to_file>`. If this write fails, report as a blocker.
+      5.  **Trigger Automatic Dependency Installation:** After a successful `write_to_file` for `frontend/package.json`, the `auto_install_dependencies_frontend` protocol MUST be immediately triggered.
+      6.  **Document Rationale (if significant):** If a non-latest version or a less common package is chosen, note why in the commit message or request Feature Lead to log in `features/{feature_id}/decisions.md`.
       </thinking>
-      <!-- Example: Adding 'axios' to frontend/package.json -->
+      <!-- Example: Adding "axios": "^1.2.0" to frontend/package.json -->
       <!--
       <read_file><path>frontend/package.json</path></read_file>
-      <thinking>Adding "axios": "^1.0.0" to dependencies.</thinking>
-      <write_to_file>...</write_to_file>
+      <thinking>Current package.json content read. Will add/update "axios": "^1.2.0" to dependencies.</thinking>
+      <write_to_file>
+        <path>frontend/package.json</path>
+        <content>{... complete updated JSON content ...}</content>
+        <line_count>...</line_count>
+      </write_to_file>
       -->
+      <!-- This write_to_file success would then trigger auto_install_dependencies_frontend -->
 
   auto_install_dependencies_frontend:
     trigger_conditions:
@@ -168,15 +176,19 @@ dependency_management_protocols_frontend:
     required_action: |
       <thinking>
       **[Protocol Triggered: Auto-Install Frontend Dependencies]**
-      I have just modified `frontend/package.json`.
+      I have just successfully modified `frontend/package.json`.
       **I MUST now execute the package manager's install command in the `frontend/` directory.**
-      Plan:
-      1.  Determine Package Manager (e.g., `pnpm install`, `npm install`, `yarn install`). Assume `pnpm`.
-      2.  Working Directory: `frontend/`.
+      This ensures my local `node_modules` and lockfile (e.g., `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`) are updated.
+
+      Action Plan:
+      1.  **Determine Package Manager & Command:** Assume `pnpm` is the project standard. Command: `pnpm install`. (If `npm` or `yarn` are standard, use `npm install` or `yarn install` respectively).
+      2.  **Working Directory:** `frontend/`.
       3.  Use `execute_command`.
+      4.  If the installation command fails (e.g., peer dependency conflicts, network issues), I MUST report this as a blocker to the Feature Lead.
       </thinking>
       <execute_command>
       <command>pnpm install</command>
-      <cwd>frontend</cwd>
+      <cwd>frontend</cwd> <!-- Crucial: run in the frontend directory -->
       </execute_command>
-      <thinking>Frontend dependency installation command executed. Will note in task report.</thinking>
+      <!-- Wait for command output. If error, report blocker. -->
+      <thinking>Frontend dependency installation command executed in `frontend/` directory. I will note its success/failure in my final task report to Feature Lead.</thinking>

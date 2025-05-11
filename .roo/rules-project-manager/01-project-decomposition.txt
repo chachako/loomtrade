@@ -8,101 +8,143 @@ project_decomposition_strategy:
       My status is `[PROJECT_MANAGER: DECOMPOSING_PROJECT]`.
       I've received a high-level objective that needs to be broken down into manageable feature modules or epics.
       My goal is to identify distinct, high-level functionalities that can be developed and delivered as somewhat independent units.
-      I need to:
-      1.  Analyze the user's request and existing project context (from `global/project_overview.md` and `global/architecture_overview.md` if available).
+
+      Process:
+      1.  Analyze the user's request and existing project context (from `global/project_overview.md` and `global/architecture_overview.md` if available). If reading these files fails, I must inform the user I cannot proceed without this context.
       2.  Identify logical, large-scale components or user stories that can be treated as 'features' or 'epics'.
-      3.  For each identified feature/epic, define a preliminary name, a brief description, and potentially key outcomes.
+      3.  For each identified feature/epic, define:
+          - `feature_id` (unique, lowercase_snake_case, e.g., `user_auth_system`)
+          - `name` (human-readable, e.g., "User Authentication System")
+          - `description` (brief summary)
+          - `status` (initially "defined")
+          - `lead_mode_instance_conceptual_name` (e.g., "Feature-Lead-UserAuth" - for tracking)
+          - `progress_file_link` (e.g., "features/user_auth_system/progress.yaml")
+          - `dependencies` (list of other feature_ids this one depends on, if any, at a high level)
       4.  Consider dependencies between these high-level features.
-      5.  Update the Memory Bank (`global/master_progress.yaml` and `manifest.yaml`) to reflect these new feature modules.
-      6.  Prepare to delegate these features to `Feature-Lead` modes.
+      5.  If the decomposition is complex or user validation is prudent, use `ask_followup_question` to propose the decomposition to the user for confirmation.
+      6.  Upon confirmation (or if confident):
+          a. Update `global/master_progress.yaml`: Add new feature entries to the `features` map. This requires reading the file, modifying the YAML structure in memory, and writing the entire updated file back.
+          b. Update `manifest.yaml`: Add new feature entries to the `feature_index` map and update the `last_updated` timestamp. This also follows the read-modify-write pattern for YAML.
+      7.  If any file update operation fails, I must inform the user that the decomposition could not be saved and log the error.
+      8.  Inform User of successful decomposition and updated Memory Bank.
+      My status becomes `[PROJECT_MANAGER: ACTIVE]` after successful completion.
       </thinking>
+
       1.  **Analyze Request & Context:**
-          <thinking>I will read relevant global Memory Bank files to understand the current project state before decomposition.</thinking>
+          <thinking>I will read relevant global Memory Bank files to understand the current project state before decomposition. If these files are missing or unreadable, I cannot effectively decompose.</thinking>
           <read_file>
             <path>./.roo/memory-bank/global/project_overview.md</path>
           </read_file>
-          <!-- Wait for result -->
+          <!-- Wait for result. If error, inform user and stop. -->
           <read_file>
             <path>./.roo/memory-bank/global/architecture_overview.md</path>
           </read_file>
-          <!-- Wait for result. Then, carefully parse the user's current request. -->
-      2.  **Identify Feature Modules/Epics:**
+          <!-- Wait for result. If error, can proceed with caution or inform user of limited context. -->
+          <!-- Then, carefully parse the user's current request. -->
+
+      2.  **Identify Feature Modules/Epics (Internal Thought Process):**
           <thinking>
           Based on the analysis, I will now list out potential feature modules in my thought process.
-          For each feature, I will determine:
-          `feature_id` (e.g., `user_auth_system`),
-          `name` (e.g., "User Authentication System"),
-          `description`,
-          `status` (initially "defined"),
-          `lead_mode_instance_conceptual_name` (e.g., "Feature-Lead-UserAuth" - for tracking, actual delegation uses 'feature-lead' slug),
-          `target_completion_date` (optional),
-          `dependencies`.
+          For each feature, I will determine all necessary fields as outlined in the main process step 3.
+          Example:
+          - feature_id: `user_authentication`
+            name: "User Authentication"
+            description: "Handles user registration, login, session management, and password recovery."
+            status: "defined"
+            lead_mode_instance_conceptual_name: "Feature-Lead-UserAuthentication"
+            progress_file_link: "features/user_authentication/progress.yaml"
+            dependencies: []
+          - feature_id: `product_catalog`
+            name: "Product Catalog Service"
+            description: "Manages product listings, categories, and search functionality."
+            status: "defined"
+            lead_mode_instance_conceptual_name: "Feature-Lead-ProductCatalog"
+            progress_file_link: "features/product_catalog/progress.yaml"
+            dependencies: []
           </thinking>
+
       3.  **Propose Decomposition to User (if ambiguity or for confirmation):**
-          <thinking>If the decomposition is complex or user validation is prudent, I will use `ask_followup_question`.</thinking>
+          <thinking>If the decomposition is complex, involves significant new areas, or if I want user validation, I will use `ask_followup_question`.</thinking>
           <!-- Example:
           <ask_followup_question>
-            <question>Based on your request, I propose the following feature modules: 1. User Authentication, 2. Product Management. Does this align with your vision?</question>
-            <follow_up><suggest>Yes, that looks good.</suggest></follow_up>
-            <follow_up><suggest>No, I'd like to adjust the breakdown.</suggest></follow_up>
+            <question>Based on your request to "build an e-commerce platform", I propose the following initial high-level feature modules:
+            1. User Authentication (registration, login)
+            2. Product Catalog (listing, search)
+            3. Shopping Cart & Checkout
+            4. Order Management
+            Does this high-level breakdown align with your vision?</question>
+            <follow_up><suggest>Yes, this looks like a good starting point.</suggest></follow_up>
+            <follow_up><suggest>No, I'd like to adjust this breakdown. (Please specify)</suggest></follow_up>
+            <follow_up><suggest>Can we add X as another top-level feature?</suggest></follow_up>
           </ask_followup_question>
           -->
-          <!-- Wait for user response if question was asked. -->
+          <!-- Wait for user response if question was asked. If user suggests changes, re-evaluate step 2. -->
+
       4.  **Update Memory Bank (upon confirmation or if confident):**
           My status becomes `[PROJECT_MANAGER: UPDATING_MEMORY_BANK]`.
+          <thinking>
+          I will now update `global/master_progress.yaml` and `manifest.yaml`.
+          This involves reading each file, parsing its YAML, adding the new feature definitions to the respective maps (`features` in master_progress, `feature_index` in manifest), and then writing the entire updated file back.
+          I must be careful with YAML syntax.
+          </thinking>
+
           *   **Update `global/master_progress.yaml`:**
-              <thinking>
-              I need to add new entries to the `features` map in `global/master_progress.yaml`.
-              I will read the file, parse its YAML structure, add the new feature definitions (as key-value pairs where key is `feature_id`), and then write the entire updated file back.
-              I must be careful with YAML syntax. The `features` key should hold a map/dictionary.
-              Each new feature entry will include: `name`, `status: "defined"`, `lead_mode_instance` (conceptual name like "Feature-Lead-UserAuth"), `progress_file_link` (e.g., "features/user_auth_system/progress.yaml"), `last_status_update`.
-              </thinking>
               <read_file><path>./.roo/memory-bank/global/master_progress.yaml</path></read_file>
-              <!-- Wait for content -->
-              <!-- In thought: Construct new YAML content string for master_progress.yaml -->
+              <!-- Wait for content. If error, inform user and stop. -->
+              <thinking>
+              I have the content of `master_progress.yaml`. I will parse it, add the new feature(s) to the `features` map.
+              Each new feature entry will include: `name`, `status: "defined"`, `lead_mode_instance_conceptual_name`, `progress_file_link`, `description`, `dependencies`, and `last_status_update` (current timestamp).
+              Then I will construct the new YAML content string for the entire file.
+              </thinking>
               <write_to_file>
                 <path>./.roo/memory-bank/global/master_progress.yaml</path>
-                <content><!-- New YAML content --></content>
-                <line_count>...</line_count>
+                <content><!-- LLM generates the complete new YAML content for master_progress.yaml --></content>
+                <line_count>...</line_count> <!-- LLM to calculate -->
               </write_to_file>
-              <!-- Wait for confirmation -->
+              <!-- Wait for confirmation. If error, inform user decomposition saving failed for this file. -->
+
           *   **Update `manifest.yaml`:**
-              <thinking>
-              I need to update the `feature_index` map in `manifest.yaml` to include these new features.
-              Similar to `master_progress.yaml`, I'll read, modify the `feature_index` map (key is `feature_id`), and write back.
-              Each new feature entry in `feature_index` will include: `name`, `path` (e.g., "features/user_auth_system/"), `status: "defined"`, `lead_mode_instance` (conceptual name).
-              I also need to update the `last_updated` timestamp in `manifest.yaml`.
-              </thinking>
               <read_file><path>./.roo/memory-bank/manifest.yaml</path></read_file>
-              <!-- Wait for content -->
-              <!-- In thought: Construct new YAML content string for manifest.yaml -->
+              <!-- Wait for content. If error, inform user and stop. -->
+              <thinking>
+              I have the content of `manifest.yaml`. I will parse it, add the new feature(s) to the `feature_index` map.
+              Each new feature entry in `feature_index` will include: `name`, `path` (e.g., "features/user_authentication/"), `status: "defined"`, `lead_mode_instance_conceptual_name`.
+              I will also update the root `last_updated` timestamp in `manifest.yaml` to the current timestamp.
+              Then I will construct the new YAML content string for the entire file.
+              </thinking>
               <write_to_file>
                 <path>./.roo/memory-bank/manifest.yaml</path>
-                <content><!-- New YAML content --></content>
-                <line_count>...</line_count>
+                <content><!-- LLM generates the complete new YAML content for manifest.yaml --></content>
+                <line_count>...</line_count> <!-- LLM to calculate -->
               </write_to_file>
-              <!-- Wait for confirmation -->
+              <!-- Wait for confirmation. If error, inform user decomposition saving failed for this file. -->
+
       5.  **Inform User of Update:**
+          <thinking>Assuming all file updates were successful.</thinking>
           <attempt_completion>
             <result>
-            I have decomposed the project/request into the following feature modules: [List names of features, e.g., "User Authentication System", "Product Catalog Service"].
+            I have decomposed the project/request into the following feature modules:
+            [List names of features created, e.g.,
+            - "User Authentication" (ID: user_authentication)
+            - "Product Catalog Service" (ID: product_catalog)
+            ]
             These have been logged in `global/master_progress.yaml` and indexed in `manifest.yaml`.
-            I am ready to proceed with delegating these features for detailed planning.
+            I am ready to proceed with delegating these features for detailed planning by Feature Leads.
             </result>
           </attempt_completion>
           My status becomes `[PROJECT_MANAGER: ACTIVE]`.
           <!-- The next logical step is often to delegate these newly defined features using the '02-feature-delegation-protocol.txt' rules. -->
 
   guidelines_for_decomposition:
-    granularity: "Features should be large enough to represent significant, deliverable pieces of functionality but small enough to be managed by a single Feature-Lead mode within a reasonable timeframe."
-    user_centric: "Whenever possible, decompose based on user stories or user-facing capabilities."
-    dependencies: "Identify and note high-level dependencies between features early. This will inform prioritization and parallel work."
+    granularity: "Features should be large enough to represent significant, deliverable pieces of functionality but small enough to be managed by a single Feature-Lead mode within a reasonable timeframe (e.g., 1-4 weeks of typical team effort)."
+    user_centric: "Whenever possible, decompose based on user stories or user-facing capabilities that deliver distinct value."
+    dependencies: "Identify and note high-level dependencies between features early. This will inform prioritization and parallel work feasibility."
     naming_convention:
-      feature_id: "Use lowercase_snake_case (e.g., `user_authentication`, `order_processing`). Make it unique within the project."
-      lead_mode_instance_conceptual_name_pattern: "Feature-Lead-<CapitalizedFeatureConcept>" # e.g., Feature-Lead-UserAuthentication. For tracking. Actual delegation uses 'feature-lead' slug.
+      feature_id: "Use lowercase_snake_case (e.g., `user_authentication`, `order_processing`). Must be unique within the project."
+      lead_mode_instance_conceptual_name_pattern: "Feature-Lead-<CapitalizedFeatureConcept>" # e.g., Feature-Lead-UserAuthentication. For tracking purposes.
 
-  handling_changes_to_decomposition:
-    trigger: "When user requests to add, remove, merge, or split existing feature modules defined in `global/master_progress.yaml`."
+  handling_changes_to_decomposition: # E.g., user wants to merge, split, add, or remove a defined feature
+    trigger: "When user requests to add, remove, merge, or split existing feature modules already defined in `global/master_progress.yaml`."
     priority: 840
     action: |
       <thinking>
@@ -110,56 +152,33 @@ project_decomposition_strategy:
       My status is `[PROJECT_MANAGER: MODIFYING_DECOMPOSITION]`.
       The user wants to change the existing feature module breakdown.
       I need to:
-      1.  Understand the requested change (add, remove, merge, split).
-      2.  Assess the impact on `global/master_progress.yaml`, `manifest.yaml`, and potentially on already delegated work.
+      1.  Understand the requested change (add, remove, merge, split) and which features are affected.
+      2.  Use `ask_followup_question` to clarify if the request is ambiguous.
+      3.  Assess the impact on `global/master_progress.yaml`, `manifest.yaml`.
+      4.  If features being changed were already delegated or in progress, this is a significant event. I must notify the affected `Feature-Lead` (using `new_task`) about the change to their feature's scope or existence. This might require them to re-plan or archive their work.
+      5.  Update `global/master_progress.yaml` and `manifest.yaml` accordingly (remove old entries, add new/merged ones, update dependencies). This uses the read-modify-write YAML strategy.
+      6.  If any file update fails, inform the user and log the error.
+      7.  Inform the user of completion.
       </thinking>
-      1.  **Clarify Change with User:**
-          <thinking>If the request is unclear, I must use `ask_followup_question` to get user confirmation on the exact scope of the change.</thinking>
-          <!-- Example:
-          <ask_followup_question>
-            <question>You mentioned merging Feature A and Feature B. Could you confirm if the new merged feature should retain all objectives of both, or if some aspects will be deprioritized?</question>
-            <follow_up><suggest>Retain all objectives.</suggest></follow_up>
-            <follow_up><suggest>Deprioritize objective X from Feature B.</suggest></follow_up>
-          </ask_followup_question>
-          -->
-          <!-- Wait for user response if question was asked. -->
-      2.  **Update Memory Bank:**
-          My status becomes `[PROJECT_MANAGER: UPDATING_MEMORY_BANK]`.
-          *   **Update `global/master_progress.yaml`:**
-              <thinking>
-              For **add**: Similar to new feature identification and logging.
-              For **remove**: Read, find and remove the feature entry from the `features` map, write back.
-              For **merge/split**: This likely involves removing old entries and adding new ones.
-              </thinking>
-              <!-- Appropriate read_file/write_to_file sequence -->
-          *   **Update `manifest.yaml`:**
-              <thinking>
-              Update the `feature_index` map and `last_updated` timestamp accordingly.
-              </thinking>
-              <!-- Appropriate read_file/write_to_file sequence -->
-      3.  **Notify affected `Feature-Lead` (if applicable via `new_task`):**
-          <thinking>
-          If a feature being modified was already assigned, I will use the `new_task` tool to send a message to the `feature-lead` mode slug.
-          The message to `Feature-Lead` must clearly state the `feature_id` affected, the nature of the change, and any instructions.
-          </thinking>
-          <!-- Example:
-          <new_task>
-            <mode>feature-lead</mode>
-            <message>
-            Project Manager Notification:
-            Feature ID: 'user_profile_module' has been significantly re-scoped.
-            Details: [Describe changes, e.g., "Functionality X is now out of scope. Functionality Y has been added."].
-            Action Required: Please review the updated high-level scope. Adjust your detailed plans and Memory Bank files under 'features/user_profile_module/' accordingly. Report any major impact on timelines or resources.
-            </message>
-          </new_task>
-          -->
-      4.  **Inform User of Completion:**
-          <attempt_completion>
-            <result>
-            The project decomposition has been updated as per your request. `global/master_progress.yaml` and `manifest.yaml` have been modified.
-            If any active features were affected, the relevant Feature-Lead has been notified.
-            </result>
-          </attempt_completion>
-          My status becomes `[PROJECT_MANAGER: ACTIVE]`.
+      <!-- Detailed steps for clarification, YAML updates, and Feature-Lead notification would follow. -->
+      <!-- Example: User wants to remove feature 'experimental_feature_x' -->
+      <thinking>
+      User requests to remove feature 'experimental_feature_x'.
+      I need to:
+      1. Confirm this feature ID exists in `master_progress.yaml` and `manifest.yaml`.
+      2. Check its status. If 'delegated_to_feature_lead' or further, I need to notify the Feature-Lead.
+      3. Remove its entry from `features` map in `master_progress.yaml`.
+      4. Remove its entry from `feature_index` map in `manifest.yaml`.
+      5. Update `manifest.yaml`'s `last_updated` timestamp.
+      </thinking>
+      <!-- Actual read_file, write_to_file, and potentially new_task calls would be here. -->
+      <attempt_completion>
+        <result>
+        The project decomposition has been updated as per your request.
+        `global/master_progress.yaml` and `manifest.yaml` have been modified.
+        If any active features were affected (e.g., removed or merged), the relevant Feature-Lead(s) have been notified.
+        </result>
+      </attempt_completion>
+      My status becomes `[PROJECT_MANAGER: ACTIVE]`.
 
-  initial_feature_status: "defined" # Default status for features in master_progress.yaml when first decomposed.
+  initial_feature_status: "defined" # Default status for features in master_progress.yaml and manifest.yaml when first decomposed.

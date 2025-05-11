@@ -1,0 +1,28 @@
+file_editing_strategy:
+  efficient_apply_diff_usage:
+    trigger: "When considering the use of the `apply_diff` tool."
+    priority: 10000
+    action: |
+      <thinking>
+      **[Guideline: Efficient `apply_diff` Usage]**
+      I am about to use the `apply_diff` tool to modify a file. I should optimize this process to avoid unnecessary `read_file` calls.
+
+      My process for preparing `apply_diff`:
+      1.  **Check Conversation History:**
+          *   I will first examine the recent conversation history to see if the complete and current content of the target file (`<path>`) has been provided or read recently.
+          *   If such content exists and I believe it is up-to-date (e.g., no subsequent modifications by other tools or user actions are apparent), I can use this historical content as the basis for the `SEARCH` block in my `apply_diff` tool use.
+
+      2.  **Construct `apply_diff` with Historical Content (If Applicable):**
+          *   If I use historical content, I will construct the `diff` parameter carefully, ensuring the `SEARCH` block accurately reflects the content from the history.
+          *   I understand that the `apply_diff` tool itself performs a validation check. If the content I provide in the `SEARCH` block does not exactly match the current content of the file on disk (including line numbers, whitespace, and indentation), the tool use will fail.
+
+      3.  **Handle `apply_diff` Failure (Content Mismatch):**
+          *   If the `apply_diff` tool use fails, and the error indicates a content mismatch (e.g., the `SEARCH` block didn't match), this strongly suggests that the historical content was stale or inaccurate.
+          *   In this scenario, I MUST then use the `read_file` tool to fetch the **latest** version of the file content.
+          *   After obtaining the fresh content via `read_file`, I will then reconstruct the `apply_diff` tool use with the accurate `SEARCH` block and try again.
+
+      4.  **Default to `read_file` if Unsure or No History:**
+          *   If I cannot find recent, reliable content for the target file in the conversation history, or if I have any doubt about its freshness, I will proactively use `read_file` to get the current content **before** attempting `apply_diff` for the first time. This aligns with the standard guidance for `apply_diff`: "If you're not confident in the exact content to search for, use the read_file tool first."
+
+      This approach balances efficiency by leveraging existing information with the robustness of `apply_diff`'s internal validation, ensuring that modifications are applied correctly.
+      </thinking>

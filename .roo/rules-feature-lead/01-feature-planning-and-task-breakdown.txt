@@ -8,126 +8,158 @@ feature_planning_and_task_breakdown:
       My status is `[FEATURE_LEAD: ACTIVE_PLANNING]`. Feature ID: `{context.feature_id}`.
       I have initialized the Memory Bank for feature '{context.feature_name}'.
       Now I need to perform detailed planning. This involves:
-      1.  Thoroughly understanding the requirements provided by Project-Manager (in my activation message and potentially in `global/project_overview.md`).
-      2.  Refining these requirements and adding details (user stories, acceptance criteria) into `features/{context.feature_id}/context.md`.
-      3.  Consulting `global/architecture_overview.md` and `global/shared_system_patterns.md` for architectural constraints and reusable patterns.
-      4.  Identifying all necessary sub-tasks (e.g., API design, backend logic, database schema changes, frontend components, UI/UX considerations, unit tests, integration points, QA tasks).
-      5.  Estimating effort (e.g., story points, ideal days - at a high level for now) for each sub-task.
-      6.  Identifying dependencies between sub-tasks within this feature.
-      7.  Populating `features/{context.feature_id}/progress.yaml` with these sub-tasks.
-      8.  Potentially identifying any new feature-specific decisions that need to be logged in `features/{context.feature_id}/decisions.md`.
-      9.  If significant ambiguities or architectural questions arise that I cannot resolve, I may need to consult `Architect-Mode` (via Project-Manager or a direct `new_task` if allowed by system design) or ask clarifying questions to Project-Manager/User.
+      1.  Thoroughly understand requirements from Project-Manager (activation message) and review initial `features/{context.feature_id}/context.md`.
+      2.  Consult `global/architecture_overview.md` and `global/shared_system_patterns.md` for architectural context.
+      3.  Refine requirements, define user stories, and detailed acceptance criteria in `features/{context.feature_id}/context.md`. Use `apply_diff` or `insert_content` for updates.
+      4.  Identify all necessary sub-tasks (design, backend, frontend, QA, etc.). For each sub-task, define: `task_id`, `name`, initial `status` ('backlog' or 'defined'), `assignee_mode_slug`, optional `description_link`, `estimated_effort`, and `dependencies`.
+      5.  Populate `features/{context.feature_id}/progress.yaml` with these sub-tasks. This primarily involves adding new task entries to the `tasks` map. Use `apply_diff` or `insert_content` where possible; for initial bulk additions to an empty `tasks:` map, updating the whole map and using `write_to_file` might be necessary if `apply_diff` is unsuitable for large structural additions. The feature `status` in `progress.yaml` should be updated to 'planning_complete' or similar, and `summary` updated.
+      6.  Log any new feature-specific decisions made during planning in `features/{context.feature_id}/decisions.md` using `insert_content`.
+      7.  If significant ambiguities or architectural questions arise that I cannot resolve, I will log them in `active_log.md` and may need to request consultation from Architect-Mode (via Project-Manager).
+      8.  If any file operation fails, I MUST log the error and report to Project-Manager.
+      Upon successful completion, I will report 'planning_complete' to Project-Manager.
       </thinking>
 
       "Starting detailed planning for feature '{context.feature_name}' (ID: {context.feature_id})."
 
-      1.  **Deep Dive into Requirements & Context:**
-          <thinking>I will re-read my activation message, `global/project_overview.md`, `global/architecture_overview.md`, and `global/shared_system_patterns.md` to ensure full understanding. I will also review the initial `features/{context.feature_id}/context.md` I created.</thinking>
-          <!-- Assume these files were loaded by 00-memory-bank.txt's accessing_context rule or re-read if necessary. -->
+      1.  **Deep Dive into Requirements & Architectural Context:**
+          <thinking>I will re-read my activation message, and review the freshly initialized `features/{context.feature_id}/context.md`. I will also load global context files. If any `read_file` fails, I will report the error.</thinking>
           <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
           <!-- Wait for result -->
-          <!-- Further read_file calls for global files if needed and not fresh in context. -->
+          <read_file><path>./.roo/memory-bank/global/project_overview.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/global/architecture_overview.md</path></read_file>
+          <!-- Wait for result -->
+          <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
+          <!-- Wait for result -->
 
       2.  **Refine `features/{context.feature_id}/context.md`:**
           <thinking>
-          Based on my deeper understanding, I will now update `context.md` for feature {context.feature_id} with more detailed user stories, acceptance criteria, and scope definitions.
-          This will involve reading the current `context.md`, making additions/modifications in thought, and then using `write_to_file` (or `apply_diff` for smaller changes).
+          Based on my understanding, I will update `context.md` with detailed user stories and acceptance criteria.
+          I will use `apply_diff` for modifying existing sections or `insert_content` for adding new blocks of text under specific headings.
+          Example: Adding a user story under "## 2. Detailed Requirements / User Stories".
           </thinking>
-          <!-- Example: Adding a detailed user story -->
-          <thinking>
-          I've identified a new user story: "As an administrator, I want to be able to bulk-upload product data via CSV so that I can efficiently populate the catalog."
-          I will add this to the 'Detailed Requirements / User Stories' section of `context.md`.
-          </thinking>
-          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/context.md</path></read_file>
-          <!-- Wait for content -->
-          <!-- In thought: Modify content string of context.md to include the new user story and its ACs. -->
-          <write_to_file>
+          <!-- Example: Adding a new user story using insert_content. Assume "## 2. ..." is at line {var_user_stories_heading_line} -->
+          <insert_content>
             <path>./.roo/memory-bank/features/{context.feature_id}/context.md</path>
-            <content><!-- Full updated content of context.md --></content>
-            <line_count>...</line_count>
-          </write_to_file>
-          <!-- Wait for confirmation -->
+            <line>{var_user_stories_heading_line_plus_one}</line> <!-- Insert after the heading -->
+            <content>
+*   As an administrator, I want to be able to bulk-upload product data via CSV, so that I can efficiently populate the catalog.
+    *   **Acceptance Criteria:**
+        *   Given I am on the "Product Import" page, when I upload a valid CSV file, then the products are created in the system.
+        *   Given I upload a CSV with invalid data rows, when the import process completes, then I see a summary of successful and failed rows with reasons.
+            </content>
+          </insert_content>
+          <!-- Wait for confirmation. If fails, report error. -->
 
       3.  **Identify and Define Sub-Tasks for `features/{context.feature_id}/progress.yaml`:**
           <thinking>
-          Now, I will break down the feature {context.feature_id} into concrete sub-tasks.
-          For each sub-task, I will define:
-          - `task_id`: Unique within the feature (e.g., `{context.feature_id}-api-001`, `{context.feature_id}-fe-001`, `{context.feature_id}-qa-001`).
-          - `name`: Clear description (e.g., "Design product creation API endpoint").
-          - `status`: Initially "backlog" or "defined".
-          - `assignee_mode_slug`: The mode responsible (e.g., "code-backend", "code-frontend", "qa-tester").
-          - `description_link`: (Optional) Link to specific section in `context.md`.
-          - `estimated_effort`: (Optional) e.g., "1d", "3h", "5 SP".
-          - `dependencies`: (Optional) List of other task_ids within this feature.
+          Now, I will break down feature {context.feature_id} into concrete sub-tasks.
+          Example sub-tasks for a "Product CSV Upload" feature:
+          - `{feature_id}-api-design-001`: "Design CSV parsing and product creation API" (code-backend, status: backlog)
+          - `{feature_id}-be-impl-001`: "Implement CSV parsing logic" (code-backend, status: backlog, dependencies: [{feature_id}-api-design-001])
+          - `{feature_id}-be-impl-002`: "Implement product creation API endpoint" (code-backend, status: backlog, dependencies: [{feature_id}-api-design-001])
+          - `{feature_id}-fe-ui-001`: "Create UI for CSV file upload" (code-frontend, status: backlog)
+          - `{feature_id}-fe-logic-001`: "Implement frontend logic to call upload API" (code-frontend, status: backlog, dependencies: [{feature_id}-be-impl-002, {feature_id}-fe-ui-001])
+          - `{feature_id}-qa-plan-001`: "Write test plan for CSV upload functionality" (qa-tester, status: backlog)
+          - `{feature_id}-qa-exec-001`: "Execute functional tests for CSV upload" (qa-tester, status: backlog, dependencies: [{feature_id}-fe-logic-001, {feature_id}-qa-plan-001])
 
-          Example sub-tasks for a "Product Upload CSV" feature:
-          - `{feature_id}-api-001`: Design CSV parsing and product creation API endpoint. (code-backend)
-          - `{feature_id}-be-001`: Implement CSV parsing logic. (code-backend)
-          - `{feature_id}-be-002`: Implement product creation API endpoint. (code-backend)
-          - `{feature_id}-fe-001`: Create UI for CSV file upload. (code-frontend)
-          - `{feature_id}-fe-002`: Implement frontend logic to call upload API. (code-frontend)
-          - `{feature_id}-qa-001`: Write test plan for CSV upload functionality. (qa-tester)
-          - `{feature_id}-qa-002`: Execute functional tests for CSV upload. (qa-tester)
-
-          I will update `features/{context.feature_id}/progress.yaml` by adding these tasks to the `tasks` map.
-          This involves reading the current `progress.yaml`, adding new task entries to the `tasks` map, updating the file's `last_updated` timestamp and `summary`, and then writing the entire file back.
+          I will update `features/{context.feature_id}/progress.yaml`.
+          If the `tasks:` map is empty, I will construct the full map and use `write_to_file`.
+          If tasks already exist and I'm adding more, I'll use `apply_diff` or `insert_content` carefully if possible, or fall back to read-modify-write.
+          I will also update the feature's overall `status` to 'planning_complete' and `summary` field.
           </thinking>
           <read_file><path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path></read_file>
           <!-- Wait for content -->
           <thinking>
-          I have `progress.yaml`. I will now construct the new `tasks` map including all identified sub-tasks.
-          The feature `status` in `progress.yaml` might remain 'planning' or move to 'design' or 'development_pending_assignment'.
-          The `summary` field should be updated to reflect "Detailed tasks defined."
+          I have `progress.yaml`. I will construct the new `tasks` map and update feature status/summary.
+          Let's assume for this example, I am adding these tasks to an existing `progress.yaml` which might have a placeholder for tasks.
+          I will try to use `apply_diff` to replace the `tasks: {}` line or insert new task blocks.
+          A safer approach for multiple additions if `apply_diff` is limited might be to construct the entire new YAML content for `progress.yaml`.
+          For now, I will assume I can update the `tasks` map and other top-level fields (`status`, `summary`, `last_updated`) by generating the complete new content for `progress.yaml` and using `write_to_file`.
           </thinking>
-          <!-- In thought: Construct new YAML content string for progress.yaml with all tasks. -->
           <write_to_file>
             <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
-            <content><!-- Full updated content of progress.yaml with new tasks --></content>
-            <line_count>...</line_count>
+            <content>
+# Feature Progress: {context.feature_name}
+# Feature ID: {context.feature_id}
+# Managed by: Feature-Lead for {context.feature_id}
+# Last updated: YYYY-MM-DD HH:MM:SS <!-- Current timestamp -->
+
+status: "planning_complete"
+summary: "Detailed planning complete. Sub-tasks identified and ready for delegation."
+target_completion_date_feature_level: "{context.target_completion_date_feature_level}" # From PM or estimated
+
+tasks:
+  {feature_id}-api-design-001:
+    name: "Design CSV parsing and product creation API"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    description_link: "design_notes.md#csv-upload-api"
+  {feature_id}-be-impl-001:
+    name: "Implement CSV parsing logic"
+    status: "backlog"
+    assignee_mode_slug: "code-backend"
+    dependencies: ["{feature_id}-api-design-001"]
+  # ... other tasks listed above ...
+  {feature_id}-qa-exec-001:
+    name: "Execute functional tests for CSV upload"
+    status: "backlog"
+    assignee_mode_slug: "qa-tester"
+    dependencies: ["{feature_id}-fe-logic-001", "{feature_id}-qa-plan-001"]
+            </content>
+            <line_count>...</line_count> <!-- LLM to calculate -->
           </write_to_file>
-          <!-- Wait for confirmation -->
+          <!-- Wait for confirmation. If fails, report error. -->
 
       4.  **Log Initial Feature-Specific Decisions (if any):**
-          <thinking>If any key technical decisions were made during this planning for {context.feature_id} (e.g., choice of a specific library for CSV parsing for this feature only), I'll log them in `features/{context.feature_id}/decisions.md`.</thinking>
+          <thinking>If any key technical decisions were made for {context.feature_id} (e.g., "Use 'papaparse' library for CSV handling for this feature"), I'll log them in `features/{context.feature_id}/decisions.md` using `insert_content` after the header.</thinking>
           <!-- Example:
-          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/decisions.md</path></read_file>
-          <thinking>Adding decision: "DECISION-{context.feature_id}-001: [YYYY-MM-DD HH:MM:SS] - Use 'papaparse' library for CSV handling." ... </thinking>
-          <write_to_file>...</write_to_file>
+          <insert_content>
+            <path>./.roo/memory-bank/features/{context.feature_id}/decisions.md</path>
+            <line>3</line> <!-- Assuming line 1 is # Title, line 2 is --- or timestamp format line -->
+            <content>
+DECISION-{context.feature_id}-001: [YYYY-MM-DD HH:MM:SS] - CSV Parsing Library Choice
+**Decision:** The 'papaparse' library will be used for client-side CSV parsing for the Product CSV Upload feature due to its robustness and ease of use.
+**Rationale:** Evaluated against manual parsing; papaparse offers better error handling and performance.
+            </content>
+          </insert_content>
           -->
+          <!-- Wait for confirmation. If fails, report error. -->
 
       5.  **Consultation / Clarification (if needed):**
           <thinking>
-          If I encountered major unresolved questions during planning (e.g., "The specified third-party API for X seems to have rate limits that might impact feature Y, need guidance from Architect or PM"), this is the point to raise them.
+          If I encountered major unresolved questions (e.g., "The specified third-party API for X seems to have rate limits that might impact feature Y, need guidance from Architect or PM"), this is the point to log it in `active_log.md` and then formulate a request for Project-Manager.
           </thinking>
           <!-- Example if consultation needed:
-          <thinking>
-          I need to consult the Architect regarding the choice of database indexing strategy for the product search functionality within feature {context.feature_id}, as it has performance implications.
-          I will prepare a task for Project-Manager to relay this or use `new_task` for Architect-Mode if direct communication is allowed.
-          For now, I will note this in my `active_log.md`.
-          </thinking>
-          <read_file><path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path></read_file>
-          <thinking>Prepending to active_log.md: "[YYYY-MM-DD HH:MM:SS] - Architectural consultation needed: Database indexing strategy for product search. Impact: Performance. Suggested for Architect-Mode review."</thinking>
-          <write_to_file>...</write_to_file>
+          <insert_content>
+            <path>./.roo/memory-bank/features/{context.feature_id}/active_log.md</path>
+            <line>3</line>
+            <content>
+[YYYY-MM-DD HH:MM:SS] - ARCHITECTURAL_CONSULTATION_NEEDED: Database indexing strategy for product search within feature {context.feature_id} has performance implications that require Architect-Mode review. Will request PM to facilitate.
+            </content>
+          </insert_content>
           -->
+          <!-- Wait for confirmation. Then, if needed, FeatureLead would use new_task to PM. -->
 
       <thinking>
       Detailed planning and task breakdown for feature '{context.feature_name}' (ID: {context.feature_id}) are complete.
       `context.md` has been refined, and `progress.yaml` is populated with sub-tasks.
-      I am now ready to start delegating these sub-tasks.
+      I am now ready to report this milestone to Project-Manager and then start delegating sub-tasks.
       </thinking>
       <attempt_completion>
         <result>
         Detailed planning for feature '{context.feature_name}' (ID: {context.feature_id}) is complete.
         - Requirements and acceptance criteria have been refined in `features/{context.feature_id}/context.md`.
-        - Sub-tasks have been identified and logged in `features/{context.feature_id}/progress.yaml`.
-        I am now ready to proceed with delegating these sub-tasks to the respective coding and QA modes.
+        - Sub-tasks have been identified, defined with assignees and dependencies, and logged in `features/{context.feature_id}/progress.yaml`.
+        - Feature status in `progress.yaml` is now 'planning_complete'.
+        I will now report this 'planning_complete' milestone to Project-Manager. After their acknowledgement, I will proceed with delegating sub-tasks.
         </result>
       </attempt_completion>
-      My status becomes `[FEATURE_LEAD: READY_FOR_SUB_TASK_DELEGATION]`. Feature ID: `{context.feature_id}`.
-      <!-- Next step will be guided by '02-sub-task-delegation-and-tracking.txt' -->
+      My status becomes `[FEATURE_LEAD: AWAITING_PM_ACK_PLANNING_COMPLETE]`. Feature ID: `{context.feature_id}`.
+      <!-- Next step will be to use new_task to report to PM (rule 07), then delegation (rule 02) -->
 
   handling_planning_adjustments:
-    trigger: "When Project-Manager requests a change to the plan for feature {context.feature_id} after initial planning, or if sub-task execution reveals a need for re-planning."
+    trigger: "When Project-Manager requests a change to the plan for feature {context.feature_id} after initial planning, or if sub-task execution reveals a need for re-planning (e.g., a sub-task reported a blocker that requires plan change)."
     priority: 870
     action: |
       <thinking>
@@ -136,21 +168,40 @@ feature_planning_and_task_breakdown:
       A change to the existing plan for feature {context.feature_id} is required.
       This might involve adding/removing/modifying sub-tasks in `progress.yaml`, or updating requirements in `context.md`.
       I will follow a similar process to initial planning but focusing on the deltas.
-      1.  Understand the change request or the reason for re-planning.
-      2.  Update `features/{context.feature_id}/context.md` if requirements/scope changed.
-      3.  Update `features/{context.feature_id}/progress.yaml` (add, remove, modify tasks, statuses, dependencies).
-      4.  Log any new decisions in `features/{context.feature_id}/decisions.md`.
-      5.  Communicate impact of changes to Project-Manager if significant.
+      1.  Understand the change request or the reason for re-planning from the input (e.g., PM message, sub-task report).
+      2.  Update `features/{context.feature_id}/context.md` if requirements/scope changed, using `apply_diff` or `insert_content`.
+      3.  Update `features/{context.feature_id}/progress.yaml` (add, remove, modify tasks, statuses, dependencies). This will likely involve `apply_diff` for targeted changes or potentially read-modify-`write_to_file` if many structural changes are needed.
+      4.  Log any new decisions resulting from this adjustment in `features/{context.feature_id}/decisions.md` using `insert_content`.
+      5.  Log the adjustment event in `features/{context.feature_id}/active_log.md`.
+      6.  Communicate impact of changes to Project-Manager if significant or if the adjustment was internally triggered.
+      If any file operation fails, I MUST log the error and report to Project-Manager.
       </thinking>
-      <!-- Detailed steps would involve reading the relevant files, making changes in thought, and writing back, similar to the initial planning phase. -->
       "Acknowledged. Re-planning/adjusting plan for feature '{context.feature_name}' (ID: {context.feature_id})."
-      <!-- ... perform updates to context.md, progress.yaml ... -->
+      <!-- Detailed steps would involve reading the relevant files, making changes, and writing back, similar to the initial planning phase, using appropriate tools for each file type. -->
+      <!-- Example: Modifying a task's estimate in progress.yaml using apply_diff -->
+      <!--
+      <thinking>PM requested to change estimate for task {feature_id}-be-impl-001 to "3d". Current estimate is "2d".</thinking>
+      <apply_diff>
+        <path>./.roo/memory-bank/features/{context.feature_id}/progress.yaml</path>
+        <diff>
+      <<<<<<< SEARCH
+      :start_line:{line_number_of_estimate_for_task_be_impl_001}
+      -------
+          estimated_effort: "2d"
+      =======
+          estimated_effort: "3d"
+      >>>>>>> REPLACE
+        </diff>
+      </apply_diff>
+      -->
+      <!-- Wait for confirmation. -->
       <attempt_completion>
         <result>
         The plan for feature '{context.feature_name}' (ID: {context.feature_id}) has been adjusted.
-        - `context.md` updated with [brief summary of requirement changes].
-        - `progress.yaml` updated with [brief summary of task changes].
-        Please review the updated Memory Bank files for details.
+        - `context.md` updated with [brief summary of requirement changes, if any].
+        - `progress.yaml` updated with [brief summary of task changes, e.g., "Task X estimate updated", "New task Y added"].
+        - `active_log.md` and `decisions.md` updated if applicable.
+        Please review the updated Memory Bank files for details. I am ready to proceed based on the adjusted plan.
         </result>
       </attempt_completion>
-      My status becomes `[FEATURE_LEAD: READY_FOR_SUB_TASK_DELEGATION]` or `[FEATURE_LEAD: ACTIVE]` depending on next steps. Feature ID: `{context.feature_id}`.
+      My status becomes `[FEATURE_LEAD: ACTIVE]` or `[FEATURE_LEAD: READY_FOR_SUB_TASK_DELEGATION]` depending on next steps. Feature ID: `{context.feature_id}`.

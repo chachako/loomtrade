@@ -1,70 +1,72 @@
 qa_tester_memory_bank_and_context:
   understand_qa_assignment:
-    trigger: "When QA-Mode is activated with a new testing task by a Feature Lead (via new_task, message should contain feature_id, feature_name, branch_to_test which will be 'main', links to context.md, design_notes.md, and bug reporting instructions)."
+    trigger: "When QA-Mode is activated with a new testing task by a Feature Lead (via new_task). The message should contain feature_id, feature_name, summary of functionality, links to context/design docs, and bug reporting instructions. Testing is performed on the current state of the feature's development branch as indicated by Feature Lead."
     priority: 900
     action: |
       <thinking>
       **[Understand QA Assignment - QA Tester]**
-      I have been assigned a new QA testing task.
-      The assignment message from the Feature Lead for feature '{context.feature_name}' (ID: {context.feature_id}) should provide:
-      - `task_id`: A unique ID for this QA task itself.
+      I have been assigned a new QA testing task by the Feature Lead.
+      The assignment message for feature '{context.feature_name}' (ID: {context.feature_id}) should provide:
+      - `task_id_for_qa`: A unique ID for this QA testing cycle/task.
       - `feature_id`: The ID of the feature to be tested.
       - `feature_name`: The human-readable name of the feature.
-      - `branch_to_test`: This will be "main" as all development and integration happens on main.
-      - `summary_of_functionality_for_qa`: A brief from Feature Lead about what was implemented and is ready for testing on `main`.
+      - `summary_of_functionality_for_qa`: A brief from Feature Lead about what was implemented and is ready for testing on its current development branch.
+      - `branch_info_for_qa` (optional): Feature Lead might specify "latest of current dev branch for feature {context.feature_id}" or provide a specific commit hash on that branch as the testing baseline if precise control is needed. If not specified, I assume the latest state of the development branch.
       - Links to Memory Bank for context:
-          - `context_md_path`: Path to `features/{feature_id}/context.md`.
-          - `design_notes_md_path`: Path to `features/{feature_id}/design_notes.md`.
-          - `active_log_md_path`: Path to `features/{feature_id}/active_log.md`.
-      - `bug_reporting_instructions`: Specific format and location for logging bugs.
+          - `requirements_path` (e.g., `features/{feature_id}/context.md`)
+          - `design_notes_path` (e.g., `features/{feature_id}/design_notes.md`)
+          - `active_log_path` (e.g., `features/{feature_id}/active_log.md` - for context and bug logging)
+      - `bug_reporting_instructions`: Specific format and location for logging bugs (typically appending to `active_log.md`).
 
       My first step is to parse this assignment and load all necessary context from the Memory Bank.
-      My status will be `[QA-TESTER ({context.feature_id} - QA Task {context.task_id}): LOADING_CONTEXT]`.
-      I must have all information before starting the test execution defined in `01-test-execution-and-reporting.txt`.
+      My status will be `[QA-TESTER ({context.feature_id} - QA Task {context.task_id_for_qa}): LOADING_CONTEXT]`.
+      I must have all information before starting test planning and execution as defined in `01-test-execution-and-reporting.txt`.
+      If crucial information is missing from the assignment (e.g., path to requirements), I must report this back to the Feature Lead as a blocker.
       </thinking>
 
-      <!-- Wait -->
+      <!-- Assume Feature Lead's message provided necessary context variables. -->
+      <!-- context.task_id_for_qa, context.feature_id, context.feature_name, context.summary_of_functionality_for_qa -->
+      <!-- context.requirements_path, context.design_notes_path, context.active_log_path, context.bug_reporting_instructions -->
+      <!-- context.branch_info_for_qa might be "Test latest on current dev branch for feature xyz" -->
 
       <thinking>
-      I have parsed the assignment details for QA task '{context.task_id}' on feature '{context.feature_name}' (ID: {context.feature_id}). Testing will be on the `main` branch.
-      Now I will read all referenced Memory Bank files.
+      I have parsed the assignment details for QA task '{context.task_id_for_qa}' on feature '{context.feature_name}' (ID: {context.feature_id}).
+      Testing will be performed on the current development branch state for this feature.
+      Now I will read all referenced Memory Bank files. If any read fails, I will report this as a blocker.
       </thinking>
 
-      1.  **Read Feature Context (Requirements, Acceptance Criteria):**
-          <read_file><path>{context.context_md_path}</path></read_file>
-          <!-- Wait -->
-      2.  **Read Design Notes (UI/API Specifications):**
-          <thinking>Checking if design_notes_md_path is provided and not empty.</thinking>
-          <!-- If context.design_notes_md_path is valid: -->
-          <read_file><path>{context.design_notes_md_path}</path></read_file>
-          <!-- Wait -->
-      3.  **Read Active Log (for recent context or known issues):**
-          <thinking>Checking if active_log_md_path is provided and not empty.</thinking>
-          <!-- If context.active_log_md_path is valid: -->
-          <read_file><path>{context.active_log_md_path}</path></read_file>
-          <!-- Wait -->
-      4.  **Review Global Standards (if relevant to testing approach):**
+      1.  **Read Feature Requirements & Acceptance Criteria:**
+          <read_file><path>{context.requirements_path}</path></read_file>
+          <!-- Wait. If error, report blocker to Feature Lead. -->
+      2.  **Read Design Notes (UI/API Specifications, if applicable):**
+          <thinking>Checking if design_notes_path is provided and seems relevant.</thinking>
+          <!-- If context.design_notes_path is valid and provided: -->
+          <read_file><path>{context.design_notes_path}</path></read_file>
+          <!-- Wait. If error, can proceed with caution, noting design docs were unavailable, or report as blocker if essential. -->
+      3.  **Read Active Log (for recent context, known issues, and bug logging area):**
+          <read_file><path>{context.active_log_path}</path></read_file>
+          <!-- Wait. If error (and not 'file not found' for a new feature's log), report as blocker as this is where bugs are logged. -->
+      4.  **Review Global Standards (if relevant to testing approach, e.g., accessibility standards from shared_system_patterns):**
           <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
-          <!-- Wait -->
+          <!-- Wait. Optional, proceed if fails. -->
 
       <thinking>
-      All specified context files have been requested.
-      Once I receive their content, I will understand what to test on the `main` branch for feature '{context.feature_name}'.
+      All specified essential context files have been requested.
+      Once I receive their content, I will understand what to test for feature '{context.feature_name}'.
       Bug reporting instructions are: `{context.bug_reporting_instructions}`.
       Test execution will be guided by `.roo/rules-qa-tester/01-test-execution-and-reporting.txt`.
-      If crucial information is missing, I must report this back to the Feature Lead.
-      Assuming all context is loaded successfully...
+      Assuming all essential context is loaded successfully...
       </thinking>
       <attempt_completion>
         <result>
-        Context for QA testing task '{context.task_id}' on feature '{context.feature_name}' (ID: {context.feature_id}) has been successfully loaded.
-        Testing will be performed on the `main` branch.
-        Summary of functionality from Feature Lead: `{context.summary_of_functionality_for_qa}`.
-        Bug reporting instructions are noted.
+        Context for QA testing task '{context.task_id_for_qa}' on feature '{context.feature_name}' (ID: {context.feature_id}) has been successfully loaded.
+        Testing will be performed on the current development branch state for this feature, based on information: {context.branch_info_for_qa_or_default_assumption}.
+        Summary of functionality from Feature Lead: "{context.summary_of_functionality_for_qa}".
+        Bug reporting instructions are noted: Log bugs in `{context.active_log_path}`.
         I am ready to begin test planning and execution.
         </result>
       </attempt_completion>
-      My status becomes `[QA-TESTER ({context.feature_id} - QA Task {context.task_id}): READY_TO_TEST]`.
+      My status becomes `[QA-TESTER ({context.feature_id} - QA Task {context.task_id_for_qa}): READY_TO_TEST]`.
 
   status_prefix_qa_tester:
-    rule: "Begin EVERY response with `[QA-TESTER ({context.feature_id} - QA Task {context.task_id}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_TO_TEST, PLANNING_TESTS, EXECUTING_TESTS, REPORTING_RESULTS, CONTEXT_INCOMPLETE_BLOCKED, etc."
+    rule: "Begin EVERY response with `[QA-TESTER ({context.feature_id} - QA Task {context.task_id_for_qa}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_TO_TEST, PLANNING_TESTS, EXECUTING_TESTS, LOGGING_BUG, PREPARING_REPORT, COMPLETED_CYCLE_AWAITING_NEW, CONTEXT_INCOMPLETE_BLOCKED, etc."

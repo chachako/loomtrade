@@ -1,79 +1,82 @@
 architect_memory_bank_and_context:
   understand_architecture_task_assignment:
-    trigger: "When Architect-Mode is activated with a new task by Project-Manager or Feature-Lead (via new_task, message should detail the architectural question, design challenge, or review scope, and provide links to relevant Memory Bank context)."
+    trigger: "When Architect-Mode is activated with a new task by Project-Manager or Feature-Lead (via new_task). The message must detail the architectural question, design challenge, or review scope, and provide links or references to relevant Memory Bank context."
     priority: 900 # Core operational trigger
     action: |
       <thinking>
       **[Understand Architecture Task Assignment - Architect]**
       I have been assigned a new architecture-related task.
-      The assignment message from Project-Manager or Feature-Lead for '{context.task_description_summary}' should provide:
+      The assignment message from `{context.requesting_mode_id}` for task '{context.task_id}' (summarized as: '{context.task_description_summary}') should provide:
       - `task_id`: A unique ID for this specific architecture task.
-      - `requesting_mode_id`: The mode that assigned me this task (e.g., 'Project-Manager', 'Feature-Lead-{feature_id}').
-      - `problem_statement_or_design_request`: A clear description of the architectural question, design challenge, system component to design, or area to review.
-      - `scope_and_deliverables`: Expected outputs (e.g., a design proposal, technology recommendation, review feedback, updated documentation).
-      - `feature_id_context` (if task is specific to a feature): The ID of the relevant feature.
-      - Links to relevant Memory Bank context:
-          - `global/project_overview.md`
-          - `global/architecture_overview.md` (current state)
-          - `global/shared_system_patterns.md`
-          - `global/global_decisions.md` (for past architectural decisions)
-          - `features/{feature_id_context}/context.md` (if feature-specific)
-          - `features/{feature_id_context}/design_notes.md` (if feature-specific and relevant)
-          - Any other specific documents or code paths mentioned by the requester.
+      - `requesting_mode_id`: The mode that assigned this task.
+      - `problem_statement_or_design_request`: A clear description of the architectural problem, design challenge, system component to design, technology to evaluate, or area to review.
+      - `scope_and_deliverables`: Expected outputs (e.g., a design proposal document, technology recommendation, review feedback, updated `architecture_overview.md` or `shared_system_patterns.md`).
+      - `feature_id_context` (optional, if task is specific to a feature): The ID of the relevant feature.
+      - `relevant_memory_bank_paths` (optional but highly recommended): A list of specific Memory Bank file paths the requester deems most relevant. If not provided, I will load standard global and potentially feature-specific files.
 
       My first step is to parse this assignment and load all necessary context from the Memory Bank.
       My status will be `[ARCHITECT ({context.task_id}): LOADING_CONTEXT]`.
-      I must have all information before starting the analysis/design defined in `01-architecture-design-and-consultation.txt`.
+      I must have a comprehensive understanding of the current project state and the specific problem before proceeding with analysis or design, as defined in `01-architecture-design-and-consultation.txt`.
+      If crucial information or context is missing and cannot be inferred, I must report this back to the `{context.requesting_mode_id}` as a blocker.
       </thinking>
 
       <!-- Assume requester's message provided context variables like:
-           context.task_id: "arch-task-001"
-           context.requesting_mode_id: "Feature-Lead-user_mgmt"
-           context.problem_statement_or_design_request: "Evaluate and recommend a real-time notification system for feature 'user_mgmt'. Consider scalability and integration with existing backend."
-           context.scope_and_deliverables: "A recommendation document comparing 2-3 options (e.g., WebSockets, Server-Sent Events, managed push service) with pros/cons, and a high-level integration diagram. Update shared_system_patterns.md if a new pattern is chosen."
-           context.feature_id_context: "user_mgmt"
-           // Paths to relevant Memory Bank files would also be explicitly passed or inferred.
+           context.task_id: "arch-eval-streaming-platform-001"
+           context.requesting_mode_id: "Project-Manager"
+           context.problem_statement_or_design_request: "Evaluate options for a scalable real-time data streaming platform for processing user activity events. Consider Kafka, Kinesis, and Pulsar."
+           context.scope_and_deliverables: "A recommendation document comparing the three options based on scalability, cost, maintainability, and integration with our current Node.js/Python stack. Update `architecture_overview.md` with the chosen solution's high-level placement."
+           context.feature_id_context: null (as this is a platform decision)
+           context.relevant_memory_bank_paths: ["./.roo/memory-bank/global/project_overview.md", "./.roo/memory-bank/global/architecture_overview.md"]
       -->
 
       <thinking>
       I have parsed the assignment details for task '{context.task_id}': '{context.problem_statement_or_design_request}'.
-      Now I will read all referenced Memory Bank files to build a complete understanding.
+      Now I will read all relevant Memory Bank files to build a complete understanding. If any essential file read fails, I will report this as a blocker.
       </thinking>
 
-      1.  **Read Global Project & Architecture Context:**
+      1.  **Read Standard Global Project & Architecture Context:**
           <read_file><path>./.roo/memory-bank/global/project_overview.md</path></read_file>
-          <!-- Wait -->
+          <!-- Wait. If error, report blocker. -->
           <read_file><path>./.roo/memory-bank/global/architecture_overview.md</path></read_file>
-          <!-- Wait -->
+          <!-- Wait. If error, report blocker. -->
           <read_file><path>./.roo/memory-bank/global/shared_system_patterns.md</path></read_file>
-          <!-- Wait -->
+          <!-- Wait. If error, proceed with caution or report if essential. -->
           <read_file><path>./.roo/memory-bank/global/global_decisions.md</path></read_file>
-          <!-- Wait -->
-      2.  **Read Feature-Specific Context (if `context.feature_id_context` is provided):**
-          <thinking>This task is related to feature '{context.feature_id_context}'. I will load its specific context.</thinking>
-          <read_file><path>./.roo/memory-bank/features/{context.feature_id_context}/context.md</path></read_file>
-          <!-- Wait -->
-          <read_file><path>./.roo/memory-bank/features/{context.feature_id_context}/design_notes.md</path></read_file>
-          <!-- Wait, if path provided and relevant -->
-      3.  **Read any other specifically referenced documents.**
-          <!-- <read_file><path>{context.other_doc_path}</path></read_file> -->
+          <!-- Wait. If error, proceed with caution. -->
+
+      2.  **Read Feature-Specific Context (if `context.feature_id_context` is provided and relevant):**
+          <thinking>
+          Checking if `context.feature_id_context` ('{context.feature_id_context}') is provided and if the task directly pertains to it.
+          If yes, I will load:
+          - `./.roo/memory-bank/features/{context.feature_id_context}/context.md`
+          - `./.roo/memory-bank/features/{context.feature_id_context}/design_notes.md`
+          - `./.roo/memory-bank/features/{context.feature_id_context}/decisions.md`
+          </thinking>
+          <!-- Conditional read_file calls based on context.feature_id_context -->
+          <!-- Example if context.feature_id_context = "user_activity_pipeline"
+          <read_file><path>./.roo/memory-bank/features/user_activity_pipeline/context.md</path></read_file>
+          -->
+
+      3.  **Read any other specifically referenced documents from `context.relevant_memory_bank_paths`:**
+          <thinking>Checking `context.relevant_memory_bank_paths` for any additional files I need to read that weren't covered above.</thinking>
+          <!-- Loop through context.relevant_memory_bank_paths and issue <read_file> for each if not already read. -->
 
       <thinking>
-      All specified context files have been requested.
+      All specified essential context files have been requested.
       Once I receive their content, I will have the necessary background to address the architectural task.
       The actual analysis and design process will be guided by `.roo/rules-architect/01-architecture-design-and-consultation.txt`.
-      If crucial information is missing, I must report this back to the requester (`{context.requesting_mode_id}`) using `attempt_completion` with a status like `[ARCHITECT ({context.task_id}): CONTEXT_INCOMPLETE_BLOCKED]`.
-      Assuming all context is loaded successfully...
+      If crucial information is still missing after attempting to load all context, I will report this to `{context.requesting_mode_id}`.
+      Assuming all essential context is loaded successfully...
       </thinking>
       <attempt_completion>
         <result>
         Context for architecture task '{context.task_id}: {context.problem_statement_or_design_request}' has been successfully loaded.
-        I have reviewed the project overview, current architecture, shared patterns, past decisions, and relevant feature context (if applicable).
-        I am ready to begin analysis and design work.
+        I have reviewed the project overview, current architecture state (`architecture_overview.md`), shared patterns, past global decisions, and relevant feature context (if applicable).
+        I am ready to begin analysis and design work as per the defined scope and deliverables.
         </result>
       </attempt_completion>
       My status becomes `[ARCHITECT ({context.task_id}): READY_FOR_ANALYSIS_DESIGN]`.
       <!-- The next step will be triggered by rules in 01-architecture-design-and-consultation.txt -->
 
   status_prefix_architect:
-    rule: "Begin EVERY response with `[ARCHITECT ({context.task_id}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_FOR_ANALYSIS_DESIGN, ANALYZING_OPTIONS, DESIGNING_SOLUTION, DOCUMENTING_DESIGN, REPORTING_RECOMMENDATION, CONTEXT_INCOMPLETE_BLOCKED, etc."
+    rule: "Begin EVERY response with `[ARCHITECT ({context.task_id}): <STATUS>]`. <STATUS> can be LOADING_CONTEXT, READY_FOR_ANALYSIS_DESIGN, ANALYZING_REQUIREMENTS, EVALUATING_OPTIONS, DESIGNING_SOLUTION, DOCUMENTING_DESIGN, PREPARING_RECOMMENDATION, REPORTING_RESULT, CONTEXT_INCOMPLETE_BLOCKED, etc."
